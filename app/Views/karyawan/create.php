@@ -1,37 +1,33 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Tambah Karyawan - Sparkleen</title>
+    <title>Tambah Karyawan</title>
 </head>
 <body>
-    <h2>Tambah Data Karyawan</h2>
-    
+    <h1>Tambah Karyawan</h1>
     <form action="/karyawan/store" method="post">
-        <?= csrf_field() ?>
+        <label>Nama Karyawan</label><br>
+        <input type="text" name="nama_karyawan" required><br>
         
-        <label>Nama Karyawan:</label><br>
-        <input type="text" name="nama_karyawan" required><br><br>
-
-        <label>Username:</label><br>
-        <input type="text" name="username" required><br><br>
-
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
-
-        <label>Level Akses:</label><br>
+        <label>Username</label><br>
+        <input type="text" name="username" required><br>
+        
+        <label>Password</label><br>
+        <input type="password" name="password" required><br>
+        
+        <label>Level</label><br>
         <select name="level" required>
-            <option value="admin">Admin</option>
             <option value="kasir">Kasir</option>
+            <option value="admin">Admin</option>
             <option value="pemilik">Pemilik</option>
-        </select><br><br>
-
-        <label>No. Telepon:</label><br>
-        <input type="text" name="no_telp" required><br><br>
-
-        <label>Gaji Pokok:</label><br>
-        <input type="number" name="gaji_pokok" required><br><br>
-
+        </select><br>
+        
+        <label>No Telp</label><br>
+        <input type="text" name="no_telp" required><br>
+        
+        <label>Gaji Pokok</label><br>
+        <input type="number" name="gaji_pokok" value="0"><br><br>
+        
         <button type="submit">Simpan</button>
         <a href="/karyawan">Batal</a>
     </form>

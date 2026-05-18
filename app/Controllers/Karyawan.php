@@ -2,23 +2,25 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
 use App\Models\MKaryawan;
 
 class Karyawan extends BaseController
 {
-    protected $mKaryawan;
+    protected $karyawanModel;
 
     public function __construct()
     {
-        $this->mKaryawan = new MKaryawan();
+        // Proteksi: cek sudah login atau belum
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+        
+        $this->karyawanModel = new MKaryawan(); 
     }
 
     public function index()
     {
-        $data = [
-            'karyawan' => $this->mKaryawan->findAll()
-        ];
+        $data['karyawan'] = $this->karyawanModel->findAll();
         return view('karyawan/index', $data);
     }
 
@@ -29,56 +31,54 @@ class Karyawan extends BaseController
 
     public function store()
     {
-        $data = [
-            'nama_karyawan' => $this->request->getPost('nama_karyawan'),
-            'username'      => $this->request->getPost('username'),
-            'password'      => password_hash((string)$this->request->getPost('password'), PASSWORD_BCRYPT),
-            'level'         => $this->request->getPost('level'),
-            'no_telp'       => $this->request->getPost('no_telp'),
-            'gaji_pokok'    => $this->request->getPost('gaji_pokok')
-        ];
+        // Hash password sebelum disimpan
+        $hashedPassword = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
 
-        $this->mKaryawan->insert($data);
-        return redirect()->to('/karyawan')->with('success', 'Data karyawan berhasil ditambahkan.');
+        $this->karyawanModel->save([
+            'nama_karyawan' => $this->request->getPost('nama_karyawan'),
+            'username' => $this->request->getPost('username'),
+            'password' => $hashedPassword,
+            'level' => $this->request->getPost('level'),
+            'no_telp' => $this->request->getPost('no_telp'),
+            'gaji_pokok' => $this->request->getPost('gaji_pokok') ?? 0,
+        ]);
+
+        session()->setFlashdata('success', 'Data karyawan berhasil ditambahkan');
+        return redirect()->to('/karyawan');
     }
 
     public function edit($id)
     {
-        $data = [
-            'karyawan' => $this->mKaryawan->find($id)
-        ];
-
-        if (empty($data['karyawan'])) {
-            return redirect()->to('/karyawan')->with('error', 'Data tidak ditemukan.');
-        }
-
+        $data['karyawan'] = $this->karyawanModel->find($id);
         return view('karyawan/edit', $data);
     }
 
     public function update($id)
     {
-        $passwordInput = $this->request->getPost('password');
-        
         $data = [
             'nama_karyawan' => $this->request->getPost('nama_karyawan'),
-            'username'      => $this->request->getPost('username'),
-            'level'         => $this->request->getPost('level'),
-            'no_telp'       => $this->request->getPost('no_telp'),
-            'gaji_pokok'    => $this->request->getPost('gaji_pokok')
+            'username' => $this->request->getPost('username'),
+            'level' => $this->request->getPost('level'),
+            'no_telp' => $this->request->getPost('no_telp'),
+            'gaji_pokok' => $this->request->getPost('gaji_pokok') ?? 0,
         ];
 
-        // Hanya update password jika diisi
-        if (!empty($passwordInput)) {
-            $data['password'] = password_hash((string)$passwordInput, PASSWORD_BCRYPT);
+        // Jika password diisi, update password
+        $password = $this->request->getPost('password');
+        if (!empty($password)) {
+            $data['password'] = password_hash($password, PASSWORD_DEFAULT);
         }
 
-        $this->mKaryawan->update($id, $data);
-        return redirect()->to('/karyawan')->with('success', 'Data karyawan berhasil diperbarui.');
+        $this->karyawanModel->update($id, $data);
+
+        session()->setFlashdata('success', 'Data karyawan berhasil diupdate');
+        return redirect()->to('/karyawan');
     }
 
     public function delete($id)
     {
-        $this->mKaryawan->delete($id);
-        return redirect()->to('/karyawan')->with('success', 'Data karyawan berhasil dihapus.');
+        $this->karyawanModel->delete($id);
+        session()->setFlashdata('success', 'Data karyawan berhasil dihapus');
+        return redirect()->to('/karyawan');
     }
 }

@@ -1,19 +1,27 @@
 <?php
+
 namespace App\Controllers;
+
 use App\Models\MLayanan;
 
 class Layanan extends BaseController
 {
-    protected $mLayanan;
+    protected $layananModel;
 
     public function __construct()
     {
-        $this->mLayanan = new MLayanan();
+        // Proteksi: cek sudah login atau belum
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+        
+        $this->layananModel = new MLayanan();
     }
 
     public function index()
     {
-        return view('layanan/index', ['layanan' => $this->mLayanan->findAll()]);
+        $data['layanan'] = $this->layananModel->findAll();
+        return view('layanan/index', $data);
     }
 
     public function create()
@@ -23,32 +31,38 @@ class Layanan extends BaseController
 
     public function store()
     {
-        $this->mLayanan->save([
-            'nama_layanan'  => $this->request->getPost('nama_layanan'),
-            'harga_per_kg'  => $this->request->getPost('harga_per_kg'),
-            'estimasi_hari' => $this->request->getPost('estimasi_hari')
+        $this->layananModel->save([
+            'nama_layanan' => $this->request->getPost('nama_layanan'),
+            'harga_per_kg' => $this->request->getPost('harga_per_kg'),
+            'estimasi_hari' => $this->request->getPost('estimasi_hari'),
         ]);
+
+        session()->setFlashdata('success', 'Data layanan berhasil ditambahkan');
         return redirect()->to('/layanan');
     }
 
     public function edit($id)
     {
-        return view('layanan/edit', ['layanan' => $this->mLayanan->find($id)]);
+        $data['layanan'] = $this->layananModel->find($id);
+        return view('layanan/edit', $data);
     }
 
     public function update($id)
     {
-        $this->mLayanan->update($id, [
-            'nama_layanan'  => $this->request->getPost('nama_layanan'),
-            'harga_per_kg'  => $this->request->getPost('harga_per_kg'),
-            'estimasi_hari' => $this->request->getPost('estimasi_hari')
+        $this->layananModel->update($id, [
+            'nama_layanan' => $this->request->getPost('nama_layanan'),
+            'harga_per_kg' => $this->request->getPost('harga_per_kg'),
+            'estimasi_hari' => $this->request->getPost('estimasi_hari'),
         ]);
+
+        session()->setFlashdata('success', 'Data layanan berhasil diupdate');
         return redirect()->to('/layanan');
     }
 
     public function delete($id)
     {
-        $this->mLayanan->delete($id);
+        $this->layananModel->delete($id);
+        session()->setFlashdata('success', 'Data layanan berhasil dihapus');
         return redirect()->to('/layanan');
     }
 }

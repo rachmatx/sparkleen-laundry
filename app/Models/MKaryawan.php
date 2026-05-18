@@ -6,24 +6,29 @@ use CodeIgniter\Model;
 
 class MKaryawan extends Model
 {
-    protected $table            = 'tb_karyawan';
-    protected $primaryKey       = 'id_karyawan';
-    protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
-    protected $protectFields    = true;
-    protected $allowedFields    = [
-        'nama_karyawan', 
-        'username', 
-        'password', 
-        'level', 
-        'no_telp', 
-        'gaji_pokok'
+    protected $table = 'tb_karyawan';
+    protected $primaryKey = 'id_karyawan';
+    protected $allowedFields = [
+        'nama_karyawan', 'username', 'password', 
+        'level', 'no_telp', 'gaji_pokok'
     ];
-
-    // Dates
     protected $useTimestamps = true;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
+
+    // Untuk login
+    public function getLogin($username, $password)
+    {
+        $builder = $this->db->table($this->table);
+        $builder->where('username', $username);
+        $query = $builder->get();
+        $row = $query->getRow();
+        
+        if ($row) {
+            if (password_verify($password, $row->password)) {
+                return $row;
+            }
+        }
+        return false;
+    }
 }
