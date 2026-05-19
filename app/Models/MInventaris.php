@@ -16,6 +16,7 @@ class MInventaris extends Model
         'satuan',
         'harga_beli',
         'stok_minimal',
+        'is_aktif',
     ];
 
     /**

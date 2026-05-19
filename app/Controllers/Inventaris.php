@@ -103,11 +103,15 @@ class Inventaris extends BaseController
         return redirect()->to('/inventaris');
     }
 
-    // Hapus
-    public function delete($id)
+    public function toggleStatus($id)
     {
-        $this->inventarisModel->delete($id);
-        session()->setFlashdata('success', 'Data inventaris berhasil dihapus.');
+        $item = $this->inventarisModel->find($id);
+        if ($item) {
+            $statusBaru = ($item['is_aktif'] == 1) ? 0 : 1;
+            $this->inventarisModel->update($id, ['is_aktif' => $statusBaru]);
+            $pesan = ($statusBaru == 1) ? 'diaktifkan' : 'dinonaktifkan';
+            session()->setFlashdata('success', "Data inventaris berhasil $pesan.");
+        }
         return redirect()->to('/inventaris');
     }
 

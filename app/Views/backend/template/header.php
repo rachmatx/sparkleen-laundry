@@ -49,8 +49,12 @@
                         <i class="fas fa-user-circle fs-5 me-1"></i> <span class="fw-medium"><?= session()->get('nama_karyawan') ?></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <a href="/logout" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                        <a href="/profile" class="dropdown-item">
+                            <i class="fas fa-user-cog me-2"></i> Profil Saya
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item text-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
                         </a>
                     </div>
                 </li>

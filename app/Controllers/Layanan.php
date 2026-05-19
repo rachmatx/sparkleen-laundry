@@ -102,14 +102,19 @@ class Layanan extends BaseController
         return redirect()->to('/layanan');
     }
 
-    public function delete($id)
+    public function toggleStatus($id)
     {
         if (!in_array($this->level, ['admin', 'pemilik'])) {
             return redirect()->to('/layanan');
         }
 
-        $this->layananModel->delete($id);
-        session()->setFlashdata('success', 'Data layanan berhasil dihapus.');
+        $layanan = $this->layananModel->find($id);
+        if ($layanan) {
+            $statusBaru = ($layanan['is_aktif'] == 1) ? 0 : 1;
+            $this->layananModel->update($id, ['is_aktif' => $statusBaru]);
+            $pesan = ($statusBaru == 1) ? 'diaktifkan' : 'dinonaktifkan';
+            session()->setFlashdata('success', "Data layanan berhasil $pesan.");
+        }
         return redirect()->to('/layanan');
     }
 }

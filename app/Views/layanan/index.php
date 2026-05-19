@@ -32,6 +32,7 @@
                                 <th>Nama Layanan</th>
                                 <th>Harga per KG</th>
                                 <th>Estimasi Selesai</th>
+                                <th class="text-center">Status</th>
                                 <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                                 <th width="160px" class="text-center">Aksi</th>
                                 <?php endif; ?>
@@ -52,16 +53,31 @@
                                 <td><?= esc($l['nama_layanan']) ?></td>
                                 <td>Rp <?= number_format($l['harga_per_kg'], 0, ',', '.') ?> / kg</td>
                                 <td><span class="badge text-bg-secondary"><?= $l['estimasi_hari'] ?> hari</span></td>
+                                <td class="text-center">
+                                    <?php if ($l['is_aktif'] == 1): ?>
+                                        <span class="badge text-bg-success">Aktif</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary">Nonaktif</span>
+                                    <?php endif; ?>
+                                </td>
                                 <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                                 <td class="text-center">
                                     <a href="/layanan/edit/<?= $l['id_layanan'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
-                                    <a href="#"
-                                       onclick="if(confirm('Yakin ingin menghapus layanan ini?')) window.location.href='/layanan/delete/<?= $l['id_layanan'] ?>'"
-                                       class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash me-1"></i> Hapus
-                                    </a>
+                                    <?php if ($l['is_aktif'] == 1): ?>
+                                        <a href="#"
+                                           onclick="if(confirm('Yakin ingin menonaktifkan layanan ini?')) window.location.href='/layanan/toggle/<?= $l['id_layanan'] ?>'"
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fas fa-power-off me-1"></i> Nonaktif
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="#"
+                                           onclick="if(confirm('Yakin ingin mengaktifkan layanan ini?')) window.location.href='/layanan/toggle/<?= $l['id_layanan'] ?>'"
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-power-off me-1"></i> Aktifkan
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                                 <?php endif; ?>
                             </tr>

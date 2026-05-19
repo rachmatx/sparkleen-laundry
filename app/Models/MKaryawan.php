@@ -1,5 +1,7 @@
 <?php
 
+// app/Models/MKaryawan.php
+
 namespace App\Models;
 
 use CodeIgniter\Model;
@@ -11,7 +13,7 @@ class MKaryawan extends Model
 
     protected $allowedFields = [
         'nama_karyawan', 'username', 'password',
-        'level', 'no_telp', 'email', 'gaji_pokok',
+        'level', 'no_telp', 'email', 'gaji_pokok', 'is_aktif',
     ];
 
     protected $useTimestamps = true;
@@ -20,6 +22,7 @@ class MKaryawan extends Model
 
     // Validasi bawaan model
     protected $validationRules = [
+        'id_karyawan'   => 'permit_empty',
         'nama_karyawan' => 'required|max_length[100]',
         'username'      => 'required|max_length[50]|is_unique[tb_karyawan.username,id_karyawan,{id_karyawan}]',
         'no_telp'       => 'required|max_length[20]|is_unique[tb_karyawan.no_telp,id_karyawan,{id_karyawan}]',
@@ -45,7 +48,7 @@ class MKaryawan extends Model
     /**
      * Login via username ATAU email
      */
-    public function getLogin(string $identifier, string $password)
+    public function getUserByIdentifier(string $identifier)
     {
         $builder = $this->db->table($this->table);
 
@@ -55,12 +58,6 @@ class MKaryawan extends Model
             $builder->where('username', $identifier);
         }
 
-        $user = $builder->get()->getRow();
-
-        if ($user && password_verify($password, $user->password)) {
-            return $user;
-        }
-
-        return false;
+        return $builder->get()->getRow();
     }
 }

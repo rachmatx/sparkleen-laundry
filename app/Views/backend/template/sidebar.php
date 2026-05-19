@@ -1,3 +1,5 @@
+<!-- app/Views/backend/template/sidebar.php -->
+
 <!-- Main Sidebar Container -->
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
     <!-- Brand Logo -->
@@ -29,7 +31,12 @@
                     </a>
                 </li>
 
+                <!-- ===================================================== -->
+                <!-- MENU KASIR: Transaksi & Data Pelanggan & Layanan       -->
+                <!-- ===================================================== -->
+
                 <!-- Transaksi: semua level -->
+                <li class="nav-header">TRANSAKSI</li>
                 <li class="nav-item">
                     <a href="/transaksi" class="nav-link <?= ($activeMenu ?? '') == 'transaksi' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-plus-circle"></i>
@@ -58,8 +65,11 @@
                     </a>
                 </li>
 
-                <!-- Karyawan & Laporan: hanya admin & pemilik -->
-                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                <!-- ===================================================== -->
+                <!-- MENU ADMIN & PEMILIK: Karyawan, Inventaris, Laporan    -->
+                <!-- ===================================================== -->
+                <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+
                 <li class="nav-item">
                     <a href="/karyawan" class="nav-link <?= ($activeMenu ?? '') == 'karyawan' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-id-badge"></i>
@@ -72,13 +82,21 @@
                         <p>Inventaris</p>
                     </a>
                 </li>
+
                 <li class="nav-header">LAPORAN</li>
                 <li class="nav-item">
-                    <a href="/laporan" class="nav-link <?= ($activeMenu ?? '') == 'laporan' ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-chart-bar"></i>
-                        <p>Laporan</p>
+                    <a href="/laporan/bulanan" class="nav-link <?= ($activeMenu ?? '') == 'laporan_bulanan' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>Laporan Keuangan</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="/laporan" class="nav-link <?= ($activeMenu ?? '') == 'laporan' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-download"></i>
+                        <p>Unduh Laporan</p>
+                    </a>
+                </li>
+
                 <?php endif; ?>
 
             </ul>

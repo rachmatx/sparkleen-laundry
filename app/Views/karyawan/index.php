@@ -26,6 +26,7 @@
                                 <th>Level</th>
                                 <th>No Telepon</th>
                                 <th>Gaji Pokok</th>
+                                <th class="text-center">Status</th>
                                 <th width="160px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -56,14 +57,41 @@
                                 <td><?= $k['no_telp'] ?></td>
                                 <td>Rp <?= number_format($k['gaji_pokok'], 0, ',', '.') ?></td>
                                 <td class="text-center">
+                                    <?php if ($k['is_aktif'] == 1): ?>
+                                        <span class="badge text-bg-success">Aktif</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary">Nonaktif</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <?php 
+                                    $canManage = false;
+                                    if (session()->get('level') === 'pemilik') {
+                                        $canManage = true;
+                                    } elseif (session()->get('level') === 'admin' && $k['level'] === 'kasir') {
+                                        $canManage = true;
+                                    }
+                                    ?>
+                                    <?php if($canManage): ?>
                                     <a href="/karyawan/edit/<?= $k['id_karyawan'] ?>" class="btn btn-warning btn-sm text-dark me-1">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <a href="#"
-                                       onclick="if(confirm('Yakin ingin menghapus karyawan ini?')) window.location.href='/karyawan/delete/<?= $k['id_karyawan'] ?>'"
-                                       class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i> Hapus
-                                    </a>
+                                    <?php if ($k['is_aktif'] == 1): ?>
+                                        <a href="#"
+                                           onclick="if(confirm('Yakin ingin menonaktifkan karyawan ini?')) window.location.href='/karyawan/toggle/<?= $k['id_karyawan'] ?>'"
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fas fa-power-off"></i> Nonaktif
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="#"
+                                           onclick="if(confirm('Yakin ingin mengaktifkan karyawan ini?')) window.location.href='/karyawan/toggle/<?= $k['id_karyawan'] ?>'"
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-power-off"></i> Aktifkan
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="text-muted"><i class="fas fa-lock"></i></span>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

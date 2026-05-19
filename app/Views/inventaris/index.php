@@ -32,7 +32,8 @@
                                 <th class="text-center">Satuan</th>
                                 <th class="text-center">Harga Beli</th>
                                 <th class="text-center">Stok Minimal</th>
-                                <th class="text-center">Status</th>
+                                <th class="text-center">Status Stok</th>
+                                <th class="text-center">Status Aktif</th>
                                 <th width="160" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -73,14 +74,29 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
+                                    <?php if ($inv['is_aktif'] == 1): ?>
+                                        <span class="badge text-bg-success">Aktif</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary">Nonaktif</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center">
                                     <a href="/inventaris/edit/<?= $inv['id_inventaris'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
-                                    <a href="#"
-                                       onclick="if(confirm('Yakin ingin menghapus barang ini?')) window.location.href='/inventaris/delete/<?= $inv['id_inventaris'] ?>'"
-                                       class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash me-1"></i> Hapus
-                                    </a>
+                                    <?php if ($inv['is_aktif'] == 1): ?>
+                                        <a href="#"
+                                           onclick="if(confirm('Yakin ingin menonaktifkan barang ini?')) window.location.href='/inventaris/toggle/<?= $inv['id_inventaris'] ?>'"
+                                           class="btn btn-danger btn-sm">
+                                            <i class="fas fa-power-off me-1"></i> Nonaktif
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="#"
+                                           onclick="if(confirm('Yakin ingin mengaktifkan barang ini?')) window.location.href='/inventaris/toggle/<?= $inv['id_inventaris'] ?>'"
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-power-off me-1"></i> Aktifkan
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

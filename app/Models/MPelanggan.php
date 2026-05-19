@@ -11,7 +11,7 @@ class MPelanggan extends Model
 
     protected $allowedFields = [
         'kode_pelanggan', 'nama_pelanggan', 'no_telp',
-        'alamat', 'poin', 'total_transaksi',
+        'alamat', 'poin', 'total_transaksi', 'is_aktif'
     ];
 
     protected $useTimestamps = true;
@@ -20,6 +20,7 @@ class MPelanggan extends Model
 
     // Validasi bawaan model
     protected $validationRules = [
+        'id_pelanggan'   => 'permit_empty',
         'nama_pelanggan' => 'required|max_length[100]',
         'no_telp'        => 'required|max_length[20]|is_unique[tb_pelanggan.no_telp,id_pelanggan,{id_pelanggan}]',
         'alamat'         => 'required',

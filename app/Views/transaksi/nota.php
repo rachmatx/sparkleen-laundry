@@ -72,6 +72,10 @@
                     <td>: <strong><?= $transaksi['no_nota'] ?></strong></td>
                 </tr>
                 <tr>
+                    <td>Kasir</td>
+                    <td>: <?= esc($transaksi['nama_kasir'] ?? 'System') ?></td>
+                </tr>
+                <tr>
                     <td>Pelanggan</td>
                     <td>: <?= esc($pelanggan['nama_pelanggan']) ?></td>
                 </tr>

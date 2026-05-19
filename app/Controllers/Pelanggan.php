@@ -35,10 +35,6 @@ class Pelanggan extends BaseController
 
     public function create()
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            return redirect()->to('/pelanggan');
-        }
 
         $data = [
             'title'      => 'Tambah Pelanggan',
@@ -54,9 +50,6 @@ class Pelanggan extends BaseController
 
     public function store()
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            return redirect()->to('/pelanggan');
-        }
 
         $data = [
             'kode_pelanggan' => $this->request->getPost('kode_pelanggan'),
@@ -76,10 +69,6 @@ class Pelanggan extends BaseController
 
     public function edit($id)
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            return redirect()->to('/pelanggan');
-        }
 
         $data = [
             'title'      => 'Edit Pelanggan',
@@ -95,9 +84,6 @@ class Pelanggan extends BaseController
 
     public function update($id)
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            return redirect()->to('/pelanggan');
-        }
 
         $data = [
             'id_pelanggan'   => $id,  // Diperlukan untuk is_unique exception
@@ -115,14 +101,19 @@ class Pelanggan extends BaseController
         return redirect()->to('/pelanggan');
     }
 
-    public function delete($id)
+    public function toggleStatus($id)
     {
         if (!in_array($this->level, ['admin', 'pemilik'])) {
             return redirect()->to('/pelanggan');
         }
 
-        $this->pelangganModel->delete($id);
-        session()->setFlashdata('success', 'Data pelanggan berhasil dihapus.');
+        $pelanggan = $this->pelangganModel->find($id);
+        if ($pelanggan) {
+            $statusBaru = ($pelanggan['is_aktif'] == 1) ? 0 : 1;
+            $this->pelangganModel->update($id, ['is_aktif' => $statusBaru]);
+            $pesan = ($statusBaru == 1) ? 'diaktifkan' : 'dinonaktifkan';
+            session()->setFlashdata('success', "Data pelanggan berhasil $pesan.");
+        }
         return redirect()->to('/pelanggan');
     }
 }

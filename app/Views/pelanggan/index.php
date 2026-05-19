@@ -3,13 +3,11 @@
         <div class="card card-outline card-primary">
             <div class="card-header">
                 <h3 class="card-title">Daftar Pelanggan</h3>
-                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                 <div class="card-tools">
                     <a href="/pelanggan/create" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus me-1"></i> Tambah Pelanggan
                     </a>
                 </div>
-                <?php endif; ?>
             </div>
             <div class="card-body p-0">
                 <?php if(session()->getFlashdata('success')): ?>
@@ -33,9 +31,8 @@
                                 <th>Nama Pelanggan</th>
                                 <th>No Telepon</th>
                                 <th>Alamat</th>
-                                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                                <th class="text-center">Status</th>
                                 <th width="160px" class="text-center">Aksi</th>
-                                <?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -54,18 +51,33 @@
                                 <td><?= esc($p['nama_pelanggan']) ?></td>
                                 <td><?= $p['no_telp'] ?></td>
                                 <td><?= esc($p['alamat']) ?></td>
-                                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                                <td class="text-center">
+                                    <?php if ($p['is_aktif'] == 1): ?>
+                                        <span class="badge text-bg-success">Aktif</span>
+                                    <?php else: ?>
+                                        <span class="badge text-bg-secondary">Nonaktif</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-center">
                                     <a href="/pelanggan/edit/<?= $p['id_pelanggan'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
-                                    <a href="#"
-                                       onclick="if(confirm('Yakin ingin menghapus pelanggan ini?')) window.location.href='/pelanggan/delete/<?= $p['id_pelanggan'] ?>'"
-                                       class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash me-1"></i> Hapus
-                                    </a>
+                                    <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                                        <?php if ($p['is_aktif'] == 1): ?>
+                                            <a href="#"
+                                               onclick="if(confirm('Yakin ingin menonaktifkan pelanggan ini?')) window.location.href='/pelanggan/toggle/<?= $p['id_pelanggan'] ?>'"
+                                               class="btn btn-danger btn-sm">
+                                                <i class="fas fa-power-off me-1"></i> Nonaktif
+                                            </a>
+                                        <?php else: ?>
+                                            <a href="#"
+                                               onclick="if(confirm('Yakin ingin mengaktifkan pelanggan ini?')) window.location.href='/pelanggan/toggle/<?= $p['id_pelanggan'] ?>'"
+                                               class="btn btn-success btn-sm">
+                                                <i class="fas fa-power-off me-1"></i> Aktifkan
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                 </td>
-                                <?php endif; ?>
                             </tr>
                             <?php endforeach; ?>
                             <?php endif; ?>

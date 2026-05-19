@@ -59,7 +59,7 @@
                             <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control" name="nominal_bayar"
                                    required placeholder="Masukkan nominal">
                         </div>
-                        <div class="form-text">Maksimum: Rp <?= number_format($sisa, 0, ',', '.') ?></div>
+                        <div class="form-text">Jika bayar lebih, sistem otomatis menghitung kembalian.</div>
                     </div>
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Metode Pembayaran <span class="text-danger">*</span></label>
@@ -74,10 +74,6 @@
                     </button>
                 </form>
                 <?php else: ?>
-                <div class="alert alert-success text-center py-2 mb-3">
-                    <i class="fas fa-check-circle me-1"></i>
-                    <strong>LUNAS</strong> &mdash; Transaksi ini sudah dibayar lunas.
-                </div>
                 <?php endif; ?>
             </div>
             <div class="card-footer">

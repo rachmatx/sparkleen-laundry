@@ -54,8 +54,10 @@
                             <select class="form-select" name="level" required>
                                 <option value="">-- Pilih Level --</option>
                                 <option value="kasir"   <?= old('level') == 'kasir'   ? 'selected' : '' ?>>Kasir</option>
+                                <?php if(session()->get('level') === 'pemilik'): ?>
                                 <option value="admin"   <?= old('level') == 'admin'   ? 'selected' : '' ?>>Admin</option>
                                 <option value="pemilik" <?= old('level') == 'pemilik' ? 'selected' : '' ?>>Pemilik</option>
+                                <?php endif; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">

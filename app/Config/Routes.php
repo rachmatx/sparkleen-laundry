@@ -19,7 +19,11 @@ $routes->get('/pelanggan/create', 'Pelanggan::create');
 $routes->post('/pelanggan/store', 'Pelanggan::store');
 $routes->get('/pelanggan/edit/(:num)', 'Pelanggan::edit/$1');
 $routes->post('/pelanggan/update/(:num)', 'Pelanggan::update/$1');
-$routes->get('/pelanggan/delete/(:num)', 'Pelanggan::delete/$1');
+$routes->get('/pelanggan/toggle/(:num)', 'Pelanggan::toggleStatus/$1');
+
+// Profil / Ganti Password
+$routes->get('/profile', 'Profile::index');
+$routes->post('/profile/update', 'Profile::update');
 
 // CRUD Layanan
 $routes->get('/layanan', 'Layanan::index');
@@ -27,7 +31,7 @@ $routes->get('/layanan/create', 'Layanan::create');
 $routes->post('/layanan/store', 'Layanan::store');
 $routes->get('/layanan/edit/(:num)', 'Layanan::edit/$1');
 $routes->post('/layanan/update/(:num)', 'Layanan::update/$1');
-$routes->get('/layanan/delete/(:num)', 'Layanan::delete/$1');
+$routes->get('/layanan/toggle/(:num)', 'Layanan::toggleStatus/$1');
 
 // CRUD Karyawan
 $routes->get('/karyawan', 'Karyawan::index');
@@ -36,6 +40,7 @@ $routes->post('/karyawan/store', 'Karyawan::store');
 $routes->get('/karyawan/edit/(:num)', 'Karyawan::edit/$1');
 $routes->post('/karyawan/update/(:num)', 'Karyawan::update/$1');
 $routes->get('/karyawan/delete/(:num)', 'Karyawan::delete/$1');
+$routes->get('/karyawan/toggle/(:num)', 'Karyawan::toggleStatus/$1');
 
 // CRUD Inventaris
 $routes->get('/inventaris', 'Inventaris::index');
@@ -43,7 +48,7 @@ $routes->get('/inventaris/create', 'Inventaris::create');
 $routes->post('/inventaris/store', 'Inventaris::store');
 $routes->get('/inventaris/edit/(:num)', 'Inventaris::edit/$1');
 $routes->post('/inventaris/update/(:num)', 'Inventaris::update/$1');
-$routes->get('/inventaris/delete/(:num)', 'Inventaris::delete/$1');
+$routes->get('/inventaris/toggle/(:num)', 'Inventaris::toggleStatus/$1');
 $routes->get('/inventaris/warning', 'Inventaris::warning');
 
 // Transaksi

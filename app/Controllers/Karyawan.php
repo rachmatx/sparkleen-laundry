@@ -91,6 +91,11 @@ class Karyawan extends BaseController
             return redirect()->to('/karyawan/create')->withInput();
         }
 
+        if (session()->get('level') === 'admin' && in_array($data['level'], ['admin', 'pemilik'])) {
+            session()->setFlashdata('errors', ['level' => 'Admin hanya dapat membuat akun dengan level Kasir.']);
+            return redirect()->to('/karyawan/create')->withInput();
+        }
+
         if (!$this->karyawanModel->save($data)) {
             session()->setFlashdata('errors', $this->karyawanModel->errors());
             return redirect()->to('/karyawan/create')->withInput();
@@ -102,10 +107,17 @@ class Karyawan extends BaseController
 
     public function edit($id)
     {
+        $karyawan = $this->karyawanModel->find($id);
+
+        if (session()->get('level') === 'admin' && in_array($karyawan['level'], ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Admin hanya diizinkan untuk mengelola akun Kasir.');
+            return redirect()->to('/karyawan');
+        }
+
         $data = [
             'title'      => 'Edit Karyawan',
             'activeMenu' => 'karyawan',
-            'karyawan'   => $this->karyawanModel->find($id),
+            'karyawan'   => $karyawan,
         ];
 
         return view('backend/template/header', $data)
@@ -131,6 +143,17 @@ class Karyawan extends BaseController
             return redirect()->to('/karyawan/edit/' . $id)->withInput();
         }
 
+        $target = $this->karyawanModel->find($id);
+        if (session()->get('level') === 'admin' && in_array($target['level'], ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Admin tidak dapat mengedit akun Admin atau Pemilik.');
+            return redirect()->to('/karyawan');
+        }
+
+        if (session()->get('level') === 'admin' && in_array($data['level'], ['admin', 'pemilik'])) {
+            session()->setFlashdata('errors', ['level' => 'Admin tidak dapat mengubah level menjadi Admin atau Pemilik.']);
+            return redirect()->to('/karyawan/edit/' . $id)->withInput();
+        }
+
         $password = $this->request->getPost('password');
         if (!empty($password)) {
             $data['password'] = password_hash($password, PASSWORD_DEFAULT);
@@ -147,8 +170,32 @@ class Karyawan extends BaseController
 
     public function delete($id)
     {
+        $target = $this->karyawanModel->find($id);
+        if (session()->get('level') === 'admin' && in_array($target['level'], ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Admin tidak dapat menghapus akun Admin atau Pemilik.');
+            return redirect()->to('/karyawan');
+        }
+
         $this->karyawanModel->delete($id);
         session()->setFlashdata('success', 'Data karyawan berhasil dihapus.');
+        return redirect()->to('/karyawan');
+    }
+
+    public function toggleStatus($id)
+    {
+        $karyawan = $this->karyawanModel->find($id);
+        
+        if (session()->get('level') === 'admin' && in_array($karyawan['level'], ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Admin tidak dapat mengubah status akun Admin atau Pemilik.');
+            return redirect()->to('/karyawan');
+        }
+
+        if ($karyawan) {
+            $statusBaru = ($karyawan['is_aktif'] == 1) ? 0 : 1;
+            $this->karyawanModel->update($id, ['is_aktif' => $statusBaru]);
+            $pesan = ($statusBaru == 1) ? 'diaktifkan' : 'dinonaktifkan';
+            session()->setFlashdata('success', "Karyawan berhasil $pesan.");
+        }
         return redirect()->to('/karyawan');
     }
 }

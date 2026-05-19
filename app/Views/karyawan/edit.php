@@ -52,8 +52,10 @@
                             <label class="form-label fw-semibold">Level Akses <span class="text-danger">*</span></label>
                             <select class="form-select" name="level" required>
                                 <option value="kasir"   <?= $karyawan['level'] == 'kasir'   ? 'selected' : '' ?>>Kasir</option>
+                                <?php if(session()->get('level') === 'pemilik'): ?>
                                 <option value="admin"   <?= $karyawan['level'] == 'admin'   ? 'selected' : '' ?>>Admin</option>
                                 <option value="pemilik" <?= $karyawan['level'] == 'pemilik' ? 'selected' : '' ?>>Pemilik</option>
+                                <?php endif; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">

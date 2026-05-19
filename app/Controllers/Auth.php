@@ -1,5 +1,7 @@
 <?php
 
+// app/Controllers/Auth.php
+
 namespace App\Controllers;
 
 use App\Models\MKaryawan;
@@ -34,21 +36,30 @@ class Auth extends BaseController
             return redirect()->to('/login');
         }
 
-        // Gunakan method getLogin dari model (support username & email)
-        $user = $this->karyawanModel->getLogin($identifier, $password);
+        // Dapatkan user berdasarkan username/email
+        $user = $this->karyawanModel->getUserByIdentifier($identifier);
 
         if ($user) {
-            session()->set([
-                'id_karyawan'   => $user->id_karyawan,
-                'nama_karyawan' => $user->nama_karyawan,
-                'username'      => $user->username,
-                'email'         => $user->email ?? '',
-                'level'         => $user->level,
-                'isLoggedIn'    => true,
-            ]);
+            // Periksa apakah akun aktif
+            if ($user->is_aktif == 0) {
+                session()->setFlashdata('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.');
+                return redirect()->to('/login');
+            }
 
-            session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan . '!');
-            return redirect()->to('/dashboard');
+            // Periksa password
+            if (password_verify($password, $user->password)) {
+                session()->set([
+                    'id_karyawan'   => $user->id_karyawan,
+                    'nama_karyawan' => $user->nama_karyawan,
+                    'username'      => $user->username,
+                    'email'         => $user->email ?? '',
+                    'level'         => $user->level,
+                    'isLoggedIn'    => true,
+                ]);
+
+                session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan . '!');
+                return redirect()->to('/dashboard');
+            }
         }
 
         session()->setFlashdata('error', 'Username/email atau password salah.');

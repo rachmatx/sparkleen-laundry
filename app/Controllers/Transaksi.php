@@ -44,7 +44,7 @@ class Transaksi extends BaseController
         $data = [
             'title'      => 'Transaksi Baru',
             'activeMenu' => 'transaksi',
-            'pelanggan'  => $this->pelangganModel->findAll(),
+            'pelanggan'  => $this->pelangganModel->where('is_aktif', 1)->findAll(),
         ];
 
         return view('backend/template/header', $data)
@@ -62,8 +62,8 @@ class Transaksi extends BaseController
             'title'      => 'Pilih Layanan',
             'activeMenu' => 'transaksi',
             'pelanggan'  => $this->pelangganModel->find($id_pelanggan),
-            'layanan'    => $this->layananModel->findAll(),
-            'inventaris' => $this->inventarisModel ? $this->inventarisModel->findAll() : [],
+            'layanan'    => $this->layananModel->where('is_aktif', 1)->findAll(),
+            'inventaris' => $this->inventarisModel ? $this->inventarisModel->where('is_aktif', 1)->findAll() : [],
             'temp'       => $this->tempModel
                                 ->where('id_pelanggan', $id_pelanggan)
                                 ->where('id_kasir', session()->get('id_karyawan'))
@@ -199,7 +199,12 @@ class Transaksi extends BaseController
     // Nota (standalone, tanpa AdminLTE layout)
     public function nota($id_transaksi)
     {
-        $transaksi = $this->transaksiModel->find($id_transaksi);
+        $transaksi = $this->transaksiModel
+            ->select('tb_transaksi.*, tb_karyawan.nama_karyawan as nama_kasir')
+            ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_transaksi.id_kasir')
+            ->where('id_transaksi', $id_transaksi)
+            ->first();
+            
         $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
         $detail    = $this->detailModel->where('id_transaksi', $id_transaksi)->findAll();
 
@@ -312,7 +317,7 @@ class Transaksi extends BaseController
         ]);
 
         if ($status_baru == 'selesai') {
-            $this->transaksiModel->update($id_transaksi, ['tgl_selesai_aktual' => date('Y-m-d')]);
+            $this->transaksiModel->update($id_transaksi, ['tgl_selesai_aktual' => date('Y-m-d H:i:s')]);
         }
 
         session()->setFlashdata('success', 'Status berhasil diubah menjadi ' . ucfirst($status_baru));
@@ -371,11 +376,20 @@ class Transaksi extends BaseController
 
         $sudahDibayar = $totalDibayar->total ?? 0;
         $sisa         = $transaksi['grand_total'] - $sudahDibayar;
-        $sisaSetelah  = $sisa - $nominal_bayar;
+        
+        $kembalian    = 0;
+        $nominal_asli = $nominal_bayar;
+
+        if ($nominal_bayar > $sisa) {
+            $kembalian     = $nominal_bayar - $sisa;
+            $nominal_bayar = $sisa; // Cap the recorded payment to the remaining balance
+        }
+        
+        $sisaSetelah  = $sisa - $nominal_bayar; // will be 0 if paid in full or more
 
         $this->transaksiModel->db->table('tb_pembayaran')->insert([
             'id_transaksi'  => $id_transaksi,
-            'tgl_bayar'     => date('Y-m-d'),
+            'tgl_bayar'     => date('Y-m-d H:i:s'),
             'nominal_bayar' => $nominal_bayar,
             'sisa_tagihan'  => $sisaSetelah,
             'metode_bayar'  => $metode_bayar,
@@ -388,7 +402,13 @@ class Transaksi extends BaseController
             'metode_pembayaran' => $metode_bayar,
         ]);
 
-        session()->setFlashdata('success', 'Pembayaran berhasil disimpan.');
+        if ($kembalian > 0) {
+            session()->setFlashdata('kembalian', $kembalian);
+            session()->setFlashdata('success', 'Pembayaran berhasil. Uang Kembalian: Rp ' . number_format($kembalian, 0, ',', '.'));
+        } else {
+            session()->setFlashdata('success', 'Pembayaran berhasil disimpan.');
+        }
+
         return redirect()->to('/transaksi/pembayaran/' . $id_transaksi);
     }
 }

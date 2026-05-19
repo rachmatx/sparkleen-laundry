@@ -31,3 +31,30 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
    - [Desain] Menggunakan efek Glassmorphism (kaca buram), background gradient dinamis, dan tipografi modern (Inter).
    - [Interaksi] Menambahkan animasi saat input difokuskan (floating labels).
    - [Fungsionalitas] Memperjelas placeholder dan label input menjadi "Username / Email" untuk menandakan bahwa pengguna bisa masuk menggunakan salah satu dari keduanya.
+
+6. MIGRASI DATABASE & PERBAIKAN BUG TABEL
+   - [Database] Mengembalikan (revert) nama tabel `tb_pengguna` kembali menjadi `tb_karyawan` untuk menyesuaikan backup database lama.
+   - [Backend] Menyesuaikan seluruh penamaan kolom `id_pengguna` menjadi `id_karyawan`, serta `nama_pengguna` menjadi `nama_karyawan` di seluruh Controller, Model, dan Views terkait.
+
+7. IMPLEMENTASI SOFT DELETE (KEAMANAN DATA TRANSAKSI)
+   - [Keamanan] Menambahkan kolom `is_aktif` pada tabel `tb_karyawan`, `tb_pelanggan`, `tb_layanan`, dan `tb_inventaris`.
+   - [Backend] Mengganti fungsi Hapus Permanen (`delete`) dengan metode `toggleStatus` di Controller. Mencegah hilangnya riwayat transaksi lama secara tidak sengaja akibat efek relasi ON DELETE CASCADE dari MySQL.
+   - [Frontend] Memperbarui antarmuka daftar tabel, tombol "Hapus" telah disingkirkan dan diganti menjadi tombol Toggle "Nonaktifkan / Aktifkan".
+   - [BugFix] Memperbaiki pesan Error "LogicException" pada saat proses Edit Data dengan mendaftarkan placeholder unik ke dalam $validationRules di Model masing-masing.
+
+8. OPTIMASI AKSES KASIR TERHADAP DATA PELANGGAN
+   - [Role-Based Access] Membuka akses untuk Kasir agar dapat menambah (`create`) dan mengedit (`update`) data pelanggan baru secara langsung. Hal ini memudahkan kasir untuk melayani pelanggan baru tanpa bantuan Admin.
+   - [Keamanan] Akses penonaktifan pelanggan (`toggleStatus`) tetap dikunci dan merupakan hak eksklusif Admin/Pemilik.
+
+9. PENINGKATAN KEAMANAN ROLE-BASED ACCESS CONTROL (RBAC)
+   - [Keamanan] Mengunci pengeditan hierarki akun. Kini "Admin" HANYA BISA mengelola, mengedit, dan menonaktifkan akun Karyawan berlevel "Kasir". Admin tidak diizinkan membuat atau mengubah status sesama Admin atau Pemilik.
+   - [Keamanan] Mencegah pembobolan akses via Inspect Element (Client-Side Manipulation) dan Direct URL (Forced Browsing) dengan memvalidasi input secara ketat di Backend Controller `Karyawan.php`.
+
+10. FITUR PROFIL SAYA & SELF-SERVICE PASSWORD
+    - [Fitur Baru] Menambahkan menu navigasi "Profil Saya" yang bisa diakses langsung melalui dropdown nama pengguna di pojok kanan atas layar.
+    - [Keamanan] Memungkinkan setiap karyawan (terutama Kasir yang tidak bisa mengakses menu Data Karyawan) untuk mengganti password mereka sendiri secara mandiri. Form dikunci aman agar mereka tidak bisa mengubah Level atau Gaji dari celah ini.
+
+11. PERBAIKAN LOGIKA PEMBAYARAN & PENYEMPURNAAN NOTA TERMAL
+    - [BugFix] Memperbaiki celah pada Kalkulasi Pembayaran. Saat pelanggan membayar dengan nominal melebihi tagihan, sistem kini memotongnya dan mencatat tepat sejumlah sisa tagihan, mencegah laporan pendapatan membengkak dan sisa tagihan menjadi minus (-).
+    - [UX] Memunculkan jendela alert hijau bertuliskan "Uang Kembalian: Rp X.XXX" agar kasir tidak lupa mengembalikan sisa uang pelanggan.
+    - [UI] Menambahkan baris informasi "Kasir: Nama Kasir" ke dalam struk cetak (`nota.php`), serta memastikan CSS @media print sudah siap diprint menggunakan printer POS/Termal ukuran standar (58mm/80mm).
