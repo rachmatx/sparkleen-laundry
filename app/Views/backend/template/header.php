@@ -3,47 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Laundry App' ?> - Sistem Laundry</title>
+    <title><?= $title ?? 'Sparkleen' ?> - Sparkleen Laundry</title>
     
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- FontSource Source Sans 3 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/source-sans-3@5.0.12/index.css" />
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
+    
+    <!-- OverlayScrollbars -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" />
     
     <!-- AdminLTE CSS -->
     <link rel="stylesheet" href="/adminlte4/dist/css/adminlte.min.css">
-    
-    <style>
-        .content-wrapper { background: #f4f6f9; }
-        .small-box { border-radius: 10px; }
-    </style>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
-<div class="wrapper">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
     
     <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <!-- Left navbar links -->
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-                    <i class="fas fa-bars"></i>
-                </a>
-            </li>
-        </ul>
-        
-        <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item dropdown">
-                <a class="nav-link" data-toggle="dropdown" href="#">
-                    <i class="fas fa-user"></i> <?= session()->get('nama_karyawan') ?>
-                </a>
-                <div class="dropdown-menu dropdown-menu-right">
-                    <a href="/logout" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+    <nav class="app-header navbar navbar-expand bg-body">
+        <div class="container-fluid">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-lte-toggle="sidebar" href="#" role="button">
+                        <i class="fas fa-bars"></i>
                     </a>
-                </div>
-            </li>
-        </ul>
+                </li>
+            </ul>
+            
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item d-none d-sm-flex align-items-center me-3">
+                    <span class="text-secondary" style="font-weight: 500; font-size: 0.95rem; cursor: default;">
+                        <i class="far fa-clock me-1 opacity-75"></i> 
+                        <span id="topBarClock">--:--:--</span>
+                    </span>
+                </li>                
+                <li class="nav-item dropdown">
+                    <a class="nav-link" data-bs-toggle="dropdown" href="#">
+                        <i class="fas fa-user-circle fs-5 me-1"></i> <span class="fw-medium"><?= session()->get('nama_karyawan') ?></span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a href="/logout" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </nav>

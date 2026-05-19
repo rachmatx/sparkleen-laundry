@@ -1,50 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Laporan Laundry</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .menu { display: flex; gap: 20px; margin-top: 20px; }
-        .card { 
-            border: 1px solid #ddd; 
-            padding: 30px; 
-            border-radius: 8px; 
-            text-align: center;
-            width: 250px;
-            background: #f8f9fa;
-        }
-        .card h2 { margin: 0 0 10px 0; }
-        .card p { color: #666; }
-        .btn { 
-            display: inline-block; 
-            padding: 10px 20px; 
-            background: #007bff; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 5px;
-            margin-top: 15px;
-        }
-        .btn-success { background: #28a745; }
-        .header { margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Laporan Laundry</h1>
-        <a href="/dashboard" class="btn">Kembali ke Dashboard</a>
-    </div>
-    
-    <div class="menu">
-        <div class="card">
-            <h2>📅 Laporan Harian</h2>
-            <p>Lihat pendapatan per hari</p>
-            <a href="/laporan/harian" class="btn btn-success">Lihat</a>
-        </div>
-        <div class="card">
-            <h2>📆 Laporan Bulanan</h2>
-            <p>Lihat pendapatan per bulan</p>
-            <a href="/laporan/bulanan" class="btn btn-success">Lihat</a>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card card-outline card-success">
+            <div class="card-header">
+                <h3 class="card-title">Laporan Harian</h3>
+            </div>
+            <div class="card-body text-center py-4">
+                <i class="fas fa-calendar-day fa-3x text-success mb-3"></i>
+                <h5>Laporan Harian</h5>
+                <p class="text-muted mb-4">Lihat ringkasan transaksi dan pendapatan per hari.</p>
+                <a href="/laporan/harian" class="btn btn-success btn-lg">
+                    <i class="fas fa-arrow-right me-1"></i> Lihat Laporan
+                </a>
+            </div>
         </div>
     </div>
-</body>
-</html>
+    <div class="col-md-6">
+        <div class="card card-outline card-info">
+            <div class="card-header">
+                <h3 class="card-title">Laporan Bulanan</h3>
+            </div>
+            <div class="card-body text-center py-4">
+                <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
+                <h5>Laporan Bulanan</h5>
+                <p class="text-muted mb-4">Lihat ringkasan transaksi dan pendapatan per bulan.</p>
+                <a href="/laporan/bulanan" class="btn btn-info text-white btn-lg">
+                    <i class="fas fa-arrow-right me-1"></i> Lihat Laporan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

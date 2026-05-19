@@ -1,7 +1,47 @@
-<h2>Edit Pelanggan</h2>
-<form action="/pelanggan/update/<?= $pelanggan['id_pelanggan'] ?>" method="post">
-    <label>Nama:</label><br><input type="text" name="nama_pelanggan" value="<?= esc($pelanggan['nama_pelanggan']) ?>" required><br>
-    <label>No Telp:</label><br><input type="text" name="no_telp" value="<?= esc($pelanggan['no_telp']) ?>" required><br>
-    <label>Alamat:</label><br><textarea name="alamat" required><?= esc($pelanggan['alamat']) ?></textarea><br><br>
-    <button type="submit">Update</button>
-</form>
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card card-warning card-outline">
+            <div class="card-header">
+                <h3 class="card-title">Edit Data Pelanggan</h3>
+            </div>
+            <form action="/pelanggan/update/<?= $pelanggan['id_pelanggan'] ?>" method="post">
+                <div class="card-body">
+                    <?php if(session()->getFlashdata('errors')): ?>
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <strong><i class="fas fa-exclamation-triangle me-1"></i> Validasi Gagal:</strong>
+                        <ul class="mb-0 mt-1">
+                            <?php foreach(session()->getFlashdata('errors') as $err): ?>
+                            <li><?= esc($err) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    <?php endif; ?>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Pelanggan <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="nama_pelanggan"
+                               value="<?= esc($pelanggan['nama_pelanggan']) ?>" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">No Telepon <span class="text-danger">*</span></label>
+                        <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control" name="no_telp"
+                               value="<?= esc($pelanggan['no_telp']) ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Alamat <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="alamat" rows="3" required><?= esc($pelanggan['alamat']) ?></textarea>
+                    </div>
+                </div>
+                <!-- UX: Back (kiri), Submit (kanan) -->
+                <div class="card-footer d-flex align-items-center">
+                    <a href="/pelanggan" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Kembali
+                    </a>
+                    <button type="submit" class="btn btn-warning text-dark ms-auto">
+                        <i class="fas fa-save me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

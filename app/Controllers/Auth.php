@@ -13,46 +13,45 @@ class Auth extends BaseController
         $this->karyawanModel = new MKaryawan();
     }
 
-    // Menampilkan halaman login
+    // Halaman login
     public function login()
     {
-        // Jika sudah login, redirect ke dashboard
         if (session()->get('isLoggedIn')) {
             return redirect()->to('/dashboard');
         }
         return view('auth/login');
     }
 
-    // Proses autentikasi login
+    // Proses login — bisa username ATAU email
     public function doLogin()
     {
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
+        $identifier = trim($this->request->getPost('username')); // field name tetap 'username' di form
+        $password   = $this->request->getPost('password');
 
-        // Cari user berdasarkan username
-        $builder = $this->karyawanModel->db->table('tb_karyawan');
-        $builder->where('username', $username);
-        $query = $builder->get();
-        $user = $query->getRow();
-
-        if ($user) {
-            // Verifikasi password
-            if (password_verify($password, $user->password)) {
-                // Set session
-                session()->set([
-                    'id_karyawan' => $user->id_karyawan,
-                    'nama_karyawan' => $user->nama_karyawan,
-                    'username' => $user->username,
-                    'level' => $user->level,
-                    'isLoggedIn' => true
-                ]);
-
-                session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan);
-                return redirect()->to('/dashboard');
-            }
+        // Validasi input dasar
+        if (empty($identifier) || empty($password)) {
+            session()->setFlashdata('error', 'Username/email dan password wajib diisi.');
+            return redirect()->to('/login');
         }
 
-        session()->setFlashdata('error', 'Username atau password salah!');
+        // Gunakan method getLogin dari model (support username & email)
+        $user = $this->karyawanModel->getLogin($identifier, $password);
+
+        if ($user) {
+            session()->set([
+                'id_karyawan'   => $user->id_karyawan,
+                'nama_karyawan' => $user->nama_karyawan,
+                'username'      => $user->username,
+                'email'         => $user->email ?? '',
+                'level'         => $user->level,
+                'isLoggedIn'    => true,
+            ]);
+
+            session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan . '!');
+            return redirect()->to('/dashboard');
+        }
+
+        session()->setFlashdata('error', 'Username/email atau password salah.');
         return redirect()->to('/login');
     }
 
@@ -60,7 +59,7 @@ class Auth extends BaseController
     public function logout()
     {
         session()->destroy();
-        session()->setFlashdata('success', 'Anda telah logout');
+        session()->setFlashdata('success', 'Anda telah berhasil logout.');
         return redirect()->to('/login');
     }
 }

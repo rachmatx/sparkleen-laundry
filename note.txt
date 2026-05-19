@@ -1,0 +1,33 @@
+LOG PERUBAHAN & PENAMBAHAN FITUR - SPARKLEEN LAUNDRY
+====================================================
+Tanggal Update: 19 Mei 2026
+
+Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur yang telah dilakukan pada sistem:
+
+1. PERBAIKAN SISTEM INVENTARIS & TRANSAKSI
+   - [BugFix] Menyelesaikan masalah "Race Condition" pada saat menyimpan transaksi. Data penggunaan inventaris (sabun/pewangi) yang tadinya dikumpulkan menggunakan JavaScript rentan gagal terkirim (kosong). Kini diubah menggunakan mekanisme Form HTML5 Native (menggunakan atribut form="formSimpan").
+   - [BugFix] Menghilangkan error DatabaseException terkait kolom "created_at" pada Model MPenggunaanInventaris dengan mematikan fitur auto-timestamps ($useTimestamps = false).
+   - [Keamanan] Membersihkan database dari suntikan kode berbahaya (XSS) pada nama barang inventaris ("Sabun Cuci").
+   - [UX/UI] Memindahkan form "Catat Pemakaian Inventaris" dari kolom kiri ke kolom kanan, tepat di atas tombol "Konfirmasi & Simpan". Ini memperbaiki alur kerja kasir agar logis: Tambah layanan ke keranjang -> Catat inventaris -> Simpan.
+
+2. PENYEMPURNAAN SISTEM NOTIFIKASI
+   - [UI] Menyeragamkan semua notifikasi Sukses (alert-success) menjadi model "Toast" melayang di pojok kanan atas aplikasi.
+   - [Animasi] Menambahkan animasi transisi halus (scale & fade) pada notifikasi Toast.
+   - [Fungsionalitas] Notifikasi Sukses kini otomatis menghilang (auto-hide) setelah 3 detik.
+   - [UX] Notifikasi Error (alert-danger) dibiarkan statis di tempat asalnya agar kasir/pengguna punya waktu untuk membaca pesan error panjang tanpa takut notifikasi menghilang.
+
+3. FITUR ZONA WAKTU & JAM REAL-TIME
+   - [Fitur Baru] Menambahkan Jam Digital Real-Time di Top Bar (Header) yang berjalan setiap detik.
+   - [UI] Jam digital di Top Bar didesain minimalis (tanpa border/kotak) agar menyatu elegan dengan tema dashboard.
+   - [Fitur Baru] Menyesuaikan jam cetak pada Struk/Nota. Sistem kini mencetak waktu persis berdasarkan zona waktu lokal perangkat/komputer kasir menggunakan JavaScript, bukan lagi mengandalkan zona waktu Server PHP.
+
+4. WAKTU ESTIMASI SELESAI (JAM & MENIT)
+   - [Database] Melakukan migrasi/perubahan struktur tabel `tb_transaksi`. Mengubah tipe data kolom `tgl_masuk`, `tgl_selesai_estimasi`, dan `tgl_selesai_aktual` dari DATE menjadi DATETIME agar bisa menyimpan jam dan menit.
+   - [Fitur Baru] Menambahkan form input "Tgl & Jam Estimasi Selesai" pada halaman pembuatan transaksi baru.
+   - [UI] Memperbarui format tampilan tanggal di halaman Nota Cetak, Detail Transaksi, dan Daftar Transaksi agar menampilkan format lengkap beserta jam dan menit (Contoh: 19/05/2026 14:30).
+
+5. PEROMBAKAN HALAMAN LOGIN
+   - [UI/UX] Mendesain ulang total halaman Login (login.php) menjadi tampilan Premium & Modern.
+   - [Desain] Menggunakan efek Glassmorphism (kaca buram), background gradient dinamis, dan tipografi modern (Inter).
+   - [Interaksi] Menambahkan animasi saat input difokuskan (floating labels).
+   - [Fungsionalitas] Memperjelas placeholder dan label input menjadi "Username / Email" untuk menandakan bahwa pengguna bisa masuk menggunakan salah satu dari keduanya.

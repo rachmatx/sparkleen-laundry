@@ -7,6 +7,8 @@ use App\Models\MLayanan;
 use App\Models\MTransaksi;
 use App\Models\MDetailTransaksi;
 use App\Models\MTempPeminjaman;
+use App\Models\MInventaris;
+use App\Models\MPenggunaanInventaris;
 
 class Transaksi extends BaseController
 {
@@ -15,62 +17,82 @@ class Transaksi extends BaseController
     protected $transaksiModel;
     protected $detailModel;
     protected $tempModel;
+    protected $inventarisModel;
+    protected $penggunaanModel;
 
     public function __construct()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            header('Location: ' . base_url('/login'));
+            exit();
         }
 
-        $this->pelangganModel = new MPelanggan();
-        $this->layananModel = new MLayanan();
-        $this->transaksiModel = new MTransaksi();
-        $this->detailModel = new MDetailTransaksi();
-        $this->tempModel = new MTempPeminjaman();
+        $this->pelangganModel  = new MPelanggan();
+        $this->layananModel    = new MLayanan();
+        $this->transaksiModel  = new MTransaksi();
+        $this->detailModel     = new MDetailTransaksi();
+        $this->tempModel       = new MTempPeminjaman();
+
+        // Inventaris bersifat opsional — muat hanya jika tabel tersedia
+        $this->inventarisModel = new MInventaris();
+        $this->penggunaanModel = new MPenggunaanInventaris();
     }
 
     // Step 1: Pilih pelanggan
     public function index()
     {
-        $data['pelanggan'] = $this->pelangganModel->findAll();
-        return view('transaksi/step1', $data);
+        $data = [
+            'title'      => 'Transaksi Baru',
+            'activeMenu' => 'transaksi',
+            'pelanggan'  => $this->pelangganModel->findAll(),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('transaksi/step1', $data)
+             . view('backend/template/footer');
     }
 
-    // Step 2: Pilih layanan (setelah memilih pelanggan)
+    // Step 2: Pilih layanan + inventaris
     public function pilihLayanan($id_pelanggan)
     {
         session()->set('id_pelanggan_transaksi', $id_pelanggan);
-        
-        $data['pelanggan'] = $this->pelangganModel->find($id_pelanggan);
-        $data['layanan'] = $this->layananModel->findAll();  // ← Kirim semua layanan
-        $data['temp'] = $this->tempModel
-            ->where('id_pelanggan', $id_pelanggan)
-            ->where('id_kasir', session()->get('id_karyawan'))
-            ->findAll();
-        
-        return view('transaksi/step2', $data);
+
+        $data = [
+            'title'      => 'Pilih Layanan',
+            'activeMenu' => 'transaksi',
+            'pelanggan'  => $this->pelangganModel->find($id_pelanggan),
+            'layanan'    => $this->layananModel->findAll(),
+            'inventaris' => $this->inventarisModel ? $this->inventarisModel->findAll() : [],
+            'temp'       => $this->tempModel
+                                ->where('id_pelanggan', $id_pelanggan)
+                                ->where('id_kasir', session()->get('id_karyawan'))
+                                ->findAll(),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('transaksi/step2', $data)
+             . view('backend/template/footer');
     }
 
     // Tambah ke keranjang
     public function addToCart()
     {
         $id_pelanggan = session()->get('id_pelanggan_transaksi');
-        $id_layanan = $this->request->getPost('id_layanan');
-        $berat = $this->request->getPost('berat');
+        $id_layanan   = $this->request->getPost('id_layanan');
+        $berat        = $this->request->getPost('berat');
 
-        // Ambil harga layanan
         $layanan = $this->layananModel->find($id_layanan);
-        $harga = $layanan['harga_per_kg'];
-        $subtotal = $berat * $harga;
 
         $this->tempModel->save([
             'id_pelanggan' => $id_pelanggan,
-            'id_kasir' => session()->get('id_karyawan'),
-            'id_layanan' => $id_layanan,
-            'berat' => $berat,
+            'id_kasir'     => session()->get('id_karyawan'),
+            'id_layanan'   => $id_layanan,
+            'berat'        => $berat,
         ]);
 
-        session()->setFlashdata('success', 'Layanan ditambahkan ke keranjang');
+        session()->setFlashdata('success', 'Layanan ditambahkan ke keranjang.');
         return redirect()->to('/transaksi/pilih-layanan/' . $id_pelanggan);
     }
 
@@ -78,24 +100,23 @@ class Transaksi extends BaseController
     public function removeFromCart($id_temp)
     {
         $this->tempModel->delete($id_temp);
-        session()->setFlashdata('success', 'Item dihapus dari keranjang');
+        session()->setFlashdata('success', 'Item dihapus dari keranjang.');
         return redirect()->back();
     }
 
-    // Simpan transaksi
+    // Simpan transaksi + catat penggunaan inventaris
     public function simpanTransaksi()
     {
         $id_pelanggan = session()->get('id_pelanggan_transaksi');
-        $id_kasir = session()->get('id_karyawan');
+        $id_kasir     = session()->get('id_karyawan');
 
-        // Ambil semua item dari keranjang
         $items = $this->tempModel
             ->where('id_pelanggan', $id_pelanggan)
             ->where('id_kasir', $id_kasir)
             ->findAll();
 
         if (empty($items)) {
-            session()->setFlashdata('error', 'Keranjang kosong!');
+            session()->setFlashdata('error', 'Keranjang masih kosong!');
             return redirect()->to('/transaksi');
         }
 
@@ -104,50 +125,69 @@ class Transaksi extends BaseController
         $total_biaya = 0;
 
         foreach ($items as $item) {
-            $layanan = $this->layananModel->find($item['id_layanan']);
-            $harga = $layanan['harga_per_kg'];
-            $subtotal = $item['berat'] * $harga;
-            
+            $layanan  = $this->layananModel->find($item['id_layanan']);
+            $subtotal = $item['berat'] * $layanan['harga_per_kg'];
             $total_berat += $item['berat'];
             $total_biaya += $subtotal;
         }
 
-        // Estimasi selesai (H+2 dari tgl masuk)
-        $estimasi = date('Y-m-d', strtotime('+2 days'));
+        // Simpan transaksi
+        $estimasiSelesai = $this->request->getPost('tgl_selesai_estimasi') ?? date('Y-m-d H:i:s', strtotime('+2 days'));
 
-        // Simpan ke tb_transaksi
         $dataTransaksi = [
-            'no_nota' => $this->transaksiModel->generateNota(),
-            'id_pelanggan' => $id_pelanggan,
-            'id_kasir' => $id_kasir,
-            'tgl_masuk' => date('Y-m-d'),
-            'tgl_selesai_estimasi' => $estimasi,
-            'total_berat' => $total_berat,
-            'total_biaya' => $total_biaya,
-            'grand_total' => $total_biaya,
-            'status' => 'menunggu',
-            'status_pembayaran' => 'belum',
+            'no_nota'              => $this->transaksiModel->generateNota(),
+            'id_pelanggan'         => $id_pelanggan,
+            'id_kasir'             => $id_kasir,
+            'tgl_masuk'            => date('Y-m-d H:i:s'),
+            'tgl_selesai_estimasi' => date('Y-m-d H:i:s', strtotime($estimasiSelesai)),
+            'total_berat'          => $total_berat,
+            'total_biaya'          => $total_biaya,
+            'grand_total'          => $total_biaya,
+            'status'               => 'menunggu',
+            'status_pembayaran'    => 'belum',
         ];
 
         $this->transaksiModel->save($dataTransaksi);
         $id_transaksi = $this->transaksiModel->insertID();
 
-        // Simpan ke tb_detail_transaksi
+        // Simpan detail layanan
         foreach ($items as $item) {
-            $layanan = $this->layananModel->find($item['id_layanan']);
-            $harga = $layanan['harga_per_kg'];
-            $subtotal = $item['berat'] * $harga;
+            $layanan  = $this->layananModel->find($item['id_layanan']);
+            $subtotal = $item['berat'] * $layanan['harga_per_kg'];
 
             $this->detailModel->save([
                 'id_transaksi' => $id_transaksi,
-                'id_layanan' => $item['id_layanan'],
-                'berat' => $item['berat'],
-                'harga_satuan' => $harga,
-                'subtotal' => $subtotal,
+                'id_layanan'   => $item['id_layanan'],
+                'berat'        => $item['berat'],
+                'harga_satuan' => $layanan['harga_per_kg'],
+                'subtotal'     => $subtotal,
             ]);
         }
 
-        // Hapus keranjang
+        // Catat penggunaan inventaris & kurangi stok (jika inventaris tersedia)
+        if ($this->inventarisModel && $this->penggunaanModel) {
+            // Checkbox only submits when checked — get array of checked IDs
+            $inventarisIds = $this->request->getPost('inv_id') ?? [];
+
+            foreach ($inventarisIds as $id_inv) {
+                $id_inv = (int)$id_inv;
+                // Each item has its own named field: inv_jumlah_1, inv_ket_1, etc.
+                $jumlah = (float)($this->request->getPost('inv_jumlah_' . $id_inv) ?? 0);
+                $ket    = $this->request->getPost('inv_ket_' . $id_inv) ?? '';
+
+                if ($id_inv > 0 && $jumlah > 0) {
+                    $this->penggunaanModel->save([
+                        'id_transaksi'  => $id_transaksi,
+                        'id_inventaris' => $id_inv,
+                        'jumlah_pakai'  => $jumlah,
+                        'keterangan'    => $ket,
+                    ]);
+                    $this->inventarisModel->kurangiStok($id_inv, $jumlah);
+                }
+            }
+        }
+
+        // Bersihkan keranjang
         $this->tempModel->where('id_pelanggan', $id_pelanggan)
             ->where('id_kasir', $id_kasir)
             ->delete();
@@ -156,27 +196,22 @@ class Transaksi extends BaseController
         return redirect()->to('/transaksi/nota/' . $id_transaksi);
     }
 
-    // Tampilkan nota
+    // Nota (standalone, tanpa AdminLTE layout)
     public function nota($id_transaksi)
     {
         $transaksi = $this->transaksiModel->find($id_transaksi);
         $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
-        $detail = $this->detailModel->where('id_transaksi', $id_transaksi)->findAll();
-        
+        $detail    = $this->detailModel->where('id_transaksi', $id_transaksi)->findAll();
+
         foreach ($detail as &$d) {
             $d['layanan'] = $this->layananModel->find($d['id_layanan']);
         }
 
-        $data = [
-            'transaksi' => $transaksi,
-            'pelanggan' => $pelanggan,
-            'detail' => $detail
-        ];
-
+        $data = compact('transaksi', 'pelanggan', 'detail');
         return view('transaksi/nota', $data);
     }
 
-    // Menampilkan daftar semua transaksi
+    // Daftar transaksi
     public function daftar()
     {
         $transaksi = $this->transaksiModel
@@ -184,12 +219,20 @@ class Transaksi extends BaseController
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->orderBy('tb_transaksi.id_transaksi', 'DESC')
             ->findAll();
-        
-        $data['transaksi'] = $transaksi;
-        return view('transaksi/daftar', $data);
+
+        $data = [
+            'title'      => 'Daftar Transaksi',
+            'activeMenu' => 'daftar_transaksi',
+            'transaksi'  => $transaksi,
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('transaksi/daftar', $data)
+             . view('backend/template/footer');
     }
 
-    // Menampilkan detail transaksi
+    // Detail transaksi
     public function detail($id_transaksi)
     {
         $transaksi = $this->transaksiModel
@@ -198,13 +241,13 @@ class Transaksi extends BaseController
             ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_transaksi.id_kasir')
             ->where('tb_transaksi.id_transaksi', $id_transaksi)
             ->first();
-        
+
         $detail = $this->detailModel
             ->select('tb_detail_transaksi.*, tb_layanan.nama_layanan')
             ->join('tb_layanan', 'tb_layanan.id_layanan = tb_detail_transaksi.id_layanan')
             ->where('id_transaksi', $id_transaksi)
             ->findAll();
-        
+
         $statusLog = $this->transaksiModel->db->table('tb_status_log')
             ->select('tb_status_log.*, tb_karyawan.nama_karyawan')
             ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_status_log.id_karyawan')
@@ -212,139 +255,140 @@ class Transaksi extends BaseController
             ->orderBy('tgl_ubah', 'DESC')
             ->get()
             ->getResultArray();
-        
+
+        $penggunaanInventaris = $this->penggunaanModel->getByTransaksi($id_transaksi);
+
         $data = [
-            'transaksi' => $transaksi,
-            'detail' => $detail,
-            'statusLog' => $statusLog
+            'title'                => 'Detail Transaksi',
+            'activeMenu'           => 'daftar_transaksi',
+            'transaksi'            => $transaksi,
+            'detail'               => $detail,
+            'statusLog'            => $statusLog,
+            'penggunaanInventaris' => $penggunaanInventaris,
         ];
-        
-        return view('transaksi/detail', $data);
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('transaksi/detail', $data)
+             . view('backend/template/footer');
     }
 
-    // Menampilkan form update status
+    // Form update status
     public function ubahStatus($id_transaksi)
     {
         $transaksi = $this->transaksiModel->find($id_transaksi);
-        $data['transaksi'] = $transaksi;
-        return view('transaksi/ubah_status', $data);
+
+        $data = [
+            'title'      => 'Update Status Transaksi',
+            'activeMenu' => 'daftar_transaksi',
+            'transaksi'  => $transaksi,
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('transaksi/ubah_status', $data)
+             . view('backend/template/footer');
     }
 
     // Proses update status
     public function prosesUbahStatus()
     {
         $id_transaksi = $this->request->getPost('id_transaksi');
-        $status_baru = $this->request->getPost('status');
-        $catatan = $this->request->getPost('catatan');
-        
-        // Ambil status lama
-        $transaksi = $this->transaksiModel->find($id_transaksi);
+        $status_baru  = $this->request->getPost('status');
+        $catatan      = $this->request->getPost('catatan');
+
+        $transaksi   = $this->transaksiModel->find($id_transaksi);
         $status_lama = $transaksi['status'];
-        
-        // Update status di tb_transaksi
-        $this->transaksiModel->update($id_transaksi, [
-            'status' => $status_baru
-        ]);
-        
-        // Catat ke tb_status_log
+
+        $this->transaksiModel->update($id_transaksi, ['status' => $status_baru]);
+
         $this->transaksiModel->db->table('tb_status_log')->insert([
             'id_transaksi' => $id_transaksi,
-            'status_lama' => $status_lama,
-            'status_baru' => $status_baru,
-            'tgl_ubah' => date('Y-m-d H:i:s'),
-            'id_karyawan' => session()->get('id_karyawan'),
-            'catatan' => $catatan
+            'status_lama'  => $status_lama,
+            'status_baru'  => $status_baru,
+            'tgl_ubah'     => date('Y-m-d H:i:s'),
+            'id_karyawan'  => session()->get('id_karyawan'),
+            'catatan'      => $catatan,
         ]);
-        
-        // Jika status selesai, update tgl_selesai_aktual
+
         if ($status_baru == 'selesai') {
-            $this->transaksiModel->update($id_transaksi, [
-                'tgl_selesai_aktual' => date('Y-m-d')
-            ]);
+            $this->transaksiModel->update($id_transaksi, ['tgl_selesai_aktual' => date('Y-m-d')]);
         }
-        
+
         session()->setFlashdata('success', 'Status berhasil diubah menjadi ' . ucfirst($status_baru));
         return redirect()->to('/transaksi/detail/' . $id_transaksi);
     }
 
-    // Menampilkan form pembayaran
+    // Form pembayaran
     public function pembayaran($id_transaksi)
     {
-        $transaksi = $this->transaksiModel->find($id_transaksi);
-        
-        // Ambil nama pelanggan
-        $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
+        $transaksi    = $this->transaksiModel->find($id_transaksi);
+        $pelanggan    = $this->pelangganModel->find($transaksi['id_pelanggan']);
         $namaPelanggan = $pelanggan['nama_pelanggan'] ?? '-';
-        
-        // Ambil riwayat pembayaran
+
         $pembayaran = $this->transaksiModel->db->table('tb_pembayaran')
             ->where('id_transaksi', $id_transaksi)
             ->orderBy('tgl_bayar', 'DESC')
             ->get()
             ->getResultArray();
-        
-        // Hitung total sudah dibayar dan sisa
+
         $totalDibayar = $this->transaksiModel->db->table('tb_pembayaran')
             ->select('SUM(nominal_bayar) as total')
             ->where('id_transaksi', $id_transaksi)
             ->get()
             ->getRow();
-        
+
         $sudahDibayar = $totalDibayar->total ?? 0;
-        $sisa = $transaksi['grand_total'] - $sudahDibayar;
-        
+        $sisa         = $transaksi['grand_total'] - $sudahDibayar;
+
         $data = [
-            'transaksi' => $transaksi,
+            'title'         => 'Pembayaran',
+            'activeMenu'    => 'daftar_transaksi',
+            'transaksi'     => $transaksi,
             'namaPelanggan' => $namaPelanggan,
-            'pembayaran' => $pembayaran,
-            'sisa' => $sisa
+            'pembayaran'    => $pembayaran,
+            'sisa'          => $sisa,
         ];
-        
-        return view('transaksi/pembayaran', $data);
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('transaksi/pembayaran', $data)
+             . view('backend/template/footer');
     }
 
-    // Proses simpan pembayaran
+    // Simpan pembayaran
     public function simpanPembayaran()
     {
-        $id_transaksi = $this->request->getPost('id_transaksi');
+        $id_transaksi  = $this->request->getPost('id_transaksi');
         $nominal_bayar = $this->request->getPost('nominal_bayar');
-        $metode_bayar = $this->request->getPost('metode_bayar');
-        
-        $transaksi = $this->transaksiModel->find($id_transaksi);
-        
-        // Hitung total sudah dibayar
+        $metode_bayar  = $this->request->getPost('metode_bayar');
+
+        $transaksi    = $this->transaksiModel->find($id_transaksi);
         $totalDibayar = $this->transaksiModel->db->table('tb_pembayaran')
             ->select('SUM(nominal_bayar) as total')
             ->where('id_transaksi', $id_transaksi)
-            ->get()
-            ->getRow();
-        
+            ->get()->getRow();
+
         $sudahDibayar = $totalDibayar->total ?? 0;
-        $sisa = $transaksi['grand_total'] - $sudahDibayar;
-        $sisaSetelah = $sisa - $nominal_bayar;
-        
-        // Simpan pembayaran
+        $sisa         = $transaksi['grand_total'] - $sudahDibayar;
+        $sisaSetelah  = $sisa - $nominal_bayar;
+
         $this->transaksiModel->db->table('tb_pembayaran')->insert([
-            'id_transaksi' => $id_transaksi,
-            'tgl_bayar' => date('Y-m-d'),
+            'id_transaksi'  => $id_transaksi,
+            'tgl_bayar'     => date('Y-m-d'),
             'nominal_bayar' => $nominal_bayar,
-            'sisa_tagihan' => $sisaSetelah,
-            'metode_bayar' => $metode_bayar
+            'sisa_tagihan'  => $sisaSetelah,
+            'metode_bayar'  => $metode_bayar,
         ]);
-        
-        // Update status pembayaran di tb_transaksi
-        if ($sisaSetelah <= 0) {
-            $statusPembayaran = 'lunas';
-        } else {
-            $statusPembayaran = 'cicil';
-        }
-        
+
+        $statusPembayaran = ($sisaSetelah <= 0) ? 'lunas' : 'cicil';
+
         $this->transaksiModel->update($id_transaksi, [
             'status_pembayaran' => $statusPembayaran,
-            'metode_pembayaran' => $metode_bayar
+            'metode_pembayaran' => $metode_bayar,
         ]);
-        
-        session()->setFlashdata('success', 'Pembayaran berhasil disimpan');
+
+        session()->setFlashdata('success', 'Pembayaran berhasil disimpan.');
         return redirect()->to('/transaksi/pembayaran/' . $id_transaksi);
     }
 }

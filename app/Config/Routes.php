@@ -37,6 +37,15 @@ $routes->get('/karyawan/edit/(:num)', 'Karyawan::edit/$1');
 $routes->post('/karyawan/update/(:num)', 'Karyawan::update/$1');
 $routes->get('/karyawan/delete/(:num)', 'Karyawan::delete/$1');
 
+// CRUD Inventaris
+$routes->get('/inventaris', 'Inventaris::index');
+$routes->get('/inventaris/create', 'Inventaris::create');
+$routes->post('/inventaris/store', 'Inventaris::store');
+$routes->get('/inventaris/edit/(:num)', 'Inventaris::edit/$1');
+$routes->post('/inventaris/update/(:num)', 'Inventaris::update/$1');
+$routes->get('/inventaris/delete/(:num)', 'Inventaris::delete/$1');
+$routes->get('/inventaris/warning', 'Inventaris::warning');
+
 // Transaksi
 $routes->get('/transaksi', 'Transaksi::index');
 $routes->get('/transaksi/pilih-layanan/(:num)', 'Transaksi::pilihLayanan/$1');
@@ -67,3 +76,7 @@ $routes->get('/laporan/export_harian_pdf', 'Laporan::export_harian_pdf');
 $routes->get('/laporan/export_bulanan_pdf', 'Laporan::export_bulanan_pdf');
 $routes->get('/laporan/export_harian_excel', 'Laporan::export_harian_excel');
 $routes->get('/laporan/export_bulanan_excel', 'Laporan::export_bulanan_excel');
+
+// Test & Debug (hapus saat production)
+$routes->get('/test', 'Test::index');
+$routes->get('/test/fixdb', 'Test::fixDb');

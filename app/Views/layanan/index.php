@@ -1,39 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Daftar Layanan</title>
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .success { color: green; }
-    </style>
-</head>
-<body>
-    <h1>Daftar Layanan Laundry</h1>
-    <a href="/layanan/create">Tambah Layanan</a>
-    
-    <?php if(session()->getFlashdata('success')): ?>
-        <p class="success"><?= session()->getFlashdata('success') ?></p>
-    <?php endif; ?>
-    
-    <table>
-        <thead>
-            <tr><th>Nama Layanan</th><th>Harga per KG</th><th>Estimasi Hari</th><th>Aksi</th></tr>
-        </thead>
-        <tbody>
-            <?php foreach($layanan as $l): ?>
-            <tr>
-                <td><?= $l['nama_layanan'] ?></td>
-                <td>Rp <?= number_format($l['harga_per_kg'], 0, ',', '.') ?></td>
-                <td><?= $l['estimasi_hari'] ?> hari</td>
-                <td>
-                    <a href="/layanan/edit/<?= $l['id_layanan'] ?>">Edit</a> |
-                    <a href="#" onclick="if(confirm('Yakin hapus?')) window.location.href='/layanan/delete/<?= $l['id_layanan'] ?>'">Hapus</a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</body>
-</html>
+<div class="row">
+    <div class="col-12">
+        <div class="card card-outline card-info">
+            <div class="card-header">
+                <h3 class="card-title">Daftar Layanan Laundry</h3>
+                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                <div class="card-tools">
+                    <a href="/layanan/create" class="btn btn-info btn-sm text-white">
+                        <i class="fas fa-plus me-1"></i> Tambah Layanan
+                    </a>
+                </div>
+                <?php endif; ?>
+            </div>
+            <div class="card-body p-0">
+                <?php if(session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success alert-dismissible m-3 mb-0">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <i class="fas fa-check-circle me-1"></i> <?= session()->getFlashdata('success') ?>
+                    </div>
+                <?php endif; ?>
+                <?php if(session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger alert-dismissible m-3 mb-0">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <i class="fas fa-exclamation-circle me-1"></i> <?= session()->getFlashdata('error') ?>
+                    </div>
+                <?php endif; ?>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50px">No</th>
+                                <th>Nama Layanan</th>
+                                <th>Harga per KG</th>
+                                <th>Estimasi Selesai</th>
+                                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                                <th width="160px" class="text-center">Aksi</th>
+                                <?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if(empty($layanan)): ?>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    <i class="fas fa-soap fa-2x d-block mb-2 opacity-25"></i>
+                                    Belum ada data layanan.
+                                </td>
+                            </tr>
+                            <?php else: ?>
+                            <?php $no = 1; foreach($layanan as $l): ?>
+                            <tr>
+                                <td class="text-center"><?= $no++ ?></td>
+                                <td><?= esc($l['nama_layanan']) ?></td>
+                                <td>Rp <?= number_format($l['harga_per_kg'], 0, ',', '.') ?> / kg</td>
+                                <td><span class="badge text-bg-secondary"><?= $l['estimasi_hari'] ?> hari</span></td>
+                                <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                                <td class="text-center">
+                                    <a href="/layanan/edit/<?= $l['id_layanan'] ?>" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit me-1"></i> Edit
+                                    </a>
+                                    <a href="#"
+                                       onclick="if(confirm('Yakin ingin menghapus layanan ini?')) window.location.href='/layanan/delete/<?= $l['id_layanan'] ?>'"
+                                       class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash me-1"></i> Hapus
+                                    </a>
+                                </td>
+                                <?php endif; ?>
+                            </tr>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

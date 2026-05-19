@@ -7,62 +7,109 @@ use App\Models\MLayanan;
 class Layanan extends BaseController
 {
     protected $layananModel;
+    protected $level;
 
     public function __construct()
     {
-        // Proteksi: cek sudah login atau belum
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            header('Location: ' . base_url('/login'));
+            exit();
         }
-        
+        $this->level        = session()->get('level');
         $this->layananModel = new MLayanan();
     }
 
     public function index()
     {
-        $data['layanan'] = $this->layananModel->findAll();
-        return view('layanan/index', $data);
+        $data = [
+            'title'      => 'Data Layanan',
+            'activeMenu' => 'layanan',
+            'layanan'    => $this->layananModel->findAll(),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('layanan/index', $data)
+             . view('backend/template/footer');
     }
 
     public function create()
     {
-        return view('layanan/create');
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
+            return redirect()->to('/layanan');
+        }
+
+        $data = [
+            'title'      => 'Tambah Layanan',
+            'activeMenu' => 'layanan',
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('layanan/create', $data)
+             . view('backend/template/footer');
     }
 
     public function store()
     {
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            return redirect()->to('/layanan');
+        }
+
         $this->layananModel->save([
-            'nama_layanan' => $this->request->getPost('nama_layanan'),
-            'harga_per_kg' => $this->request->getPost('harga_per_kg'),
+            'nama_layanan'  => $this->request->getPost('nama_layanan'),
+            'harga_per_kg'  => $this->request->getPost('harga_per_kg'),
             'estimasi_hari' => $this->request->getPost('estimasi_hari'),
         ]);
 
-        session()->setFlashdata('success', 'Data layanan berhasil ditambahkan');
+        session()->setFlashdata('success', 'Data layanan berhasil ditambahkan.');
         return redirect()->to('/layanan');
     }
 
     public function edit($id)
     {
-        $data['layanan'] = $this->layananModel->find($id);
-        return view('layanan/edit', $data);
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
+            return redirect()->to('/layanan');
+        }
+
+        $data = [
+            'title'      => 'Edit Layanan',
+            'activeMenu' => 'layanan',
+            'layanan'    => $this->layananModel->find($id),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('layanan/edit', $data)
+             . view('backend/template/footer');
     }
 
     public function update($id)
     {
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            return redirect()->to('/layanan');
+        }
+
         $this->layananModel->update($id, [
-            'nama_layanan' => $this->request->getPost('nama_layanan'),
-            'harga_per_kg' => $this->request->getPost('harga_per_kg'),
+            'nama_layanan'  => $this->request->getPost('nama_layanan'),
+            'harga_per_kg'  => $this->request->getPost('harga_per_kg'),
             'estimasi_hari' => $this->request->getPost('estimasi_hari'),
         ]);
 
-        session()->setFlashdata('success', 'Data layanan berhasil diupdate');
+        session()->setFlashdata('success', 'Data layanan berhasil diupdate.');
         return redirect()->to('/layanan');
     }
 
     public function delete($id)
     {
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            return redirect()->to('/layanan');
+        }
+
         $this->layananModel->delete($id);
-        session()->setFlashdata('success', 'Data layanan berhasil dihapus');
+        session()->setFlashdata('success', 'Data layanan berhasil dihapus.');
         return redirect()->to('/layanan');
     }
 }

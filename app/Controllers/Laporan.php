@@ -16,55 +16,70 @@ class Laporan extends BaseController
     public function __construct()
     {
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            header('Location: ' . base_url('/login'));
+            exit();
         }
-        
+
         $level = session()->get('level');
         if ($level != 'admin' && $level != 'pemilik') {
-            return redirect()->to('/dashboard');
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman laporan.');
+            header('Location: ' . base_url('/dashboard'));
+            exit();
         }
-        
+
         $this->transaksiModel = new MTransaksi();
     }
 
     // Halaman utama laporan
     public function index()
     {
-        return view('laporan/index');
+        $data = [
+            'title'      => 'Laporan',
+            'activeMenu' => 'laporan',
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('laporan/index', $data)
+             . view('backend/template/footer');
     }
 
     // Laporan Harian (Web)
     public function harian()
     {
         $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
-        
+
         $transaksi = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
-        ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
-        ->where('DATE(tgl_masuk)', $tanggal)
-        ->orderBy('id_transaksi', 'DESC')
-        ->findAll();
-    
-    $totalPendapatan = $this->transaksiModel
-        ->select('SUM(grand_total) as total')
-        ->where('DATE(tgl_masuk)', $tanggal)
-        ->first();
-    
-    // Hitung total berat
-    $totalBerat = $this->transaksiModel
-        ->select('SUM(total_berat) as berat')
-        ->where('DATE(tgl_masuk)', $tanggal)
-        ->first();
-    
-    $data = [
-        'transaksi' => $transaksi,
-        'tanggal' => $tanggal,
-        'totalPendapatan' => $totalPendapatan['total'] ?? 0,
-        'jumlahTransaksi' => count($transaksi),
-        'totalBerat' => $totalBerat['berat'] ?? 0   // <-- TAMBAHKAN INI
-    ];
-    
-    return view('laporan/harian', $data);
+            ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
+            ->where('DATE(tgl_masuk)', $tanggal)
+            ->orderBy('id_transaksi', 'DESC')
+            ->findAll();
+
+        $totalPendapatan = $this->transaksiModel
+            ->select('SUM(grand_total) as total')
+            ->where('DATE(tgl_masuk)', $tanggal)
+            ->first();
+
+        $totalBerat = $this->transaksiModel
+            ->select('SUM(total_berat) as berat')
+            ->where('DATE(tgl_masuk)', $tanggal)
+            ->first();
+
+        $data = [
+            'title'            => 'Laporan Harian',
+            'activeMenu'       => 'laporan',
+            'transaksi'        => $transaksi,
+            'tanggal'          => $tanggal,
+            'totalPendapatan'  => $totalPendapatan['total'] ?? 0,
+            'jumlahTransaksi'  => count($transaksi),
+            'totalBerat'       => $totalBerat['berat'] ?? 0,
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('laporan/harian', $data)
+             . view('backend/template/footer');
     }
 
     // Laporan Bulanan (Web)
@@ -72,7 +87,7 @@ class Laporan extends BaseController
     {
         $bulan = $this->request->getGet('bulan') ?? date('m');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
-        
+
         $transaksi = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
@@ -80,13 +95,13 @@ class Laporan extends BaseController
             ->where('YEAR(tgl_masuk)', $tahun)
             ->orderBy('tgl_masuk', 'ASC')
             ->findAll();
-        
+
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
             ->where('MONTH(tgl_masuk)', $bulan)
             ->where('YEAR(tgl_masuk)', $tahun)
             ->first();
-        
+
         $pendapatanPerHari = $this->transaksiModel
             ->select('DATE(tgl_masuk) as tanggal, SUM(grand_total) as total')
             ->where('MONTH(tgl_masuk)', $bulan)
@@ -94,17 +109,22 @@ class Laporan extends BaseController
             ->groupBy('DATE(tgl_masuk)')
             ->orderBy('tanggal', 'ASC')
             ->findAll();
-        
+
         $data = [
-            'transaksi' => $transaksi,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'totalPendapatan' => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi' => count($transaksi),
-            'pendapatanPerHari' => $pendapatanPerHari
+            'title'             => 'Laporan Bulanan',
+            'activeMenu'        => 'laporan',
+            'transaksi'         => $transaksi,
+            'bulan'             => $bulan,
+            'tahun'             => $tahun,
+            'totalPendapatan'   => $totalPendapatan['total'] ?? 0,
+            'jumlahTransaksi'   => count($transaksi),
+            'pendapatanPerHari' => $pendapatanPerHari,
         ];
-        
-        return view('laporan/bulanan', $data);
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('laporan/bulanan', $data)
+             . view('backend/template/footer');
     }
 
     // ==================== EXPORT PDF ====================
@@ -112,32 +132,32 @@ class Laporan extends BaseController
     public function export_harian_pdf()
     {
         $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
-        
+
         $transaksi = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->where('DATE(tgl_masuk)', $tanggal)
             ->findAll();
-        
+
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
             ->where('DATE(tgl_masuk)', $tanggal)
             ->first();
-        
+
         $data = [
-            'transaksi' => $transaksi,
-            'tanggal' => $tanggal,
+            'transaksi'       => $transaksi,
+            'tanggal'         => $tanggal,
             'totalPendapatan' => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi' => count($transaksi)
+            'jumlahTransaksi' => count($transaksi),
         ];
-        
+
         $html = view('laporan/export_harian_pdf', $data);
-        
+
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
-        $dompdf->stream('Laporan_Harian_' . $tanggal . '.pdf', array('Attachment' => false));
+        $dompdf->stream('Laporan_Harian_' . $tanggal . '.pdf', ['Attachment' => false]);
         exit();
     }
 
@@ -145,43 +165,43 @@ class Laporan extends BaseController
     {
         $bulan = $this->request->getGet('bulan') ?? date('m');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
-        
+
         $transaksi = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->where('MONTH(tgl_masuk)', $bulan)
             ->where('YEAR(tgl_masuk)', $tahun)
             ->findAll();
-        
+
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
             ->where('MONTH(tgl_masuk)', $bulan)
             ->where('YEAR(tgl_masuk)', $tahun)
             ->first();
-        
+
         $namaBulan = [
             '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
-            '04' => 'April', '05' => 'Mei', '06' => 'Juni',
-            '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
-            '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+            '04' => 'April',   '05' => 'Mei',       '06' => 'Juni',
+            '07' => 'Juli',    '08' => 'Agustus',   '09' => 'September',
+            '10' => 'Oktober', '11' => 'November',  '12' => 'Desember',
         ];
-        
+
         $data = [
-            'transaksi' => $transaksi,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'namaBulan' => $namaBulan[$bulan],
+            'transaksi'       => $transaksi,
+            'bulan'           => $bulan,
+            'tahun'           => $tahun,
+            'namaBulan'       => $namaBulan[$bulan],
             'totalPendapatan' => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi' => count($transaksi)
+            'jumlahTransaksi' => count($transaksi),
         ];
-        
+
         $html = view('laporan/export_bulanan_pdf', $data);
-        
+
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
-        $dompdf->stream('Laporan_Bulanan_' . $namaBulan[$bulan] . '_' . $tahun . '.pdf', array('Attachment' => false));
+        $dompdf->stream('Laporan_Bulanan_' . $namaBulan[$bulan] . '_' . $tahun . '.pdf', ['Attachment' => false]);
         exit();
     }
 
@@ -190,34 +210,32 @@ class Laporan extends BaseController
     public function export_harian_excel()
     {
         $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
-        
+
         $transaksi = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->where('DATE(tgl_masuk)', $tanggal)
             ->findAll();
-        
+
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
             ->where('DATE(tgl_masuk)', $tanggal)
             ->first();
-        
+
         $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        // Header
-        $sheet->setCellValue('A1', 'LAPORAN HARIAN LAUNDRY');
+        $sheet       = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('A1', 'LAPORAN HARIAN SPARKLEEN LAUNDRY');
         $sheet->setCellValue('A2', 'Tanggal: ' . date('d/m/Y', strtotime($tanggal)));
         $sheet->setCellValue('A3', 'Total Pendapatan: Rp ' . number_format($totalPendapatan['total'] ?? 0, 0, ',', '.'));
         $sheet->setCellValue('A4', 'Jumlah Transaksi: ' . count($transaksi));
-        
+
         $sheet->mergeCells('A1:H1');
         $sheet->mergeCells('A2:H2');
         $sheet->mergeCells('A3:H3');
         $sheet->mergeCells('A4:H4');
         $sheet->getStyle('A1:A4')->getFont()->setBold(true);
-        
-        // Header Tabel
+
         $headers = ['No', 'No Nota', 'Pelanggan', 'Tgl Masuk', 'Total Berat', 'Grand Total', 'Status', 'Status Bayar'];
         $col = 'A';
         foreach ($headers as $header) {
@@ -226,10 +244,9 @@ class Laporan extends BaseController
             $sheet->getStyle($col . '6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0E0E0');
             $col++;
         }
-        
-        // Data
+
         $row = 7;
-        $no = 1;
+        $no  = 1;
         foreach ($transaksi as $t) {
             $sheet->setCellValue('A' . $row, $no++);
             $sheet->setCellValue('B' . $row, $t['no_nota']);
@@ -241,16 +258,15 @@ class Laporan extends BaseController
             $sheet->setCellValue('H' . $row, ucfirst($t['status_pembayaran']));
             $row++;
         }
-        
-        // Auto size & border
+
         foreach (range('A', 'H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-        
+
         $sheet->getStyle('A6:H' . ($row - 1))->applyFromArray([
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
-        
+
         $writer = new Xlsx($spreadsheet);
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="Laporan_Harian_' . $tanggal . '.xlsx"');
@@ -262,43 +278,41 @@ class Laporan extends BaseController
     {
         $bulan = $this->request->getGet('bulan') ?? date('m');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
-        
+
         $transaksi = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->where('MONTH(tgl_masuk)', $bulan)
             ->where('YEAR(tgl_masuk)', $tahun)
             ->findAll();
-        
+
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
             ->where('MONTH(tgl_masuk)', $bulan)
             ->where('YEAR(tgl_masuk)', $tahun)
             ->first();
-        
+
         $namaBulan = [
             '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
-            '04' => 'April', '05' => 'Mei', '06' => 'Juni',
-            '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
-            '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+            '04' => 'April',   '05' => 'Mei',       '06' => 'Juni',
+            '07' => 'Juli',    '08' => 'Agustus',   '09' => 'September',
+            '10' => 'Oktober', '11' => 'November',  '12' => 'Desember',
         ];
-        
+
         $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        // Header
-        $sheet->setCellValue('A1', 'LAPORAN BULANAN LAUNDRY');
+        $sheet       = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('A1', 'LAPORAN BULANAN SPARKLEEN LAUNDRY');
         $sheet->setCellValue('A2', 'Bulan: ' . $namaBulan[$bulan] . ' ' . $tahun);
         $sheet->setCellValue('A3', 'Total Pendapatan: Rp ' . number_format($totalPendapatan['total'] ?? 0, 0, ',', '.'));
         $sheet->setCellValue('A4', 'Jumlah Transaksi: ' . count($transaksi));
-        
+
         $sheet->mergeCells('A1:I1');
         $sheet->mergeCells('A2:I2');
         $sheet->mergeCells('A3:I3');
         $sheet->mergeCells('A4:I4');
         $sheet->getStyle('A1:A4')->getFont()->setBold(true);
-        
-        // Header Tabel
+
         $headers = ['No', 'No Nota', 'Pelanggan', 'Tgl Masuk', 'Tgl Selesai', 'Total Berat', 'Grand Total', 'Status', 'Status Bayar'];
         $col = 'A';
         foreach ($headers as $header) {
@@ -307,10 +321,9 @@ class Laporan extends BaseController
             $sheet->getStyle($col . '6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0E0E0');
             $col++;
         }
-        
-        // Data
+
         $row = 7;
-        $no = 1;
+        $no  = 1;
         foreach ($transaksi as $t) {
             $sheet->setCellValue('A' . $row, $no++);
             $sheet->setCellValue('B' . $row, $t['no_nota']);
@@ -323,16 +336,15 @@ class Laporan extends BaseController
             $sheet->setCellValue('I' . $row, ucfirst($t['status_pembayaran']));
             $row++;
         }
-        
-        // Auto size & border
+
         foreach (range('A', 'I') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-        
+
         $sheet->getStyle('A6:I' . ($row - 1))->applyFromArray([
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
         ]);
-        
+
         $writer = new Xlsx($spreadsheet);
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="Laporan_Bulanan_' . $namaBulan[$bulan] . '_' . $tahun . '.xlsx"');

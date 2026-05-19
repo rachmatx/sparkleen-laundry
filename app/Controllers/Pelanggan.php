@@ -7,70 +7,122 @@ use App\Models\MPelanggan;
 class Pelanggan extends BaseController
 {
     protected $pelangganModel;
+    protected $level;
 
     public function __construct()
     {
-        // Proteksi: cek sudah login atau belum
         if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login');
+            header('Location: ' . base_url('/login'));
+            exit();
         }
-        
+        $this->level          = session()->get('level');
         $this->pelangganModel = new MPelanggan();
     }
 
-    // Menampilkan semua data pelanggan
     public function index()
     {
-        $data['pelanggan'] = $this->pelangganModel->findAll();
-        return view('pelanggan/index', $data); // view sederhana dulu
+        $data = [
+            'title'      => 'Data Pelanggan',
+            'activeMenu' => 'pelanggan',
+            'pelanggan'  => $this->pelangganModel->findAll(),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('pelanggan/index', $data)
+             . view('backend/template/footer');
     }
 
-    // Form tambah pelanggan
     public function create()
     {
-        $data['kode'] = $this->pelangganModel->generateKode();
-        return view('pelanggan/create', $data);
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
+            return redirect()->to('/pelanggan');
+        }
+
+        $data = [
+            'title'      => 'Tambah Pelanggan',
+            'activeMenu' => 'pelanggan',
+            'kode'       => $this->pelangganModel->generateKode(),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('pelanggan/create', $data)
+             . view('backend/template/footer');
     }
 
-    // Simpan data pelanggan
     public function store()
     {
-        $this->pelangganModel->save([
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            return redirect()->to('/pelanggan');
+        }
+
+        $data = [
             'kode_pelanggan' => $this->request->getPost('kode_pelanggan'),
             'nama_pelanggan' => $this->request->getPost('nama_pelanggan'),
-            'no_telp' => $this->request->getPost('no_telp'),
-            'alamat' => $this->request->getPost('alamat'),
-        ]);
+            'no_telp'        => $this->request->getPost('no_telp'),
+            'alamat'         => $this->request->getPost('alamat'),
+        ];
 
-        session()->setFlashdata('success', 'Data pelanggan berhasil ditambahkan');
+        if (!$this->pelangganModel->save($data)) {
+            session()->setFlashdata('errors', $this->pelangganModel->errors());
+            return redirect()->to('/pelanggan/create')->withInput();
+        }
+
+        session()->setFlashdata('success', 'Data pelanggan berhasil ditambahkan.');
         return redirect()->to('/pelanggan');
     }
 
-    // Form edit pelanggan
     public function edit($id)
     {
-        $data['pelanggan'] = $this->pelangganModel->find($id);
-        return view('pelanggan/edit', $data);
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
+            return redirect()->to('/pelanggan');
+        }
+
+        $data = [
+            'title'      => 'Edit Pelanggan',
+            'activeMenu' => 'pelanggan',
+            'pelanggan'  => $this->pelangganModel->find($id),
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('pelanggan/edit', $data)
+             . view('backend/template/footer');
     }
 
-    // Update data pelanggan
     public function update($id)
     {
-        $this->pelangganModel->update($id, [
-            'nama_pelanggan' => $this->request->getPost('nama_pelanggan'),
-            'no_telp' => $this->request->getPost('no_telp'),
-            'alamat' => $this->request->getPost('alamat'),
-        ]);
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            return redirect()->to('/pelanggan');
+        }
 
-        session()->setFlashdata('success', 'Data pelanggan berhasil diupdate');
+        $data = [
+            'id_pelanggan'   => $id,  // Diperlukan untuk is_unique exception
+            'nama_pelanggan' => $this->request->getPost('nama_pelanggan'),
+            'no_telp'        => $this->request->getPost('no_telp'),
+            'alamat'         => $this->request->getPost('alamat'),
+        ];
+
+        if (!$this->pelangganModel->save($data)) {
+            session()->setFlashdata('errors', $this->pelangganModel->errors());
+            return redirect()->to('/pelanggan/edit/' . $id)->withInput();
+        }
+
+        session()->setFlashdata('success', 'Data pelanggan berhasil diupdate.');
         return redirect()->to('/pelanggan');
     }
 
-    // Hapus pelanggan
     public function delete($id)
     {
+        if (!in_array($this->level, ['admin', 'pemilik'])) {
+            return redirect()->to('/pelanggan');
+        }
+
         $this->pelangganModel->delete($id);
-        session()->setFlashdata('success', 'Data pelanggan berhasil dihapus');
+        session()->setFlashdata('success', 'Data pelanggan berhasil dihapus.');
         return redirect()->to('/pelanggan');
     }
 }
