@@ -58,3 +58,50 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
     - [BugFix] Memperbaiki celah pada Kalkulasi Pembayaran. Saat pelanggan membayar dengan nominal melebihi tagihan, sistem kini memotongnya dan mencatat tepat sejumlah sisa tagihan, mencegah laporan pendapatan membengkak dan sisa tagihan menjadi minus (-).
     - [UX] Memunculkan jendela alert hijau bertuliskan "Uang Kembalian: Rp X.XXX" agar kasir tidak lupa mengembalikan sisa uang pelanggan.
     - [UI] Menambahkan baris informasi "Kasir: Nama Kasir" ke dalam struk cetak (`nota.php`), serta memastikan CSS @media print sudah siap diprint menggunakan printer POS/Termal ukuran standar (58mm/80mm).
+
+12. PENYEMPURNAAN SISTEM NOTIFIKASI WHATSAPP (OTOMATIS & MANUAL)
+    - [BugFix] Memperbaiki kesalahan logika (typo) pada library `WhatsAppNotifier.php` di mana pengecekan `$provider === 'link'` tertukar menjadi `$provider === 'fonnte'`. Akibat typo ini, provider `link` sebelumnya tidak dikenali (eror "Provider WhatsApp tidak dikenali"), dan provider `fonnte` terkunci ke mode manual (tidak bisa mengirim otomatis).
+    - [BugFix] Mengubah logika validasi API token di `WhatsAppNotifier.php` dari pemeriksaan string keras (hardcoded) `ddYoPxKGyC6***` menjadi pengecekan string kosong (`empty($this->config->apiToken)`).
+    - [Backend] Mengubah nilai default `apiToken` pada kelas `Config\WhatsApp` menjadi string kosong (`''`) agar token riil pengguna (meskipun sama dengan token contoh) tetap diterima dan diproses sebagai token valid.
+
+13. KEAMANAN REPOSITORI (GIT & KREDENSIAL)
+    - [Keamanan] Memastikan file `.env` yang menyimpan informasi sensitif (database, token API WhatsApp) dikecualikan sepenuhnya dari Git melalui konfigurasi `.gitignore`.
+    - [Keamanan] Membuat file template `.env.example` yang berisi struktur konfigurasi proyek tanpa menyertakan kredensial sensitif asli. Ini berguna sebagai panduan konfigurasi bagi developer baru tanpa membocorkan rahasia.
+    - [Dokumentasi] Memperbarui file `README.md` dengan instruksi detail tentang cara instalasi, konfigurasi file `.env` dari `.env.example`, serta petunjuk integrasi notifikasi WhatsApp.
+
+14. AKTIVASI PERTAHANAN CSRF PADA SETIAP AKSES POST
+    - [Keamanan] Mengaktifkan perlindungan CSRF (Cross-Site Request Forgery) secara global pada `Config\Filters.php` untuk semua request metode `POST` guna mencegah serangan pemalsuan request sisi klien.
+
+15. IMPLEMENTASI GLOBAL AUTHENTICATION FILTER
+    - [Keamanan] Menerapkan `AuthFilter` secara global di `Config\Filters.php` untuk memastikan seluruh rute internal aplikasi mewajibkan kasir/admin/pemilik untuk login terlebih dahulu sebelum bisa mengakses menu, dengan pengecualian rute login (`/`, `/login`, dan `/doLogin`).
+
+16. TOMBOL REVEAL/SHOW PASSWORD (IKON MATA)
+    - [UI/UX] Menambahkan tombol reveal password (ikon mata) pada form login, form tambah/edit karyawan, dan form edit profil saya.
+    - [Fungsionalitas] Mengimplementasikan helper partial `partials/password_field` yang modular serta script Javascript `password-toggle.js` agar pengguna dapat menampilkan/menyembunyikan password dengan nyaman saat mengetik.
+
+17. RATE LIMITING LOGIN (BRUTE-FORCE PROTECTION)
+    - [Keamanan] Mengintegrasikan mekanisme pembatasan percobaan login (rate limit / throttle) dengan library `LoginThrottle` di `Auth.php`. Sistem akan melacak IP address pengguna dan mengunci login sementara waktu jika terdeteksi kesalahan sandi berulang kali secara beruntun.
+
+18. PEMBERSIHAN DRAF & FILE PENGUJIAN PRODUKSI
+    - [Keamanan] Menghapus rute `/test` dari file `Routes.php` serta membersihkan file-file uji sementara seperti `hash.php`, `cek_duplikat.php`, `jalankan_migration.php`, `scratch.php`, dan `public/test.php` agar sistem bersih saat diunggah ke repositori produksi.
+
+19. PENERAPAN LOG AKTIVITAS ADMIN & PENGELOLA
+    - [Fitur Baru] Membuat tabel database `tb_log_aktivitas` dan Model `MLogAktivitas` untuk merekam tindakan-tindakan administratif krusial yang dilakukan oleh pengguna (misalnya: menambah/mengubah karyawan, memperbarui inventaris, dll).
+    - [Backend] Menyediakan helper `activity_log_helper.php` agar pencatatan log aktivitas di setiap Controller berjalan dengan konsisten dan mudah dipanggil.
+
+20. DOKUMENTASI UML & SYSTEM DESIGN DENGAN MERMAID LIVE RENDERER
+    - [Dokumentasi] Merancang diagram UML dan alur sistem Sparkleen Laundry secara lengkap meliputi: Use Case, Activity, Sequence, Class, ERD, Deployment diagram, LRS, dan Flowchart Login. Seluruh dokumentasi terperinci disimpan pada file uml_and_system_design_documentation.md di root proyek.
+    - [Fitur Baru] Membuat aplikasi web single-page interaktif mermaid_renderer.html di root direktori proyek. Aplikasi ini memungkinkan pengguna memuat seluruh diagram preset Sparkleen secara instan, mengedit kode diagram secara langsung dengan live preview, serta mengunduh hasil render diagram dalam format SVG atau gambar PNG (HD) secara client-side langsung dari browser.
+
+21. RESTRUKTURISASI UML DIAGRAM & FITUR TRANSPARANSI EKSPOR RENDERER
+    - [Dokumentasi] Memperbarui struktur `uml_and_system_design_documentation.md` agar menyajikan 11 diagram terperinci: Use Case, 3 Activity Diagram (Proses Transaksi, Update Status, Pembayaran), 2 Sequence Diagram (Proses Transaksi, Proses Pembayaran Cicilan), Class Diagram, ERD, LRS, Deployment Diagram, dan 2 Flowchart (Proses Login, Proses CRUD Pelanggan).
+    - [Fitur Baru] Menambahkan fitur checkbox toggle latar belakang transparan ("Transparan") pada toolbar ekspor `mermaid_renderer.html`. Pengguna kini bisa memilih untuk mengunduh PNG dengan latar belakang transparan (default) atau latar belakang gelap bawaan tema.
+    - [Renderer Preset] Menyesuaikan 11 preset diagram interaktif di dalam `mermaid_renderer.html` agar selaras 100% dengan dokumen UML terbaru dan sistem asli Sparkleen Laundry.
+
+22. PENYEMPURNAAN DAN PERBAIKAN SYNTAX DIAGRAM UML SPARKLEEN
+    - [BugFix] Memperbaiki kesalahan syntax Mermaid pada diagram Activity Transaksi (menghilangkan colons ganda pada penamaan state) dan ERD (mengubah karakter dash '-' menjadi underscore '_' pada penamaan entitas/tabel) untuk mencegah error parser.
+    - [Dokumentasi] Menyempurnakan diagram alur di file dokumen dan renderer preset:
+      - Activity Transaksi: Ditambahkan percabangan registrasi pelanggan baru saat No HP tidak ditemukan.
+      - Sequence Transaksi: Menyisipkan filter keamanan `AuthFilter` dan `CSRF Guard` sebagai komponen pencegat (interceptor) sebelum Controller memproses data.
+      - Class Diagram: Ditambahkan class penunjang filter dan keamanan baru seperti `AuthFilter`, `LoginThrottle`, dan `activity_log_helper`.
+      - ERD Diagram: Menyesuaikan tipe data tanggal transaksi menjadi `datetime` untuk mencerminkan skema database fisik yang presisi.

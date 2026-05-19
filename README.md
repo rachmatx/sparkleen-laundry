@@ -1,69 +1,95 @@
-# CodeIgniter 4 Application Starter
+# Sparkleen Laundry Management System
 
-## What is CodeIgniter?
+A premium laundry management system built on top of **CodeIgniter 4** framework. This application features order tracking, transaction management, payment tracking, inventory usage logs, and WhatsApp notification integration.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## 🚀 Fitur Utama
+1. **Manajemen Transaksi & Kasir**: Pembuatan order, pencetakan nota kasir termal (POS), kalkulasi tagihan, dan sisa kembalian secara presisi.
+2. **Notifikasi WhatsApp**: Integrasi pengiriman notifikasi otomatis via API Fonnte/Wablas atau tautan manual (`wa.me`) ketika pesanan laundry selesai.
+3. **Manajemen Inventaris**: Pengurangan stok otomatis barang habis pakai (seperti sabun/pewangi) saat transaksi diproses.
+4. **Log Perubahan Status & Aktivitas**: Riwayat status laundry terpantau transparan beserta catatan kasir.
+5. **Keamanan & Kontrol Akses (RBAC)**: Pembatasan ketat untuk kasir, admin, dan pemilik (owner).
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+---
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## ⚙️ Persyaratan Sistem
+- **PHP** versi 8.2 atau lebih tinggi.
+- Ekstensi PHP wajib diaktifkan: `intl`, `mbstring`, `json`, `mysqlnd`, `libcurl`.
+- Database **MySQL** / MariaDB.
 
-## Installation & updates
+---
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## 📥 Panduan Instalasi & Setup
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+1. **Clone Repositori & Salin Konfigurasi**:
+   Salin file template `.env.example` menjadi `.env` di direktori utama:
+   ```bash
+   cp .env.example .env
+   ```
 
-## Setup
+2. **Konfigurasi Database & Base URL**:
+   Buka file `.env` yang baru dibuat dan sesuaikan konfigurasi database Anda:
+   ```env
+   CI_ENVIRONMENT = development
+   app.baseURL = 'http://localhost:8080/'
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+   database.default.hostname = localhost
+   database.default.database = nama_database_laundry
+   database.default.username = root
+   database.default.password = 
+   ```
 
-## Important Change with index.php
+3. **Install Dependensi Composer**:
+   ```bash
+   composer install
+   ```
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+4. **Jalankan Migrasi Database**:
+   ```bash
+   php spark db:create nama_database_laundry (jika belum ada database)
+   php spark migrate
+   php spark db:seed (jika ada seeder)
+   ```
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+5. **Jalankan Server Lokal**:
+   ```bash
+   php spark serve
+   ```
+   Aplikasi dapat diakses di `http://localhost:8080` (atau sesuaikan port default Anda).
 
-**Please** read the user guide for a better explanation of how CI4 works!
+---
 
-## Repository Management
+## 🔒 Keamanan Repositori (Git & Kredensial)
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+Untuk menjaga keamanan informasi rahasia proyek:
+- File `.env` **wajib diabaikan** dari Git (tidak boleh di-upload ke GitHub). File ini sudah didaftarkan pada `.gitignore`.
+- Jangan pernah menulis kredensial database asli, password, atau Token API WhatsApp di file selain `.env` lokal Anda.
+- Jika ada penambahan variabel konfigurasi baru, daftarkan variabel baru tersebut ke file `.env.example` dengan nilai kosong/placeholder sebagai panduan bagi developer lain.
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+---
 
-## Server Requirements
+## 💬 Konfigurasi Notifikasi WhatsApp
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+Sistem ini mendukung pengiriman notifikasi otomatis saat status pesanan diubah menjadi **Selesai**. Konfigurasikan ini di file `.env` lokal Anda:
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+```env
+# 1 = aktifkan, 0 = nonaktifkan
+whatsapp.enabled = true
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+# Pilihan provider: link | fonnte | wablas
+whatsapp.provider = fonnte
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+# Token API resmi dari Fonnte / Wablas Anda
+whatsapp.apiToken = TOKEN_API_ANDA_DISINI
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+# URL API (kosongkan saja untuk menggunakan default provider)
+whatsapp.apiUrl = https://api.fonnte.com/send
+
+# Nama Laundry Anda yang akan muncul di teks pesan
+whatsapp.businessName = "Sparkleen Laundry"
+```
+
+### Jenis Provider:
+* **`fonnte` / `wablas`**: Mengirimkan notifikasi WhatsApp secara **otomatis** di latar belakang menggunakan jalur API Gateway masing-masing.
+* **`link` (Manual)**: Tidak mengirim otomatis, melainkan menampilkan tombol **"Kirim WhatsApp"** di halaman Detail Transaksi yang mengarah ke tautan `wa.me` (berisi nomor tujuan & teks template pesan otomatis yang siap dikirim lewat web/aplikasi WhatsApp).
