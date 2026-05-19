@@ -83,17 +83,20 @@
                     </a>
                 </li>
 
-                <li class="nav-header">LAPORAN</li>
+                <?php if (session()->get('level') === 'pemilik'): ?>
                 <li class="nav-item">
-                    <a href="/laporan/bulanan" class="nav-link <?= ($activeMenu ?? '') == 'laporan_bulanan' ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-chart-line"></i>
-                        <p>Laporan Keuangan</p>
+                    <a href="/log-aktivitas" class="nav-link <?= ($activeMenu ?? '') == 'log_aktivitas' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-history"></i>
+                        <p>Log Aktivitas</p>
                     </a>
                 </li>
+                <?php endif; ?>
+
+                <li class="nav-header">LAPORAN</li>
                 <li class="nav-item">
-                    <a href="/laporan" class="nav-link <?= ($activeMenu ?? '') == 'laporan' ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-download"></i>
-                        <p>Unduh Laporan</p>
+                    <a href="/laporan" class="nav-link <?= in_array($activeMenu ?? '', ['laporan', 'laporan_bulanan', 'laporan_harian']) ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-chart-line"></i>
+                        <p>Laporan Keuangan</p>
                     </a>
                 </li>
 

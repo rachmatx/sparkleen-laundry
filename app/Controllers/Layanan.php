@@ -11,10 +11,6 @@ class Layanan extends BaseController
 
     public function __construct()
     {
-        if (!session()->get('isLoggedIn')) {
-            header('Location: ' . base_url('/login'));
-            exit();
-        }
         $this->level        = session()->get('level');
         $this->layananModel = new MLayanan();
     }
