@@ -26,6 +26,7 @@
                 <h3 class="card-title">Tambah Layanan</h3>
             </div>
             <form action="/transaksi/addToCart" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="alert alert-light border py-2 mb-3">
                         <small class="text-muted d-block">Pelanggan</small>
@@ -156,6 +157,7 @@
             <div class="card-footer text-end">
                 <!-- Form konfirmasi simpan (termasuk data inventaris) -->
                 <form action="/transaksi/simpanTransaksi" method="post" id="formSimpan">
+                    <?= csrf_field() ?>
                     <!-- Hidden inputs inventaris akan diisi oleh JavaScript -->
                     <div id="hiddenInventarisContainer"></div>
                     <!-- Penggunaan Inventaris -->

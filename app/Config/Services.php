@@ -19,6 +19,24 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function loginThrottle(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('loginThrottle');
+        }
+
+        return new \App\Libraries\LoginThrottle();
+    }
+
+    public static function whatsapp(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('whatsapp');
+        }
+
+        return new \App\Libraries\WhatsAppNotifier();
+    }
+
     /*
      * public static function example($getShared = true)
      * {

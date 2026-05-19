@@ -19,6 +19,27 @@ function bayarBadgeClass(string $status): string {
 }
 ?>
 
+<?php
+$flashWaLink    = session()->getFlashdata('wa_link');
+$flashWaSuccess = session()->getFlashdata('wa_success');
+$flashWaWarning = session()->getFlashdata('wa_warning');
+$waHref         = $flashWaLink ?: ($waLink ?? null);
+?>
+
+<?php if ($flashWaSuccess): ?>
+<div class="alert alert-success alert-dismissible">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <i class="fab fa-whatsapp me-1"></i> <?= esc($flashWaSuccess) ?>
+</div>
+<?php endif; ?>
+
+<?php if ($flashWaWarning): ?>
+<div class="alert alert-warning alert-dismissible">
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <i class="fas fa-exclamation-triangle me-1"></i> <?= esc($flashWaWarning) ?>
+</div>
+<?php endif; ?>
+
 <!-- Action Buttons Row -->
 <div class="row mb-3">
     <div class="col-12">
@@ -35,6 +56,11 @@ function bayarBadgeClass(string $status): string {
             <?php if($transaksi['status'] != 'diambil'): ?>
             <a href="/transaksi/ubah-status/<?= $transaksi['id_transaksi'] ?>" class="btn btn-warning text-dark">
                 <i class="fas fa-exchange-alt me-1"></i> Update Status
+            </a>
+            <?php endif; ?>
+            <?php if (!empty($waHref) && $transaksi['status'] === 'selesai'): ?>
+            <a href="<?= esc($waHref) ?>" target="_blank" rel="noopener" class="btn btn-success">
+                <i class="fab fa-whatsapp me-1"></i> Kirim WhatsApp
             </a>
             <?php endif; ?>
         </div>

@@ -51,6 +51,7 @@
                 <?php if($sisa > 0): ?>
                 <hr>
                 <form action="/transaksi/simpanPembayaran" method="post">
+                    <?= csrf_field() ?>
                     <input type="hidden" name="id_transaksi" value="<?= $transaksi['id_transaksi'] ?>">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Nominal Bayar <span class="text-danger">*</span></label>

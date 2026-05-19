@@ -22,11 +22,6 @@ class Transaksi extends BaseController
 
     public function __construct()
     {
-        if (!session()->get('isLoggedIn')) {
-            header('Location: ' . base_url('/login'));
-            exit();
-        }
-
         $this->pelangganModel  = new MPelanggan();
         $this->layananModel    = new MLayanan();
         $this->transaksiModel  = new MTransaksi();
@@ -241,7 +236,7 @@ class Transaksi extends BaseController
     public function detail($id_transaksi)
     {
         $transaksi = $this->transaksiModel
-            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, tb_karyawan.nama_karyawan')
+            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, tb_pelanggan.no_telp, tb_karyawan.nama_karyawan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_transaksi.id_kasir')
             ->where('tb_transaksi.id_transaksi', $id_transaksi)
@@ -263,6 +258,18 @@ class Transaksi extends BaseController
 
         $penggunaanInventaris = $this->penggunaanModel->getByTransaksi($id_transaksi);
 
+        $waLink = null;
+        if ($transaksi && $transaksi['status'] === 'selesai') {
+            $notifier = service('whatsapp');
+            $phone    = $notifier->normalizePhone($transaksi['no_telp'] ?? '');
+            if ($phone !== '') {
+                $waLink = $notifier->buildWaMeLink($phone, $notifier->buildOrderSelesaiMessage(
+                    $transaksi,
+                    ['nama_pelanggan' => $transaksi['nama_pelanggan']]
+                ));
+            }
+        }
+
         $data = [
             'title'                => 'Detail Transaksi',
             'activeMenu'           => 'daftar_transaksi',
@@ -270,6 +277,7 @@ class Transaksi extends BaseController
             'detail'               => $detail,
             'statusLog'            => $statusLog,
             'penggunaanInventaris' => $penggunaanInventaris,
+            'waLink'               => $waLink,
         ];
 
         return view('backend/template/header', $data)
@@ -318,6 +326,23 @@ class Transaksi extends BaseController
 
         if ($status_baru == 'selesai') {
             $this->transaksiModel->update($id_transaksi, ['tgl_selesai_aktual' => date('Y-m-d H:i:s')]);
+
+            if ($status_lama !== 'selesai' && $this->request->getPost('kirim_wa') === '1') {
+                $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
+                if ($pelanggan) {
+                    $transaksiFresh = $this->transaksiModel->find($id_transaksi);
+                    $hasil          = service('whatsapp')->notifyOrderSelesai($transaksiFresh, $pelanggan);
+
+                    if ($hasil['success']) {
+                        session()->setFlashdata('wa_success', $hasil['message']);
+                    } else {
+                        if (! empty($hasil['wa_link'])) {
+                            session()->setFlashdata('wa_link', $hasil['wa_link']);
+                        }
+                        session()->setFlashdata('wa_warning', $hasil['message']);
+                    }
+                }
+            }
         }
 
         session()->setFlashdata('success', 'Status berhasil diubah menjadi ' . ucfirst($status_baru));
