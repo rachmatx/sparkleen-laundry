@@ -15,39 +15,53 @@ class Auth extends BaseController
         $this->karyawanModel = new MKaryawan();
     }
 
-    // Halaman login
     public function login()
     {
         if (session()->get('isLoggedIn')) {
             return redirect()->to('/dashboard');
         }
-        return view('auth/login');
+
+        $throttle = service('loginThrottle');
+        $ip       = $this->request->getIPAddress();
+        $blocked  = $throttle->isBlocked($ip);
+
+        return view('auth/login', [
+            'loginBlocked'        => $blocked,
+            'loginBlockedMessage' => $blocked ? $throttle->getBlockedMessage($ip) : '',
+        ]);
     }
 
-    // Proses login — bisa username ATAU email
     public function doLogin()
     {
-        $identifier = trim($this->request->getPost('username')); // field name tetap 'username' di form
+        $throttle   = service('loginThrottle');
+        $ip         = $this->request->getIPAddress();
+        $identifier = trim((string) $this->request->getPost('username'));
         $password   = $this->request->getPost('password');
 
-        // Validasi input dasar
-        if (empty($identifier) || empty($password)) {
-            session()->setFlashdata('error', 'Username/email dan password wajib diisi.');
+        if ($throttle->isBlocked($ip, $identifier)) {
+            session()->setFlashdata('error', $throttle->getBlockedMessage($ip, $identifier));
+
             return redirect()->to('/login');
         }
 
-        // Dapatkan user berdasarkan username/email
+        if ($identifier === '' || empty($password)) {
+            session()->setFlashdata('error', 'Username/email dan password wajib diisi.');
+
+            return redirect()->to('/login');
+        }
+
         $user = $this->karyawanModel->getUserByIdentifier($identifier);
 
         if ($user) {
-            // Periksa apakah akun aktif
             if ($user->is_aktif == 0) {
                 session()->setFlashdata('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.');
+
                 return redirect()->to('/login');
             }
 
-            // Periksa password
             if (password_verify($password, $user->password)) {
+                $throttle->clear($ip, $identifier);
+
                 session()->set([
                     'id_karyawan'   => $user->id_karyawan,
                     'nama_karyawan' => $user->nama_karyawan,
@@ -58,19 +72,27 @@ class Auth extends BaseController
                 ]);
 
                 session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan . '!');
+
                 return redirect()->to('/dashboard');
             }
         }
 
-        session()->setFlashdata('error', 'Username/email atau password salah.');
+        $throttle->recordFailure($ip, $identifier);
+
+        if ($throttle->isBlocked($ip, $identifier)) {
+            session()->setFlashdata('error', $throttle->getBlockedMessage($ip, $identifier));
+        } else {
+            session()->setFlashdata('error', $throttle->getFailureMessage($ip, $identifier));
+        }
+
         return redirect()->to('/login');
     }
 
-    // Logout
     public function logout()
     {
         session()->destroy();
         session()->setFlashdata('success', 'Anda telah berhasil logout.');
+
         return redirect()->to('/login');
     }
 }

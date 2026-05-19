@@ -10,11 +10,6 @@ class Karyawan extends BaseController
 
     public function __construct()
     {
-        if (!session()->get('isLoggedIn')) {
-            header('Location: ' . base_url('/login'));
-            exit();
-        }
-
         if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
             session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
             header('Location: ' . base_url('/dashboard'));
@@ -76,6 +71,16 @@ class Karyawan extends BaseController
 
     public function store()
     {
+        $passwordError = password_validation_error(
+            $this->request->getPost('password'),
+            $this->request->getPost('password_confirm'),
+            true
+        );
+        if ($passwordError !== null) {
+            session()->setFlashdata('errors', ['password' => $passwordError]);
+            return redirect()->to('/karyawan/create')->withInput();
+        }
+
         $data = [
             'nama_karyawan' => $this->request->getPost('nama_karyawan'),
             'username'      => $this->request->getPost('username'),
@@ -100,6 +105,12 @@ class Karyawan extends BaseController
             session()->setFlashdata('errors', $this->karyawanModel->errors());
             return redirect()->to('/karyawan/create')->withInput();
         }
+
+        log_aktivitas('karyawan', 'tambah', (int) $this->karyawanModel->getInsertID(), $data['nama_karyawan'], [
+            'username' => $data['username'],
+            'level'    => $data['level'],
+            'no_telp'  => $data['no_telp'],
+        ]);
 
         session()->setFlashdata('success', 'Data karyawan berhasil ditambahkan.');
         return redirect()->to('/karyawan');
@@ -155,7 +166,17 @@ class Karyawan extends BaseController
         }
 
         $password = $this->request->getPost('password');
-        if (!empty($password)) {
+        $passwordError = password_validation_error(
+            $password,
+            $this->request->getPost('password_confirm'),
+            false
+        );
+        if ($passwordError !== null) {
+            session()->setFlashdata('errors', ['password' => $passwordError]);
+            return redirect()->to('/karyawan/edit/' . $id)->withInput();
+        }
+        $passwordDiubah = ! empty($password);
+        if ($passwordDiubah) {
             $data['password'] = password_hash($password, PASSWORD_DEFAULT);
         }
 
@@ -163,6 +184,14 @@ class Karyawan extends BaseController
             session()->setFlashdata('errors', $this->karyawanModel->errors());
             return redirect()->to('/karyawan/edit/' . $id)->withInput();
         }
+
+        $perubahan = detail_perubahan($target, $data, [
+            'nama_karyawan', 'username', 'level', 'no_telp', 'email', 'gaji_pokok',
+        ]);
+        if ($passwordDiubah) {
+            $perubahan['password'] = 'diubah';
+        }
+        log_aktivitas('karyawan', 'ubah', (int) $id, $data['nama_karyawan'], $perubahan);
 
         session()->setFlashdata('success', 'Data karyawan berhasil diupdate.');
         return redirect()->to('/karyawan');
@@ -175,6 +204,11 @@ class Karyawan extends BaseController
             session()->setFlashdata('error', 'Admin tidak dapat menghapus akun Admin atau Pemilik.');
             return redirect()->to('/karyawan');
         }
+
+        log_aktivitas('karyawan', 'hapus', (int) $id, $target['nama_karyawan'], [
+            'username' => $target['username'],
+            'level'    => $target['level'],
+        ]);
 
         $this->karyawanModel->delete($id);
         session()->setFlashdata('success', 'Data karyawan berhasil dihapus.');
@@ -193,6 +227,10 @@ class Karyawan extends BaseController
         if ($karyawan) {
             $statusBaru = ($karyawan['is_aktif'] == 1) ? 0 : 1;
             $this->karyawanModel->update($id, ['is_aktif' => $statusBaru]);
+            $aksiLog = $statusBaru === 1 ? 'aktifkan' : 'nonaktifkan';
+            log_aktivitas('karyawan', $aksiLog, (int) $id, $karyawan['nama_karyawan'], [
+                'is_aktif' => ['dari' => $karyawan['is_aktif'], 'ke' => $statusBaru],
+            ]);
             $pesan = ($statusBaru == 1) ? 'diaktifkan' : 'dinonaktifkan';
             session()->setFlashdata('success', "Karyawan berhasil $pesan.");
         }

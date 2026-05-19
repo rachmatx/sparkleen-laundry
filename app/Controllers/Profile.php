@@ -10,10 +10,6 @@ class Profile extends BaseController
 
     public function __construct()
     {
-        if (!session()->get('isLoggedIn')) {
-            header('Location: ' . base_url('/login'));
-            exit();
-        }
         $this->karyawanModel = new MKaryawan();
     }
 
@@ -57,9 +53,17 @@ class Profile extends BaseController
             return redirect()->to('/profile')->withInput();
         }
 
-        // Cek jika ganti password
         $password = $this->request->getPost('password');
-        if (!empty($password)) {
+        $passwordError = password_validation_error(
+            $password,
+            $this->request->getPost('password_confirm'),
+            false
+        );
+        if ($passwordError !== null) {
+            session()->setFlashdata('errors', ['password' => $passwordError]);
+            return redirect()->to('/profile')->withInput();
+        }
+        if (! empty($password)) {
             $data['password'] = password_hash($password, PASSWORD_DEFAULT);
         }
 

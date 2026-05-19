@@ -110,6 +110,25 @@
             font-size: 16px;
         }
 
+        .password-toggle-floating > .form-control {
+            padding-right: 48px;
+        }
+        .password-toggle-btn-login {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 6;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            padding: 0.35rem 0.5rem;
+            line-height: 1;
+        }
+        .password-toggle-btn-login:hover {
+            color: #0d6efd;
+        }
+
         .btn-login {
             border-radius: 12px;
             padding: 12px;
@@ -152,6 +171,13 @@
             </div>
             
             <div class="login-body">
+                <?php if (! empty($loginBlocked) && ! session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <i class="fas fa-shield-alt"></i>
+                        <div><?= esc($loginBlockedMessage ?? '') ?></div>
+                    </div>
+                <?php endif; ?>
+
                 <?php if(session()->getFlashdata('error')): ?>
                     <div class="alert alert-danger mb-4" role="alert">
                         <i class="fas fa-exclamation-circle"></i>
@@ -166,24 +192,28 @@
                     </div>
                 <?php endif; ?>
 
-                <form action="/doLogin" method="post">
+                <form action="/doLogin" method="post"<?= ! empty($loginBlocked) ? ' class="pe-none opacity-75"' : '' ?>>
+                    <?= csrf_field() ?>
                     <!-- Username / Email Field -->
                     <div class="form-floating mb-3 position-relative">
                         <i class="fas fa-user input-icon"></i>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Username atau Email" required autocomplete="username">
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Username atau Email" required autocomplete="username"<?= ! empty($loginBlocked) ? ' disabled' : '' ?>>
                         <label for="username">Username / Email</label>
                     </div>
                     
                     <!-- Password Field -->
-                    <div class="form-floating mb-4 position-relative">
+                    <div class="form-floating mb-4 position-relative password-toggle-floating">
                         <i class="fas fa-lock input-icon"></i>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required autocomplete="current-password">
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required autocomplete="current-password"<?= ! empty($loginBlocked) ? ' disabled' : '' ?>>
                         <label for="password">Password</label>
+                        <button type="button" class="password-toggle-btn-login" data-password-target="password" aria-label="Tampilkan password">
+                            <i class="fas fa-eye" aria-hidden="true"></i>
+                        </button>
                     </div>
 
                     <div class="d-grid mt-2">
-                        <button type="submit" class="btn btn-primary btn-login">
-                            Masuk <i class="fas fa-arrow-right ms-1"></i>
+                        <button type="submit" class="btn btn-primary btn-login"<?= ! empty($loginBlocked) ? ' disabled' : '' ?>>
+                            <?= ! empty($loginBlocked) ? 'Login Terkunci' : 'Masuk' ?> <i class="fas fa-arrow-right ms-1"></i>
                         </button>
                     </div>
                 </form>
@@ -197,5 +227,6 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="/js/password-toggle.js"></script>
 </body>
 </html>

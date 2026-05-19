@@ -5,6 +5,7 @@
                 <h3 class="card-title">Tambah Karyawan Baru</h3>
             </div>
             <form action="/karyawan/store" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
 
                     <?php if(session()->getFlashdata('errors')): ?>
@@ -42,10 +43,26 @@
                         <div class="form-text">Bisa digunakan untuk login sebagai alternatif username.</div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="password"
-                               placeholder="Minimal 6 karakter" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <?= view('partials/password_field', [
+                                'id'          => 'password_karyawan_create',
+                                'name'        => 'password',
+                                'label'       => 'Password',
+                                'placeholder' => 'Minimal 6 karakter',
+                                'required'    => true,
+                            ]) ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?= view('partials/password_field', [
+                                'id'           => 'password_karyawan_create_confirm',
+                                'name'         => 'password_confirm',
+                                'label'        => 'Konfirmasi Password',
+                                'placeholder'  => 'Ulangi password',
+                                'required'     => true,
+                                'autocomplete' => 'new-password',
+                            ]) ?>
+                        </div>
                     </div>
 
                     <div class="row">

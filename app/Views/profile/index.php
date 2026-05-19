@@ -5,6 +5,7 @@
                 <h3 class="card-title">Profil Saya</h3>
             </div>
             <form action="/profile/update" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
 
                     <?php if(session()->getFlashdata('errors')): ?>
@@ -56,11 +57,26 @@
                     <hr class="my-4">
                     <h5 class="mb-3 text-secondary"><i class="fas fa-lock me-2"></i> Keamanan Akun</h5>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Ganti Password</label>
-                        <input type="password" class="form-control" name="password"
-                               placeholder="Kosongkan jika tidak ingin mengganti password">
-                        <div class="form-text text-muted">Hanya isi bagian ini jika Anda ingin mengubah password login Anda. Minimal 6 karakter.</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <?= view('partials/password_field', [
+                                'id'           => 'password_profile',
+                                'name'         => 'password',
+                                'label'        => 'Password Baru',
+                                'placeholder'  => 'Kosongkan jika tidak ingin mengganti',
+                                'helpText'     => 'Minimal 6 karakter. Kosongkan jika tidak ingin mengubah.',
+                                'autocomplete' => 'new-password',
+                            ]) ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?= view('partials/password_field', [
+                                'id'           => 'password_profile_confirm',
+                                'name'         => 'password_confirm',
+                                'label'        => 'Konfirmasi Password Baru',
+                                'placeholder'  => 'Ulangi password baru',
+                                'autocomplete' => 'new-password',
+                            ]) ?>
+                        </div>
                     </div>
                     
                     <div class="mt-4 p-3 bg-light rounded border">

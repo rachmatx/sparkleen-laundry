@@ -5,6 +5,7 @@
                 <h3 class="card-title">Edit Data Karyawan</h3>
             </div>
             <form action="/karyawan/update/<?= $karyawan['id_karyawan'] ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
 
                     <?php if(session()->getFlashdata('errors')): ?>
@@ -40,11 +41,25 @@
                         <div class="form-text">Bisa digunakan untuk login sebagai alternatif username.</div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Password</label>
-                        <input type="password" class="form-control" name="password"
-                               placeholder="Kosongkan jika tidak ingin mengubah password">
-                        <div class="form-text text-muted">Biarkan kosong jika tidak ingin mengubah password.</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <?= view('partials/password_field', [
+                                'id'          => 'password_karyawan_edit',
+                                'name'        => 'password',
+                                'label'       => 'Password Baru',
+                                'placeholder' => 'Kosongkan jika tidak ingin mengubah',
+                                'helpText'    => 'Biarkan kosong jika tidak ingin mengubah password.',
+                            ]) ?>
+                        </div>
+                        <div class="col-md-6">
+                            <?= view('partials/password_field', [
+                                'id'           => 'password_karyawan_edit_confirm',
+                                'name'         => 'password_confirm',
+                                'label'        => 'Konfirmasi Password Baru',
+                                'placeholder'  => 'Ulangi password baru',
+                                'autocomplete' => 'new-password',
+                            ]) ?>
+                        </div>
                     </div>
 
                     <div class="row">
