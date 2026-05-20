@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nota Laundry - <?= $transaksi['no_nota'] ?></title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Courier New', Courier, monospace; font-size: 13px; background: #f0f0f0; }
@@ -29,15 +31,18 @@
         .item-table .text-right { text-align: right; }
         .item-table tfoot td { border-top: 1px dashed #999; font-weight: bold; padding-top: 8px; }
         .nota-footer { text-align: center; margin-top: 14px; font-size: 12px; color: #555; line-height: 1.7; }
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .btn-group { display: flex; flex-direction: column; gap: 8px; width: 320px; margin-top: 20px; }
+        .btn-row { display: flex; gap: 10px; width: 100%; }
         .btn {
-            display: inline-block; padding: 8px 20px;
+            display: inline-block; padding: 10px 20px;
             border-radius: 4px; text-decoration: none;
             font-family: Arial, sans-serif; font-size: 14px; cursor: pointer;
             border: 1px solid #ccc; background: #fff;
+            text-align: center;
         }
         .btn-primary { background: #0d6efd; color: #fff; border-color: #0d6efd; }
         .btn-secondary { background: #6c757d; color: #fff; border-color: #6c757d; }
+        .btn-success { background: #25d366; color: #fff; border-color: #25d366; }
         @media print {
             body { background: #fff; }
             .no-print { display: none !important; }
@@ -54,7 +59,6 @@
             <small>Jasa Laundry Profesional</small><br>
             <small id="printTime"></small>
             <script>
-                // Mengambil waktu lokal device/komputer kasir saat ini
                 const now = new Date();
                 const formattedTime = now.toLocaleDateString('id-ID', {
                     day: '2-digit', month: '2-digit', year: 'numeric'
@@ -115,8 +119,28 @@
                     <td class="text-right"><?= $transaksi['total_berat'] ?> kg</td>
                 </tr>
                 <tr>
-                    <td colspan="2">TOTAL BIAYA</td>
+                    <td colspan="2">Subtotal</td>
+                    <td class="text-right">Rp <?= number_format($transaksi['total_biaya'], 0, ',', '.') ?></td>
+                </tr>
+                <?php if (($transaksi['poin_ditebus'] ?? 0) > 0): ?>
+                <tr>
+                    <td colspan="2">Poin Ditebus (<?= $transaksi['poin_ditebus'] ?> pt)</td>
+                    <td class="text-right">-Rp <?= number_format($transaksi['diskon'], 0, ',', '.') ?></td>
+                </tr>
+                <?php endif; ?>
+                <tr>
+                    <td colspan="2">TOTAL BAYAR</td>
                     <td class="text-right">Rp <?= number_format($transaksi['grand_total'], 0, ',', '.') ?></td>
+                </tr>
+                <?php if (($transaksi['poin_diperoleh'] ?? 0) > 0): ?>
+                <tr>
+                    <td colspan="2" style="font-size: 11px; font-weight: normal; color: #555; padding-top: 8px;">Poin Diperoleh</td>
+                    <td class="text-right" style="font-size: 11px; font-weight: normal; color: #555; padding-top: 8px;">+<?= $transaksi['poin_diperoleh'] ?> pt</td>
+                </tr>
+                <?php endif; ?>
+                <tr>
+                    <td colspan="2" style="font-size: 11px; font-weight: normal; color: #555;">Total Poin Pelanggan</td>
+                    <td class="text-right" style="font-size: 11px; font-weight: normal; color: #555;"><?= $pelanggan['poin'] ?> pt</td>
                 </tr>
             </tfoot>
         </table>
@@ -129,8 +153,27 @@
     </div>
 
     <div class="btn-group no-print">
-        <button onclick="window.print()" class="btn btn-primary">Cetak Nota</button>
-        <a href="/transaksi/daftar" class="btn btn-secondary">Kembali</a>
+        <div class="btn-row">
+            <button onclick="window.print()" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-print me-1"></i> Cetak Nota
+            </button>
+            <a href="/transaksi/daftar" class="btn btn-secondary" style="flex: 1;">
+                <i class="fas fa-list me-1"></i> Daftar
+            </a>
+        </div>
+        
+        <?php
+        $nomor = $pelanggan['no_telp'];
+        if (substr($nomor, 0, 1) === '0') {
+            $nomor = '62' . substr($nomor, 1);
+        }
+        $pesanWa = "Halo *" . esc($pelanggan['nama_pelanggan']) . "*,\n\nTerima kasih telah mencuci di *Sparkleen Laundry*.\n\nBerikut rincian pesanan Anda:\n- *No Nota*: " . $transaksi['no_nota'] . "\n- *Total Berat*: " . $transaksi['total_berat'] . " kg\n- *Grand Total*: Rp " . number_format($transaksi['grand_total'], 0, ',', '.') . "\n- *Est. Selesai*: " . date('d/m/Y H:i', strtotime($transaksi['tgl_selesai_estimasi'])) . "\n\nPoin didapat: +" . ($transaksi['poin_diperoleh'] ?? 0) . " pt\nTotal Poin Anda: " . ($pelanggan['poin'] ?? 0) . " pt\n\nSalam bersih & rapi,\n*Sparkleen Laundry*";
+        $waLink = "https://api.whatsapp.com/send?phone=" . urlencode($nomor) . "&text=" . urlencode($pesanWa);
+        ?>
+        
+        <a href="<?= $waLink ?>" target="_blank" class="btn btn-success">
+            <i class="fab fa-whatsapp me-1"></i> Kirim WhatsApp Manual
+        </a>
     </div>
 </div>
 </body>

@@ -5,6 +5,7 @@
                 <h3 class="card-title">Tambah Barang Inventaris</h3>
             </div>
             <form action="/inventaris/store" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Nama Barang <span class="text-danger">*</span></label>

@@ -32,6 +32,8 @@ $routes->post('/layanan/store', 'Layanan::store');
 $routes->get('/layanan/edit/(:num)', 'Layanan::edit/$1');
 $routes->post('/layanan/update/(:num)', 'Layanan::update/$1');
 $routes->get('/layanan/toggle/(:num)', 'Layanan::toggleStatus/$1');
+$routes->get('/layanan/resep/(:num)', 'Layanan::resep/$1');
+$routes->post('/layanan/resep/store/(:num)', 'Layanan::resepStore/$1');
 
 // CRUD Karyawan
 $routes->get('/karyawan', 'Karyawan::index');
@@ -50,6 +52,13 @@ $routes->get('/inventaris/edit/(:num)', 'Inventaris::edit/$1');
 $routes->post('/inventaris/update/(:num)', 'Inventaris::update/$1');
 $routes->get('/inventaris/toggle/(:num)', 'Inventaris::toggleStatus/$1');
 $routes->get('/inventaris/warning', 'Inventaris::warning');
+
+// Log aktivitas (hanya pemilik)
+$routes->get('/log-aktivitas', 'LogAktivitas::index');
+
+// Backup database (admin, pemilik)
+$routes->get('/backup', 'Backup::index');
+$routes->get('/backup/download', 'Backup::download');
 
 // Transaksi
 $routes->get('/transaksi', 'Transaksi::index');
@@ -81,7 +90,3 @@ $routes->get('/laporan/export_harian_pdf', 'Laporan::export_harian_pdf');
 $routes->get('/laporan/export_bulanan_pdf', 'Laporan::export_bulanan_pdf');
 $routes->get('/laporan/export_harian_excel', 'Laporan::export_harian_excel');
 $routes->get('/laporan/export_bulanan_excel', 'Laporan::export_bulanan_excel');
-
-// Test & Debug (hapus saat production)
-$routes->get('/test', 'Test::index');
-$routes->get('/test/fixdb', 'Test::fixDb');

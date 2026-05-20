@@ -31,6 +31,10 @@ class Pelanggan extends BaseController
 
     public function create()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/pelanggan');
+        }
 
         $data = [
             'title'      => 'Tambah Pelanggan',
@@ -46,6 +50,9 @@ class Pelanggan extends BaseController
 
     public function store()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/pelanggan');
+        }
 
         $data = [
             'kode_pelanggan' => $this->request->getPost('kode_pelanggan'),
@@ -65,6 +72,10 @@ class Pelanggan extends BaseController
 
     public function edit($id)
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/pelanggan');
+        }
 
         $data = [
             'title'      => 'Edit Pelanggan',
@@ -80,6 +91,9 @@ class Pelanggan extends BaseController
 
     public function update($id)
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/pelanggan');
+        }
 
         $data = [
             'id_pelanggan'   => $id,  // Diperlukan untuk is_unique exception

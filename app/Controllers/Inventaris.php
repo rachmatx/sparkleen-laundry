@@ -10,7 +10,7 @@ class Inventaris extends BaseController
 
     public function __construct()
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
+        if (!in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])) {
             // Tidak boleh akses: redirect ke dashboard
             session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
             header('Location: ' . base_url('/dashboard'));
@@ -42,6 +42,11 @@ class Inventaris extends BaseController
     // Form tambah
     public function create()
     {
+        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/inventaris');
+        }
+
         $data = [
             'title'      => 'Tambah Inventaris',
             'activeMenu' => 'inventaris',
@@ -56,6 +61,10 @@ class Inventaris extends BaseController
     // Simpan
     public function store()
     {
+        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
+            return redirect()->to('/inventaris');
+        }
+
         $data = [
             'nama_barang'  => $this->request->getPost('nama_barang'),
             'stok'         => (float) $this->request->getPost('stok'),
@@ -80,6 +89,11 @@ class Inventaris extends BaseController
     // Form edit
     public function edit($id)
     {
+        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/inventaris');
+        }
+
         $data = [
             'title'      => 'Edit Inventaris',
             'activeMenu' => 'inventaris',
@@ -95,6 +109,10 @@ class Inventaris extends BaseController
     // Update
     public function update($id)
     {
+        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
+            return redirect()->to('/inventaris');
+        }
+
         $lama = $this->inventarisModel->find($id);
         $baru = [
             'nama_barang'  => $this->request->getPost('nama_barang'),
@@ -117,6 +135,10 @@ class Inventaris extends BaseController
 
     public function toggleStatus($id)
     {
+        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
+            return redirect()->to('/inventaris');
+        }
+
         $item = $this->inventarisModel->find($id);
         if ($item) {
             $statusBaru = ($item['is_aktif'] == 1) ? 0 : 1;

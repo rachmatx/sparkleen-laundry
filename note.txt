@@ -105,3 +105,49 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
       - Sequence Transaksi: Menyisipkan filter keamanan `AuthFilter` dan `CSRF Guard` sebagai komponen pencegat (interceptor) sebelum Controller memproses data.
       - Class Diagram: Ditambahkan class penunjang filter dan keamanan baru seperti `AuthFilter`, `LoginThrottle`, dan `activity_log_helper`.
       - ERD Diagram: Menyesuaikan tipe data tanggal transaksi menjadi `datetime` untuk mencerminkan skema database fisik yang presisi.
+
+23. OTOMATISASI FORMULA BAHAN BAKU (RESEP LAYANAN)
+    - [Fitur Baru] Membuat tabel `tb_layanan_inventaris` untuk menyimpan konfigurasi formula pemakaian bahan baku (resep) per layanan (misal: deterjen 0.02 kg per 1 kg pakaian).
+    - [Fungsionalitas] Mengimplementasikan halaman kelola resep bagi Admin di mana Admin bisa mengatur takaran penggunaan barang inventaris untuk masing-masing layanan.
+    - [UX/UI] Menambahkan script otomatisasi pada checkout transaksi (step 2) yang mendeteksi resep layanan yang dipilih, mencentang inventaris terkait, dan otomatis mem-prefill kuantitas pemakaian bahan baku berdasarkan berat laundry.
+
+24. PROGRAM LOYALITAS POIN PELANGGAN
+    - [Fitur Baru] Menambahkan fitur perolehan poin otomatis (tiap kelipatan nominal Rp 10.000 belanja mendapat 1 poin) dan penukaran poin menjadi diskon pemotong tagihan (1 poin = Rp 300 diskon) sesuai preferensi pemilik.
+    - [Keamanan] Memvalidasi batas input penukaran poin agar kasir tidak dapat menebus poin melebihi poin yang dimiliki pelanggan atau melebihi total tagihan.
+    - [UI] Menampilkan ringkasan transaksi poin (poin ditebus, diskon diperoleh, poin baru yang didapat, dan total sisa poin terbaru) pada Nota termal (`nota.php`).
+
+25. NOTIFIKASI WHATSAPP MULTI-TAHAP
+    - [Fitur Baru] Mengintegrasikan notifikasi otomatis WhatsApp yang dikirimkan pada tiga tahapan pesanan: Order Baru diterima, Order Selesai dicuci/setrika, dan Order Diambil oleh pelanggan.
+    - [UI] Menambahkan checkbox kirim notifikasi dinamis pada modal ubah status (tulisan label menyesuaikan dengan status target).
+    - [UX] Menyediakan tombol "Kirim WhatsApp Manual" di bagian bawah Nota Termal sebagai cadangan jika API gateway belum dikonfigurasi atau pengiriman otomatis gagal.
+    - [BugFix/Validasi] Menerapkan regex validation pada nomor telepon pelanggan (minimal 9-14 digit, hanya angka, dan harus diawali 08/62) untuk menjamin validitas pengiriman notifikasi WhatsApp.
+
+26. FITUR KEAMANAN SISTEM & MONITORING (CADANGAN DATABASE & LOGS)
+    - [Keamanan] Menerapkan log keamanan otomatis pada sistem autentikasi (`Auth.php`) untuk mencatat upaya login sukses, percobaan gagal, hingga event blokir IP address (rate limiting).
+    - [Fitur Baru] Membangun fitur Backup Database bagi Admin dan Pemilik untuk mengunduh seluruh skema dan isi tabel database ke dalam file SQL (`.sql`) secara aman dan instan dari sistem.
+    - [Keamanan] Melacak dan mencatat setiap aktivitas ekspor/backup database ke dalam tabel log aktivitas (`tb_log_aktivitas`).
+
+27. VALIDASI BATAS STOK INVENTARIS & PENYEMPURNAAN LOG KEAMANAN
+    - [BugFix/Validasi] Menambahkan sistem validasi real-time untuk ketersediaan stok bahan baku sebelum transaksi disimpan. Jika kasir menginput pemakaian bahan baku melebihi sisa stok di database, transaksi akan diblokir dengan pesan error informatif dan kasir dikembalikan ke formulir transaksi tanpa kehilangan data keranjang.
+    - [BugFix] Memperbaiki struktur tabel log aktivitas agar kolom `id_karyawan` menjadi nullable dan tipe ENUM diubah menjadi VARCHAR sehingga log keamanan (login gagal, login terblokir, backup database) oleh Guest/System dapat terekam sempurna.
+    - [UX/UI] Memperbarui antarmuka log aktivitas dengan menambahkan dukungan rendering pesan detail teks, badge warna interaktif (hijau/merah/hitam/biru) untuk aksi-aksi baru, serta filter pencarian modul dan aksi keamanan.
+
+28. PERBAIKAN NAVIGASI, EKSPOR, & ZOOM PADA MERMAID LIVE RENDERER
+    - [BugFix/UI] Memperbaiki scroll vertikal pada `mermaid_renderer.html`. Sebelumnya, pemusatan diagram menggunakan metode flex `align-items: center` menyebabkan bagian atas/bawah diagram besar terpotong. Sekarang dipusatkan menggunakan `margin: auto` pada kontainer diagram sehingga scrollbar vertikal dan horizontal berfungsi penuh 100% tanpa area yang terpotong.
+    - [UX/UI] Menambahkan fitur interaktif "Drag-to-Scroll" (Pan) menggunakan event mouse. Pengguna dapat mengklik kiri dan menyeret diagram raksasa dengan bebas ke segala arah menggunakan kursor drag (`grab` / `grabbing`) yang premium.
+    - [BugFix/UX] Menyelamatkan tombol zoom (`.zoom-controls`) dari masalah tertutup/terhalang oleh scrollbar browser atau diagram. Caranya dengan menaikkan `z-index: 999` dan mendesain ulang wadahnya menjadi kartu melayang ber-efek glassmorphism modern yang tebal dan bersih.
+    - [BugFix/Fungsional] Memperbaiki kegagalan ekspor diagram (freeze pada status mengekspor PNG). Hal ini disebabkan karena Chrome melarang penggambaran SVG bermuatan objek asing (`foreignObject` / HTML labels) ke dalam canvas (melanggar aturan CORS/Tainted Canvas pada protocol `file:///`). Solusinya adalah mengubah parameter inisialisasi Mermaid menjadi `htmlLabels: false`, menyetel penentuan dimensi aman (menghindari NaN/TypeErrors), serta menaruh try-catch untuk menangani pembatasan keamanan dan menawarkan fallback opsi "Unduh SVG".
+    - [UX/Fungsional] Meningkatkan fungsionalitas unduhan SVG dengan menerapkan inlining style warna latar belakang gelap `#131b31` langsung ke elemen SVG root. Mencegah tulisan diagram (yang berwarna terang) menjadi tidak terlihat (transparan) saat berkas SVG dibuka di tab peramban baru.
+    - [UML Presets] Memperbarui data diagram preset *Class Diagram* dan *ERD* di dalam renderer agar sesuai dengan pembaruan database fisik dan kelas PHP terbaru (menambahkan tabel resep `tb_layanan_inventaris`, kontrol keamanan login, program poin loyalitas, dan fitur database backup).
+    - [Fungsional/Ekspor] Mengubah penamaan berkas unduhan diagram secara otomatis berdasarkan diagram yang sedang aktif (contoh: `use_case_diagram.png`, `class_diagram.png`, dll.) atau membaca judul dari konfigurasi frontmatter/komentar di editor Mermaid.
+
+
+29. DETAIL INFORMASI METODE PEMBAYARAN DINAMIS (QRIS & TRANSFER BANK)
+    - [UX/UI] Menambahkan blok informasi pembayaran responsif yang muncul secara dinamis di bawah dropdown metode pembayaran ketika kasir memilih "QRIS" atau "Transfer Bank".
+    - [Fungsional/QRIS] Merender kode QR (mockup) menggunakan grafis SVG inline murni yang tajam, ringan, dan mandiri tanpa bergantung pada koneksi internet atau berkas gambar eksternal.
+    - [Fungsional/Transfer] Menampilkan informasi rekening Bank Mandiri palsu dengan tambahan tombol "Salin" nomor rekening yang memicu animasi *floating toast* hijau elegan ("Nomor rekening disalin!") di pojok kanan atas layar peramban.
+    - [UML/Dokumentasi] Memperbarui diagram aktivitas pembayaran (activity_pembayaran) pada berkas dokumentasi uml_and_system_design_documentation.md dan preset renderer untuk menyertakan decision point "Pilih Metode Bayar" beserta alur percabangan penampilan kode QRIS (mockup) dan rekening transfer bank.
+
+30. DOKUMENTASI BUSINESS PROCESS MODEL AND NOTATION (BPMN)
+    - [UML/Dokumentasi] Menambahkan rancangan alur bisnis menggunakan standar notasi BPMN dengan sistem *Swimlanes* yang melibatkan tiga pilar utama: Pelanggan, Kasir, dan Sistem Sparkleen. Diagram ini telah dimuat pada berkas `uml_and_system_design_documentation.md`.
+    - [UX/UI] Menambahkan preset tombol **BPMN Diagram** pada bagian kiri halaman `mermaid_renderer.html` untuk memvisualisasikan seluruh alur operasional bisnis secara utuh.

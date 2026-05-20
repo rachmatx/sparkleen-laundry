@@ -11,7 +11,7 @@ class MTransaksi extends Model
     protected $allowedFields = [
         'no_nota', 'id_pelanggan', 'id_kasir', 'tgl_masuk',
         'tgl_selesai_estimasi', 'tgl_selesai_aktual', 'total_berat',
-        'total_biaya', 'diskon', 'grand_total', 'status', 'status_pembayaran'
+        'total_biaya', 'diskon', 'poin_ditebus', 'poin_diperoleh', 'grand_total', 'status', 'status_pembayaran'
     ];
     protected $useTimestamps = true;
 

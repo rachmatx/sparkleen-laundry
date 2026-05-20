@@ -9,9 +9,11 @@
                                placeholder="Cari no nota atau nama pelanggan..." onkeyup="searchTable()">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                     </div>
+                    <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                     <a href="/transaksi" class="btn btn-primary btn-sm text-nowrap">
                         <i class="fas fa-plus"></i> Transaksi Baru
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -80,7 +82,7 @@
                                            target="_blank" class="btn btn-secondary" title="Cetak Nota">
                                             <i class="fas fa-print"></i>
                                         </a>
-                                        <?php if($t['status'] != 'diambil'): ?>
+                                        <?php if($t['status'] != 'diambil' && in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                                         <a href="/transaksi/ubah-status/<?= $t['id_transaksi'] ?>"
                                            class="btn btn-warning text-dark" title="Update Status">
                                             <i class="fas fa-exchange-alt"></i>

@@ -37,16 +37,27 @@ class Auth extends BaseController
         $ip         = $this->request->getIPAddress();
         $identifier = trim((string) $this->request->getPost('username'));
         $password   = $this->request->getPost('password');
+        $logModel   = new \App\Models\MLogAktivitas();
 
         if ($throttle->isBlocked($ip, $identifier)) {
-            session()->setFlashdata('error', $throttle->getBlockedMessage($ip, $identifier));
+            $logModel->save([
+                'id_karyawan'    => null,
+                'nama_karyawan'  => 'System',
+                'level_karyawan' => 'system',
+                'modul'          => 'Keamanan',
+                'aksi'           => 'Blokir Login',
+                'id_referensi'   => null,
+                'nama_referensi' => $ip,
+                'detail'         => "IP/Username diblokir sementara karena terlalu banyak percobaan gagal: '$identifier' (IP: $ip)",
+                'ip_address'     => $ip,
+            ]);
 
+            session()->setFlashdata('error', $throttle->getBlockedMessage($ip, $identifier));
             return redirect()->to('/login');
         }
 
         if ($identifier === '' || empty($password)) {
             session()->setFlashdata('error', 'Username/email dan password wajib diisi.');
-
             return redirect()->to('/login');
         }
 
@@ -54,8 +65,19 @@ class Auth extends BaseController
 
         if ($user) {
             if ($user->is_aktif == 0) {
-                session()->setFlashdata('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.');
+                $logModel->save([
+                    'id_karyawan'    => null,
+                    'nama_karyawan'  => 'Guest',
+                    'level_karyawan' => 'guest',
+                    'modul'          => 'Keamanan',
+                    'aksi'           => 'Login Akun Nonaktif',
+                    'id_referensi'   => $user->id_karyawan,
+                    'nama_referensi' => $user->username,
+                    'detail'         => "Upaya login ke akun yang dinonaktifkan: '{$user->username}'",
+                    'ip_address'     => $ip,
+                ]);
 
+                session()->setFlashdata('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.');
                 return redirect()->to('/login');
             }
 
@@ -71,13 +93,36 @@ class Auth extends BaseController
                     'isLoggedIn'    => true,
                 ]);
 
-                session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan . '!');
+                $logModel->save([
+                    'id_karyawan'    => $user->id_karyawan,
+                    'nama_karyawan'  => $user->nama_karyawan,
+                    'level_karyawan' => $user->level,
+                    'modul'          => 'Autentikasi',
+                    'aksi'           => 'Login',
+                    'id_referensi'   => $user->id_karyawan,
+                    'nama_referensi' => $user->username,
+                    'detail'         => 'Berhasil login ke dalam sistem.',
+                    'ip_address'     => $ip,
+                ]);
 
+                session()->setFlashdata('success', 'Selamat datang, ' . $user->nama_karyawan . '!');
                 return redirect()->to('/dashboard');
             }
         }
 
         $throttle->recordFailure($ip, $identifier);
+
+        $logModel->save([
+            'id_karyawan'    => null,
+            'nama_karyawan'  => 'Guest',
+            'level_karyawan' => 'guest',
+            'modul'          => 'Keamanan',
+            'aksi'           => 'Gagal Login',
+            'id_referensi'   => null,
+            'nama_referensi' => $identifier,
+            'detail'         => "Gagal login dengan menggunakan username/email '$identifier'. Upaya gagal dicatat.",
+            'ip_address'     => $ip,
+        ]);
 
         if ($throttle->isBlocked($ip, $identifier)) {
             session()->setFlashdata('error', $throttle->getBlockedMessage($ip, $identifier));

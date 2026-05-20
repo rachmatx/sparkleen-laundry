@@ -73,6 +73,144 @@ class WhatsAppNotifier
         ];
     }
 
+    /**
+     * Kirim notifikasi order baru ke pelanggan.
+     *
+     * @return array{success: bool, message: string, wa_link: ?string}
+     */
+    public function notifyOrderBaru(array $transaksi, array $pelanggan): array
+    {
+        if (! $this->config->enabled) {
+            return [
+                'success' => false,
+                'message' => 'Notifikasi WhatsApp dinonaktifkan.',
+                'wa_link' => null,
+            ];
+        }
+
+        $phone = $this->normalizePhone($pelanggan['no_telp'] ?? '');
+        if ($phone === '') {
+            return [
+                'success' => false,
+                'message' => 'Nomor telepon pelanggan tidak valid.',
+                'wa_link' => null,
+            ];
+        }
+
+        $text    = $this->buildOrderBaruMessage($transaksi, $pelanggan);
+        $waLink  = $this->buildWaMeLink($phone, $text);
+        $provider = strtolower($this->config->provider);
+
+        if ($provider === 'link' || empty($this->config->apiToken)) {
+            return [
+                'success' => false,
+                'message' => empty($this->config->apiToken)
+                    ? 'Token API belum dikonfigurasi. Gunakan tombol WhatsApp untuk mengirim manual.'
+                    : 'Mode tautan WhatsApp.',
+                'wa_link' => $waLink,
+            ];
+        }
+
+        if ($provider === 'fonnte') {
+            return $this->sendViaFonnte($phone, $text, $waLink);
+        }
+
+        if ($provider === 'wablas') {
+            return $this->sendViaWablas($phone, $text, $waLink);
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Provider WhatsApp tidak dikenali: ' . $provider,
+            'wa_link' => $waLink,
+        ];
+    }
+
+    /**
+     * Kirim notifikasi order diambil ke pelanggan.
+     *
+     * @return array{success: bool, message: string, wa_link: ?string}
+     */
+    public function notifyOrderDiambil(array $transaksi, array $pelanggan): array
+    {
+        if (! $this->config->enabled) {
+            return [
+                'success' => false,
+                'message' => 'Notifikasi WhatsApp dinonaktifkan.',
+                'wa_link' => null,
+            ];
+        }
+
+        $phone = $this->normalizePhone($pelanggan['no_telp'] ?? '');
+        if ($phone === '') {
+            return [
+                'success' => false,
+                'message' => 'Nomor telepon pelanggan tidak valid.',
+                'wa_link' => null,
+            ];
+        }
+
+        $text    = $this->buildOrderDiambilMessage($transaksi, $pelanggan);
+        $waLink  = $this->buildWaMeLink($phone, $text);
+        $provider = strtolower($this->config->provider);
+
+        if ($provider === 'link' || empty($this->config->apiToken)) {
+            return [
+                'success' => false,
+                'message' => empty($this->config->apiToken)
+                    ? 'Token API belum dikonfigurasi. Gunakan tombol WhatsApp untuk mengirim manual.'
+                    : 'Mode tautan WhatsApp.',
+                'wa_link' => $waLink,
+            ];
+        }
+
+        if ($provider === 'fonnte') {
+            return $this->sendViaFonnte($phone, $text, $waLink);
+        }
+
+        if ($provider === 'wablas') {
+            return $this->sendViaWablas($phone, $text, $waLink);
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Provider WhatsApp tidak dikenali: ' . $provider,
+            'wa_link' => $waLink,
+        ];
+    }
+
+    public function buildOrderBaruMessage(array $transaksi, array $pelanggan): string
+    {
+        $nama   = $pelanggan['nama_pelanggan'] ?? 'Pelanggan';
+        $nota   = $transaksi['no_nota'] ?? '-';
+        $total  = number_format((float) ($transaksi['grand_total'] ?? 0), 0, ',', '.');
+        $berat  = $transaksi['total_berat'] ?? 0;
+        $estimasi = date('d-m-Y H:i', strtotime($transaksi['tgl_selesai_estimasi'] ?? ''));
+        $toko   = $this->config->businessName;
+
+        return "Halo {$nama},\n\n"
+            . "Terima kasih telah mencuci di *{$toko}*.\n"
+            . "Pesanan Anda telah kami terima dengan detail berikut:\n\n"
+            . "*No. Nota:* {$nota}\n"
+            . "*Berat:* {$berat} kg\n"
+            . "*Total Biaya:* Rp {$total}\n"
+            . "*Estimasi Selesai:* {$estimasi}\n\n"
+            . "Anda akan menerima notifikasi kembali jika cucian Anda sudah siap diambil.\n\n"
+            . '_Pesan otomatis dari sistem._';
+    }
+
+    public function buildOrderDiambilMessage(array $transaksi, array $pelanggan): string
+    {
+        $nama   = $pelanggan['nama_pelanggan'] ?? 'Pelanggan';
+        $nota   = $transaksi['no_nota'] ?? '-';
+        $toko   = $this->config->businessName;
+
+        return "Halo {$nama},\n\n"
+            . "Pesanan Anda dengan nomor nota *{$nota}* telah *DIAMBIL*.\n\n"
+            . "Terima kasih banyak atas kepercayaan Anda mencuci di *{$toko}*. Kami menantikan kedatangan Anda kembali!\n\n"
+            . '_Pesan otomatis dari sistem._';
+    }
+
     public function buildOrderSelesaiMessage(array $transaksi, array $pelanggan): string
     {
         $nama   = $pelanggan['nama_pelanggan'] ?? 'Pelanggan';

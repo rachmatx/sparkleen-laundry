@@ -37,12 +37,14 @@
 
                 <!-- Transaksi: semua level -->
                 <li class="nav-header">TRANSAKSI</li>
+                <?php if (in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                 <li class="nav-item">
                     <a href="/transaksi" class="nav-link <?= ($activeMenu ?? '') == 'transaksi' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-plus-circle"></i>
                         <p>Transaksi Baru</p>
                     </a>
                 </li>
+                <?php endif; ?>
                 <li class="nav-item">
                     <a href="/transaksi/daftar" class="nav-link <?= ($activeMenu ?? '') == 'daftar_transaksi' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-list-alt"></i>
@@ -68,21 +70,27 @@
                 <!-- ===================================================== -->
                 <!-- MENU ADMIN & PEMILIK: Karyawan, Inventaris, Laporan    -->
                 <!-- ===================================================== -->
+                <!-- Karyawan: admin, pemilik -->
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-
                 <li class="nav-item">
                     <a href="/karyawan" class="nav-link <?= ($activeMenu ?? '') == 'karyawan' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-id-badge"></i>
                         <p>Karyawan</p>
                     </a>
                 </li>
+                <?php endif; ?>
+
+                <!-- Inventaris: admin, pemilik, kasir -->
+                <?php if (in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])): ?>
                 <li class="nav-item">
                     <a href="/inventaris" class="nav-link <?= ($activeMenu ?? '') == 'inventaris' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-boxes"></i>
                         <p>Inventaris</p>
                     </a>
                 </li>
+                <?php endif; ?>
 
+                <!-- Log Aktivitas: pemilik saja -->
                 <?php if (session()->get('level') === 'pemilik'): ?>
                 <li class="nav-item">
                     <a href="/log-aktivitas" class="nav-link <?= ($activeMenu ?? '') == 'log_aktivitas' ? 'active' : '' ?>">
@@ -92,6 +100,8 @@
                 </li>
                 <?php endif; ?>
 
+                <!-- Laporan: admin, pemilik -->
+                <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                 <li class="nav-header">LAPORAN</li>
                 <li class="nav-item">
                     <a href="/laporan" class="nav-link <?= in_array($activeMenu ?? '', ['laporan', 'laporan_bulanan', 'laporan_harian']) ? 'active' : '' ?>">
@@ -99,7 +109,17 @@
                         <p>Laporan Keuangan</p>
                     </a>
                 </li>
+                <?php endif; ?>
 
+                <!-- Sistem: admin, pemilik -->
+                <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                <li class="nav-header">SISTEM</li>
+                <li class="nav-item">
+                    <a href="/backup" class="nav-link <?= ($activeMenu ?? '') == 'backup' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-database text-info"></i>
+                        <p>Backup Database</p>
+                    </a>
+                </li>
                 <?php endif; ?>
 
             </ul>

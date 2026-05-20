@@ -70,6 +70,49 @@
                             <option value="transfer">Transfer Bank</option>
                         </select>
                     </div>
+
+                    <!-- Payment details container for QRIS and Bank Transfer -->
+                    <div id="payment-details-container" class="mb-4 d-none">
+                        <div id="details-qris" class="p-3 border rounded text-center bg-light d-none">
+                            <div class="fw-semibold text-success mb-2">
+                                <i class="fas fa-qrcode me-1"></i> Scan QRIS Pembayaran
+                            </div>
+                            <div class="d-inline-block p-3 bg-white border rounded shadow-sm mb-2">
+                                <svg width="180" height="180" viewBox="0 0 29 29" shape-rendering="crispEdges">
+                                    <path fill="#ffffff" d="M0 0h29v29H0z"/>
+                                    <path fill="#1a1a1a" d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2z"/>
+                                    <path fill="#1a1a1a" d="M22 0h7v7h-7zm1 1v5h5V1zm1 1h3v3H4z"/>
+                                    <path fill="#1a1a1a" d="M0 22h7v7H0zm1 1v5h5v-5zm1 1h3v3H2z"/>
+                                    <path fill="#1a1a1a" d="M8 2h1v1H8zm3 0h1v2h-1zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm-9 2h2v1H9zm4 0h1v1h-1zm3 0h2v1h-2zm-6 2h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm-9 2h1v1H8zm3 0h1v1h-1zm3 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm-9 2h1v1H8zm2 0h1v1h-1zm3 0h1v1H13zm2 0h2v1h-2zm3 0h1v1h-1zm-9 2h2v1H9zm4 0h1v1h-1zm3 0h2v1h-2zm-6 2h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zM6 8h2v1H6zm4 0h1v1h-1zm3 0h2v1h-2zm3 0h2v1h-2zm4 0h1v1h-1zM2 10h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm4 0h1v1h-1zm4 0h2v1h-2zm3 0h1v1h-1zM0 12h2v1H0zm4 0h1v1H4zm3 0h1v1H7zm3 0h2v1h-10zm4 0h1v1h-1zm2 0h2v1h-2zm3 0h2v1h-2zM2 14h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2zM0 16h2v1H0zm4 0h1v1H4zm3 0h1v1H7zm3 0h2v1h-10zm4 0h1v1h-1zm2 0h2v1h-2zm3 0h2v1h-2zM2 18h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2zM0 20h2v1H0zm4 0h1v1H4zm3 0h1v1H7zm3 0h2v1h-10zm4 0h1v1h-1zm2 0h2v1h-2zm3 0h2v1h-2zM2 18h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2z"/>
+                                    <rect x="11" y="11" width="7" height="7" rx="1.5" fill="#1e3a8a"/>
+                                    <text x="14.5" y="15.5" font-family="Arial" font-size="4.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QRIS</text>
+                                </svg>
+                            </div>
+                            <div class="small text-muted">Scan QR di atas menggunakan e-wallet atau aplikasi m-banking Anda</div>
+                            <div class="fw-bold mt-1 text-dark">Sparkleen Laundry & Dry Clean</div>
+                        </div>
+                        <div id="details-transfer" class="p-3 border rounded bg-light d-none">
+                            <div class="fw-semibold text-primary mb-2">
+                                <i class="fas fa-university me-1"></i> Informasi Rekening Bank
+                            </div>
+                            <div class="row g-2 text-start small">
+                                <div class="col-4 text-muted">Bank</div>
+                                <div class="col-8 fw-bold">Bank Mandiri</div>
+                                <div class="col-4 text-muted">No. Rekening</div>
+                                <div class="col-8 fw-bold text-primary fs-6 d-flex align-items-center">
+                                    <span id="bank-acc-num">137-00-998877-6</span>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary ms-2 py-0 px-1" onclick="copyBankAccount()" style="font-size: 0.7rem;">
+                                        <i class="far fa-copy me-1"></i> Salin
+                                    </button>
+                                </div>
+                                <div class="col-4 text-muted">Atas Nama</div>
+                                <div class="col-8 fw-bold">Sparkleen Laundry Group</div>
+                            </div>
+                            <div class="small text-muted mt-2 border-top pt-2">
+                                <i class="fas fa-info-circle me-1 text-info"></i> Harap kirimkan bukti transfer ke kasir setelah transaksi selesai.
+                            </div>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-success w-100">
                         <i class="fas fa-money-bill-wave me-1"></i> Proses Pembayaran
                     </button>
@@ -127,3 +170,73 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectMetode = document.querySelector('select[name="metode_bayar"]');
+    const container = document.getElementById('payment-details-container');
+    const detailsQris = document.getElementById('details-qris');
+    const detailsTransfer = document.getElementById('details-transfer');
+
+    if (selectMetode && container && detailsQris && detailsTransfer) {
+        selectMetode.addEventListener('change', function() {
+            const val = this.value;
+            // Hide all details first
+            container.classList.add('d-none');
+            detailsQris.classList.add('d-none');
+            detailsTransfer.classList.add('d-none');
+
+            if (val === 'qris') {
+                container.classList.remove('d-none');
+                detailsQris.classList.remove('d-none');
+            } else if (val === 'transfer') {
+                container.classList.remove('d-none');
+                detailsTransfer.classList.remove('d-none');
+            }
+        });
+
+        // Trigger change initially in case of validation/reload state
+        selectMetode.dispatchEvent(new Event('change'));
+    }
+});
+
+function copyBankAccount() {
+    const accNum = document.getElementById('bank-acc-num').innerText;
+    navigator.clipboard.writeText(accNum).then(function() {
+        // Floating toast animation
+        const toast = document.createElement('div');
+        toast.innerHTML = '<i class="fas fa-check-circle me-1"></i> Nomor rekening disalin!';
+        toast.style.position = 'fixed';
+        toast.style.top = '25px';
+        toast.style.right = '25px';
+        toast.style.backgroundColor = '#10b981';
+        toast.style.color = '#ffffff';
+        toast.style.padding = '12px 24px';
+        toast.style.borderRadius = '8px';
+        toast.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)';
+        toast.style.zIndex = '9999';
+        toast.style.fontSize = '0.9rem';
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.opacity = '0';
+        document.body.appendChild(toast);
+        
+        // Trigger reflow & animate in
+        setTimeout(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        }, 10);
+
+        // Animate out & remove
+        setTimeout(() => {
+            toast.style.transform = 'translateY(-10px)';
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Gagal menyalin text: ', err);
+    });
+}
+</script>

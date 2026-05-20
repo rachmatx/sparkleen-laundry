@@ -50,6 +50,7 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
             <a href="/transaksi/nota/<?= $transaksi['id_transaksi'] ?>" target="_blank" class="btn btn-outline-primary">
                 <i class="fas fa-print me-1"></i> Cetak Nota
             </a>
+            <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
             <a href="/transaksi/pembayaran/<?= $transaksi['id_transaksi'] ?>" class="btn btn-success">
                 <i class="fas fa-credit-card me-1"></i> Kelola Pembayaran
             </a>
@@ -62,6 +63,7 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
             <a href="<?= esc($waHref) ?>" target="_blank" rel="noopener" class="btn btn-success">
                 <i class="fab fa-whatsapp me-1"></i> Kirim WhatsApp
             </a>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

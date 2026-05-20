@@ -160,6 +160,41 @@
                     <?= csrf_field() ?>
                     <!-- Hidden inputs inventaris akan diisi oleh JavaScript -->
                     <div id="hiddenInventarisContainer"></div>
+
+                    <!-- Loyalitas Poin Pelanggan -->
+                    <?php if(($pelanggan['poin'] ?? 0) > 0): ?>
+                    <div class="border rounded p-3 mb-3 text-start bg-light">
+                        <h6 class="fw-bold mb-2 text-primary"><i class="fas fa-gift me-1"></i> Penukaran Poin Loyalitas</h6>
+                        <p class="text-muted small mb-2">
+                            Pelanggan memiliki <strong><?= $pelanggan['poin'] ?> poin</strong>.
+                            Setiap <strong>1 poin</strong> bernilai potongan diskon <strong>Rp 300</strong>.
+                        </p>
+                        <div class="row align-items-center">
+                            <div class="col-md-6 mb-2 mb-md-0">
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           name="poin_ditebus" 
+                                           id="poin_ditebus" 
+                                           min="0" 
+                                           max="<?= $pelanggan['poin'] ?>" 
+                                           placeholder="0" 
+                                           oninput="hitungDiskonPoin(this, <?= $totalBiaya ?>)">
+                                    <span class="input-group-text">poin</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <span class="d-block text-muted small">Potongan Diskon:</span>
+                                <strong class="text-success" id="diskon_poin_text">Rp 0</strong>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-end">
+                            <span class="d-block text-muted small">Total Tagihan Akhir:</span>
+                            <h4 class="fw-bold text-dark mb-0" id="total_akhir_text">Rp <?= number_format($totalBiaya, 0, ',', '.') ?></h4>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Penggunaan Inventaris -->
                     <?php if(!empty($inventaris)): ?>
                     <div class="border rounded p-3 mb-3 text-start bg-light">
@@ -235,5 +270,61 @@ function toggleInvInput(checkbox) {
         jumlah.value = '';
         ket.value    = '';
     }
+}
+
+// Data Rekomendasi Resep dari Controller
+const resepRekomendasi = <?= json_encode($resepRekomendasi ?? []) ?>;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Jalankan auto pre-fill resep
+    for (const [id_inv, jumlah] of Object.entries(resepRekomendasi)) {
+        const checkbox = document.getElementById('inv_' + id_inv);
+        if (checkbox) {
+            checkbox.checked = true;
+            toggleInvInput(checkbox);
+            
+            const detail = checkbox.closest('.inv-item').querySelector('.inv-detail');
+            const jumlahInput = detail.querySelector('.inv-jumlah');
+            if (jumlahInput) {
+                // Tampilkan nilai desimal dengan presisi
+                jumlahInput.value = parseFloat(jumlah).toFixed(4);
+            }
+            const ketInput = detail.querySelector('.inv-ket');
+            if (ketInput) {
+                ketInput.value = 'Rekomendasi sistem (resep)';
+            }
+        }
+    }
+});
+
+function hitungDiskonPoin(input, totalBiaya) {
+    const poinMax = parseInt(input.getAttribute('max')) || 0;
+    let poin = parseInt(input.value) || 0;
+    
+    if (poin < 0) {
+        poin = 0;
+        input.value = 0;
+    }
+    if (poin > poinMax) {
+        poin = poinMax;
+        input.value = poinMax;
+    }
+    
+    const diskon = poin * 300;
+    
+    // Pastikan diskon tidak melebihi total biaya
+    let diskonTerpakai = diskon;
+    if (diskonTerpakai > totalBiaya) {
+        diskonTerpakai = totalBiaya;
+        // Sesuaikan input poin dengan batas max totalBiaya
+        const poinBatas = Math.floor(totalBiaya / 300);
+        input.value = poinBatas;
+        poin = poinBatas;
+    }
+    
+    const totalAkhir = totalBiaya - (poin * 300);
+    
+    document.getElementById('diskon_poin_text').textContent = 'Rp ' + (poin * 300).toLocaleString('id-ID');
+    document.getElementById('total_akhir_text').textContent = 'Rp ' + totalAkhir.toLocaleString('id-ID');
 }
 </script>

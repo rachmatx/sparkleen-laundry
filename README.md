@@ -5,11 +5,13 @@ A premium laundry management system built on top of **CodeIgniter 4** framework.
 ---
 
 ## 🚀 Fitur Utama
-1. **Manajemen Transaksi & Kasir**: Pembuatan order, pencetakan nota kasir termal (POS), kalkulasi tagihan, dan sisa kembalian secara presisi.
-2. **Notifikasi WhatsApp**: Integrasi pengiriman notifikasi otomatis via API Fonnte/Wablas atau tautan manual (`wa.me`) ketika pesanan laundry selesai.
-3. **Manajemen Inventaris**: Pengurangan stok otomatis barang habis pakai (seperti sabun/pewangi) saat transaksi diproses.
-4. **Log Perubahan Status & Aktivitas**: Riwayat status laundry terpantau transparan beserta catatan kasir.
-5. **Keamanan & Kontrol Akses (RBAC)**: Pembatasan ketat untuk kasir, admin, dan pemilik (owner).
+1. **Manajemen Transaksi & Kasir**: Pembuatan order, pencetakan nota kasir termal (POS), kalkulasi tagihan, loyalitas poin, dan sisa kembalian secara presisi.
+2. **Resep Otomatis & Inventaris**: Pengurangan stok otomatis bahan baku (seperti sabun/pewangi) berdasarkan berat cucian menggunakan formula takaran (resep) default per layanan yang dapat diatur oleh Admin.
+3. **Program Poin Loyalitas**: Akumulasi poin belanja otomatis untuk pelanggan (tiap kelipatan Rp 10.000) dan penukaran poin menjadi diskon pemotong tagihan (1 poin = Rp 300 diskon).
+4. **Notifikasi WhatsApp Multi-Tahap**: Integrasi pengiriman notifikasi otomatis via API Fonnte/Wablas atau tautan manual (`wa.me`) ketika pesanan laundry Baru Diterima, Selesai Dicuci, atau Diambil Pelanggan.
+5. **Log Keamanan & Backup Database**: Pencatatan log upaya keamanan login secara dinamis di database, serta penyediaan fitur ekspor (backup) database terenkripsi ke file SQL secara aman dan instan.
+6. **Keamanan & Kontrol Akses (RBAC)**: Pembatasan ketat berbasis role (kasir, admin, pemilik) dengan pertahanan serangan CSRF global, Brute Force protection (rate limiting IP login), dan sanitasi XSS.
+7. **Mermaid Live Renderer**: Halaman visualisasi diagram UML interaktif (`mermaid_renderer.html`) dengan preset diagram sistem lengkap, fitur *live editing preview*, ekspor HD PNG/SVG (latar belakang transparan/solid), serta navigasi *Drag-to-Scroll* yang adaptif.
 
 ---
 

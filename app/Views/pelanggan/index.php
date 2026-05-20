@@ -3,11 +3,13 @@
         <div class="card card-outline card-primary">
             <div class="card-header">
                 <h3 class="card-title">Daftar Pelanggan</h3>
+                <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                 <div class="card-tools">
                     <a href="/pelanggan/create" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus me-1"></i> Tambah Pelanggan
                     </a>
                 </div>
+                <?php endif; ?>
             </div>
             <div class="card-body p-0">
                 <?php if(session()->getFlashdata('success')): ?>
@@ -59,9 +61,11 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
+                                    <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                                     <a href="/pelanggan/edit/<?= $p['id_pelanggan'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
+                                    <?php endif; ?>
                                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                                         <?php if ($p['is_aktif'] == 1): ?>
                                             <a href="#"

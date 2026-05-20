@@ -12,13 +12,15 @@
                             <option value="">Semua</option>
                             <option value="karyawan" <?= ($filter['modul'] ?? '') === 'karyawan' ? 'selected' : '' ?>>Karyawan</option>
                             <option value="inventaris" <?= ($filter['modul'] ?? '') === 'inventaris' ? 'selected' : '' ?>>Inventaris</option>
+                            <option value="Keamanan" <?= ($filter['modul'] ?? '') === 'Keamanan' ? 'selected' : '' ?>>Keamanan</option>
+                            <option value="Autentikasi" <?= ($filter['modul'] ?? '') === 'Autentikasi' ? 'selected' : '' ?>>Autentikasi</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small mb-0">Aksi</label>
                         <select name="aksi" class="form-select form-select-sm">
                             <option value="">Semua</option>
-                            <?php foreach (['tambah', 'ubah', 'hapus', 'aktifkan', 'nonaktifkan'] as $a): ?>
+                            <?php foreach (['tambah', 'ubah', 'hapus', 'aktifkan', 'nonaktifkan', 'Login', 'Gagal Login', 'Blokir Login', 'Backup Database'] as $a): ?>
                             <option value="<?= $a ?>" <?= ($filter['aksi'] ?? '') === $a ? 'selected' : '' ?>><?= label_aksi_log($a) ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -33,14 +35,14 @@
                     </div>
                     <div class="col-md-4 d-flex gap-1">
                         <button type="submit" class="btn btn-info btn-sm text-white">
-                            <i class="fas fa-filter"></i> Filter
+                             <i class="fas fa-filter"></i> Filter
                         </button>
                         <a href="/log-aktivitas" class="btn btn-secondary btn-sm">Reset</a>
                     </div>
                 </form>
 
                 <p class="text-muted small mb-0">
-                    Mencatat perubahan data Karyawan dan Inventaris oleh Admin/Pemilik (maks. 500 entri terbaru).
+                    Mencatat aktivitas perubahan data (Karyawan, Inventaris) serta log keamanan sistem oleh Admin/Pemilik (maks. 500 entri terbaru).
                 </p>
             </div>
             <div class="card-body p-0 border-top">
@@ -99,6 +101,8 @@
                                             <?php endif; ?>
                                         <?php endforeach; ?>
                                         </ul>
+                                    <?php elseif (!empty($log['detail'])): ?>
+                                        <?= esc($log['detail']) ?>
                                     <?php else: ?>
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>

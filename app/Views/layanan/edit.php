@@ -5,6 +5,7 @@
                 <h3 class="card-title">Edit Layanan</h3>
             </div>
             <form action="/layanan/update/<?= $layanan['id_layanan'] ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Nama Layanan <span class="text-danger">*</span></label>

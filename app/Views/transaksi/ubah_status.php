@@ -46,10 +46,10 @@
                         <textarea class="form-control" name="catatan" rows="3" placeholder="Contoh: Ada kerusakan, perlu perhatian khusus..."></textarea>
                     </div>
 
-                    <div class="mb-0" id="wrap-kirim-wa" style="display:none;">
+                     <div class="mb-0" id="wrap-kirim-wa" style="display:none;">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="kirim_wa" value="1" id="kirim_wa" checked>
-                            <label class="form-check-label" for="kirim_wa">
+                            <label class="form-check-label" for="kirim_wa" id="label_kirim_wa">
                                 <i class="fab fa-whatsapp text-success"></i>
                                 Kirim notifikasi WhatsApp ke pelanggan (order selesai)
                             </label>
@@ -77,10 +77,19 @@
 (function () {
     const select = document.getElementById('status_baru');
     const wrap   = document.getElementById('wrap-kirim-wa');
+    const label  = document.getElementById('label_kirim_wa');
     if (!select || !wrap) return;
 
     function toggleWa() {
-        wrap.style.display = select.value === 'selesai' ? 'block' : 'none';
+        const val = select.value;
+        if (val === 'selesai' || val === 'diambil') {
+            wrap.style.display = 'block';
+            if (label) {
+                label.innerHTML = '<i class="fab fa-whatsapp text-success me-1"></i> Kirim notifikasi WhatsApp ke pelanggan (order ' + val + ')';
+            }
+        } else {
+            wrap.style.display = 'none';
+        }
     }
 
     select.addEventListener('change', toggleWa);

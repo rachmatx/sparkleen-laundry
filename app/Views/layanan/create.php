@@ -5,6 +5,7 @@
                 <h3 class="card-title">Tambah Layanan</h3>
             </div>
             <form action="/layanan/store" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Nama Layanan <span class="text-danger">*</span></label>

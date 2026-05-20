@@ -62,9 +62,14 @@
                                 </td>
                                 <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                                 <td class="text-center">
-                                    <a href="/layanan/edit/<?= $l['id_layanan'] ?>" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit me-1"></i> Edit
-                                    </a>
+                                     <?php if(session()->get('level') === 'admin'): ?>
+                                     <a href="/layanan/resep/<?= $l['id_layanan'] ?>" class="btn btn-info btn-sm text-white me-1">
+                                         <i class="fas fa-flask me-1"></i> Resep
+                                     </a>
+                                     <?php endif; ?>
+                                     <a href="/layanan/edit/<?= $l['id_layanan'] ?>" class="btn btn-warning btn-sm">
+                                         <i class="fas fa-edit me-1"></i> Edit
+                                     </a>
                                     <?php if ($l['is_aktif'] == 1): ?>
                                         <a href="#"
                                            onclick="if(confirm('Yakin ingin menonaktifkan layanan ini?')) window.location.href='/layanan/toggle/<?= $l['id_layanan'] ?>'"

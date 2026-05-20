@@ -3,16 +3,22 @@
 namespace App\Controllers;
 
 use App\Models\MLayanan;
+use App\Models\MInventaris;
+use App\Models\MLayananInventaris;
 
 class Layanan extends BaseController
 {
     protected $layananModel;
+    protected $inventarisModel;
+    protected $layananInventarisModel;
     protected $level;
 
     public function __construct()
     {
-        $this->level        = session()->get('level');
-        $this->layananModel = new MLayanan();
+        $this->level                  = session()->get('level');
+        $this->layananModel           = new MLayanan();
+        $this->inventarisModel        = new MInventaris();
+        $this->layananInventarisModel = new MLayananInventaris();
     }
 
     public function index()
@@ -111,6 +117,75 @@ class Layanan extends BaseController
             $pesan = ($statusBaru == 1) ? 'diaktifkan' : 'dinonaktifkan';
             session()->setFlashdata('success', "Data layanan berhasil $pesan.");
         }
+        return redirect()->to('/layanan');
+    }
+
+    public function resep($id)
+    {
+        if ($this->level !== 'admin') {
+            session()->setFlashdata('error', 'Hanya Admin yang dapat mengonfigurasi resep bahan baku.');
+            return redirect()->to('/layanan');
+        }
+
+        $layanan = $this->layananModel->find($id);
+        if (!$layanan) {
+            session()->setFlashdata('error', 'Layanan tidak ditemukan.');
+            return redirect()->to('/layanan');
+        }
+
+        // Dapatkan semua barang inventaris aktif
+        $inventaris = $this->inventarisModel->where('is_aktif', 1)->findAll();
+
+        // Dapatkan data resep saat ini
+        $currentRecipeRaw = $this->layananInventarisModel->where('id_layanan', $id)->findAll();
+        $currentRecipe = [];
+        foreach ($currentRecipeRaw as $r) {
+            $currentRecipe[$r['id_inventaris']] = $r['jumlah_default'];
+        }
+
+        $data = [
+            'title'         => 'Resep Bahan Baku - ' . $layanan['nama_layanan'],
+            'activeMenu'    => 'layanan',
+            'layanan'       => $layanan,
+            'inventaris'    => $inventaris,
+            'currentRecipe' => $currentRecipe,
+        ];
+
+        return view('backend/template/header', $data)
+             . view('backend/template/sidebar', $data)
+             . view('layanan/resep', $data)
+             . view('backend/template/footer');
+    }
+
+    public function resepStore($id)
+    {
+        if ($this->level !== 'admin') {
+            return redirect()->to('/layanan');
+        }
+
+        $layanan = $this->layananModel->find($id);
+        if (!$layanan) {
+            session()->setFlashdata('error', 'Layanan tidak ditemukan.');
+            return redirect()->to('/layanan');
+        }
+
+        // Hapus resep yang ada terlebih dahulu
+        $this->layananInventarisModel->where('id_layanan', $id)->delete();
+
+        // Simpan resep baru
+        $jumlahDefaults = $this->request->getPost('jumlah_default') ?? [];
+        foreach ($jumlahDefaults as $id_inventaris => $jumlah) {
+            $jumlah = (float)$jumlah;
+            if ($jumlah > 0) {
+                $this->layananInventarisModel->save([
+                    'id_layanan'     => $id,
+                    'id_inventaris'  => (int)$id_inventaris,
+                    'jumlah_default' => $jumlah,
+                ]);
+            }
+        }
+
+        session()->setFlashdata('success', 'Resep bahan baku layanan berhasil disimpan.');
         return redirect()->to('/layanan');
     }
 }

@@ -64,7 +64,7 @@
                                 'name'         => 'password',
                                 'label'        => 'Password Baru',
                                 'placeholder'  => 'Kosongkan jika tidak ingin mengganti',
-                                'helpText'     => 'Minimal 6 karakter. Kosongkan jika tidak ingin mengubah.',
+                                'helpText'     => 'Min. 8 karakter (kombinasi huruf & angka/simbol). Kosongkan jika tidak ingin mengubah.',
                                 'autocomplete' => 'new-password',
                             ]) ?>
                         </div>

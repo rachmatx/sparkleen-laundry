@@ -9,6 +9,7 @@ use App\Models\MDetailTransaksi;
 use App\Models\MTempPeminjaman;
 use App\Models\MInventaris;
 use App\Models\MPenggunaanInventaris;
+use App\Models\MLayananInventaris;
 
 class Transaksi extends BaseController
 {
@@ -19,23 +20,30 @@ class Transaksi extends BaseController
     protected $tempModel;
     protected $inventarisModel;
     protected $penggunaanModel;
+    protected $layananInventarisModel;
+    protected $level;
 
     public function __construct()
     {
-        $this->pelangganModel  = new MPelanggan();
-        $this->layananModel    = new MLayanan();
-        $this->transaksiModel  = new MTransaksi();
-        $this->detailModel     = new MDetailTransaksi();
-        $this->tempModel       = new MTempPeminjaman();
-
-        // Inventaris bersifat opsional — muat hanya jika tabel tersedia
-        $this->inventarisModel = new MInventaris();
-        $this->penggunaanModel = new MPenggunaanInventaris();
+        $this->pelangganModel         = new MPelanggan();
+        $this->layananModel           = new MLayanan();
+        $this->transaksiModel         = new MTransaksi();
+        $this->detailModel            = new MDetailTransaksi();
+        $this->tempModel              = new MTempPeminjaman();
+        $this->inventarisModel        = new MInventaris();
+        $this->penggunaanModel        = new MPenggunaanInventaris();
+        $this->layananInventarisModel = new MLayananInventaris();
+        $this->level                  = session()->get('level');
     }
 
     // Step 1: Pilih pelanggan
     public function index()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $data = [
             'title'      => 'Transaksi Baru',
             'activeMenu' => 'transaksi',
@@ -51,18 +59,40 @@ class Transaksi extends BaseController
     // Step 2: Pilih layanan + inventaris
     public function pilihLayanan($id_pelanggan)
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/transaksi/daftar');
+        }
+
         session()->set('id_pelanggan_transaksi', $id_pelanggan);
 
+        $temp = $this->tempModel
+            ->where('id_pelanggan', $id_pelanggan)
+            ->where('id_kasir', session()->get('id_karyawan'))
+            ->findAll();
+
+        $resepRekomendasi = [];
+        foreach ($temp as $t) {
+            $recipes = $this->layananInventarisModel->where('id_layanan', $t['id_layanan'])->findAll();
+            foreach ($recipes as $r) {
+                $id_inv = (int)$r['id_inventaris'];
+                $jumlah_pakai = (float)$r['jumlah_default'] * (float)$t['berat'];
+                if (isset($resepRekomendasi[$id_inv])) {
+                    $resepRekomendasi[$id_inv] += $jumlah_pakai;
+                } else {
+                    $resepRekomendasi[$id_inv] = $jumlah_pakai;
+                }
+            }
+        }
+
         $data = [
-            'title'      => 'Pilih Layanan',
-            'activeMenu' => 'transaksi',
-            'pelanggan'  => $this->pelangganModel->find($id_pelanggan),
-            'layanan'    => $this->layananModel->where('is_aktif', 1)->findAll(),
-            'inventaris' => $this->inventarisModel ? $this->inventarisModel->where('is_aktif', 1)->findAll() : [],
-            'temp'       => $this->tempModel
-                                ->where('id_pelanggan', $id_pelanggan)
-                                ->where('id_kasir', session()->get('id_karyawan'))
-                                ->findAll(),
+            'title'            => 'Pilih Layanan',
+            'activeMenu'       => 'transaksi',
+            'pelanggan'        => $this->pelangganModel->find($id_pelanggan),
+            'layanan'          => $this->layananModel->where('is_aktif', 1)->findAll(),
+            'inventaris'       => $this->inventarisModel ? $this->inventarisModel->where('is_aktif', 1)->findAll() : [],
+            'temp'             => $temp,
+            'resepRekomendasi' => $resepRekomendasi,
         ];
 
         return view('backend/template/header', $data)
@@ -74,6 +104,10 @@ class Transaksi extends BaseController
     // Tambah ke keranjang
     public function addToCart()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $id_pelanggan = session()->get('id_pelanggan_transaksi');
         $id_layanan   = $this->request->getPost('id_layanan');
         $berat        = $this->request->getPost('berat');
@@ -94,6 +128,10 @@ class Transaksi extends BaseController
     // Hapus dari keranjang
     public function removeFromCart($id_temp)
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $this->tempModel->delete($id_temp);
         session()->setFlashdata('success', 'Item dihapus dari keranjang.');
         return redirect()->back();
@@ -102,6 +140,10 @@ class Transaksi extends BaseController
     // Simpan transaksi + catat penggunaan inventaris
     public function simpanTransaksi()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $id_pelanggan = session()->get('id_pelanggan_transaksi');
         $id_kasir     = session()->get('id_karyawan');
 
@@ -113,6 +155,22 @@ class Transaksi extends BaseController
         if (empty($items)) {
             session()->setFlashdata('error', 'Keranjang masih kosong!');
             return redirect()->to('/transaksi');
+        }
+
+        // Validasi ketersediaan stok inventaris sebelum memproses transaksi
+        if ($this->inventarisModel) {
+            $inventarisIds = $this->request->getPost('inv_id') ?? [];
+            foreach ($inventarisIds as $id_inv) {
+                $id_inv = (int)$id_inv;
+                $jumlah = (float)($this->request->getPost('inv_jumlah_' . $id_inv) ?? 0);
+                if ($id_inv > 0 && $jumlah > 0) {
+                    $invItem = $this->inventarisModel->find($id_inv);
+                    if ($invItem && $jumlah > (float)$invItem['stok']) {
+                        session()->setFlashdata('error', 'Stok tidak mencukupi untuk bahan baku: ' . $invItem['nama_barang'] . ' (Stok saat ini: ' . number_format($invItem['stok'], 2, ',', '.') . ' ' . $invItem['satuan'] . ', dibutuhkan: ' . number_format($jumlah, 2, ',', '.') . ' ' . $invItem['satuan'] . ')');
+                        return redirect()->to('/transaksi/pilih-layanan/' . $id_pelanggan)->withInput();
+                    }
+                }
+            }
         }
 
         // Hitung total
@@ -128,6 +186,33 @@ class Transaksi extends BaseController
 
         // Simpan transaksi
         $estimasiSelesai = $this->request->getPost('tgl_selesai_estimasi') ?? date('Y-m-d H:i:s', strtotime('+2 days'));
+        
+        // Perhitungan Poin & Diskon
+        $pelanggan = $this->pelangganModel->find($id_pelanggan);
+        $poin_ditebus = (int)($this->request->getPost('poin_ditebus') ?? 0);
+        
+        // Validasi agar poin_ditebus tidak melebihi poin pelanggan
+        $poin_tersedia = (int)($pelanggan['poin'] ?? 0);
+        if ($poin_ditebus > $poin_tersedia) {
+            $poin_ditebus = $poin_tersedia;
+        }
+        if ($poin_ditebus < 0) {
+            $poin_ditebus = 0;
+        }
+
+        $diskon = $poin_ditebus * 300;
+        if ($diskon > $total_biaya) {
+            $diskon = $total_biaya;
+            $poin_ditebus = (int)ceil($diskon / 300);
+        }
+
+        $grand_total = $total_biaya - $diskon;
+        if ($grand_total < 0) {
+            $grand_total = 0;
+        }
+
+        // Perolehan poin baru (kelipatan Rp 10.000)
+        $poin_diperoleh = (int)floor($grand_total / 10000);
 
         $dataTransaksi = [
             'no_nota'              => $this->transaksiModel->generateNota(),
@@ -137,13 +222,26 @@ class Transaksi extends BaseController
             'tgl_selesai_estimasi' => date('Y-m-d H:i:s', strtotime($estimasiSelesai)),
             'total_berat'          => $total_berat,
             'total_biaya'          => $total_biaya,
-            'grand_total'          => $total_biaya,
+            'diskon'               => $diskon,
+            'poin_ditebus'         => $poin_ditebus,
+            'poin_diperoleh'       => $poin_diperoleh,
+            'grand_total'          => $grand_total,
             'status'               => 'menunggu',
             'status_pembayaran'    => 'belum',
         ];
 
         $this->transaksiModel->save($dataTransaksi);
         $id_transaksi = $this->transaksiModel->insertID();
+
+        // Update poin pelanggan dan total transaksi
+        if ($pelanggan) {
+            $poin_baru = $poin_tersedia - $poin_ditebus + $poin_diperoleh;
+            $total_transaksi_baru = (float)($pelanggan['total_transaksi'] ?? 0) + $grand_total;
+            $this->pelangganModel->update($id_pelanggan, [
+                'poin'            => $poin_baru,
+                'total_transaksi' => $total_transaksi_baru
+            ]);
+        }
 
         // Simpan detail layanan
         foreach ($items as $item) {
@@ -161,12 +259,10 @@ class Transaksi extends BaseController
 
         // Catat penggunaan inventaris & kurangi stok (jika inventaris tersedia)
         if ($this->inventarisModel && $this->penggunaanModel) {
-            // Checkbox only submits when checked — get array of checked IDs
             $inventarisIds = $this->request->getPost('inv_id') ?? [];
 
             foreach ($inventarisIds as $id_inv) {
                 $id_inv = (int)$id_inv;
-                // Each item has its own named field: inv_jumlah_1, inv_ket_1, etc.
                 $jumlah = (float)($this->request->getPost('inv_jumlah_' . $id_inv) ?? 0);
                 $ket    = $this->request->getPost('inv_ket_' . $id_inv) ?? '';
 
@@ -186,6 +282,25 @@ class Transaksi extends BaseController
         $this->tempModel->where('id_pelanggan', $id_pelanggan)
             ->where('id_kasir', $id_kasir)
             ->delete();
+
+        // Kirim WhatsApp (Order Baru) jika diaktifkan
+        try {
+            $pelangganFresh = $this->pelangganModel->find($id_pelanggan);
+            if ($pelangganFresh) {
+                $transaksiFresh = $this->transaksiModel->find($id_transaksi);
+                $hasil = service('whatsapp')->notifyOrderBaru($transaksiFresh, $pelangganFresh);
+                if ($hasil['success']) {
+                    session()->setFlashdata('wa_success', $hasil['message']);
+                } else {
+                    if (! empty($hasil['wa_link'])) {
+                        session()->setFlashdata('wa_link', $hasil['wa_link']);
+                    }
+                    session()->setFlashdata('wa_warning', $hasil['message']);
+                }
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal mengirim WA Order Baru: ' . $e->getMessage());
+        }
 
         session()->setFlashdata('success', 'Transaksi berhasil disimpan!');
         return redirect()->to('/transaksi/nota/' . $id_transaksi);
@@ -289,6 +404,11 @@ class Transaksi extends BaseController
     // Form update status
     public function ubahStatus($id_transaksi)
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $transaksi = $this->transaksiModel->find($id_transaksi);
 
         $data = [
@@ -306,6 +426,10 @@ class Transaksi extends BaseController
     // Proses update status
     public function prosesUbahStatus()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $id_transaksi = $this->request->getPost('id_transaksi');
         $status_baru  = $this->request->getPost('status');
         $catatan      = $this->request->getPost('catatan');
@@ -343,6 +467,23 @@ class Transaksi extends BaseController
                     }
                 }
             }
+        } elseif ($status_baru == 'diambil') {
+            if ($status_lama !== 'diambil' && $this->request->getPost('kirim_wa') === '1') {
+                $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
+                if ($pelanggan) {
+                    $transaksiFresh = $this->transaksiModel->find($id_transaksi);
+                    $hasil          = service('whatsapp')->notifyOrderDiambil($transaksiFresh, $pelanggan);
+
+                    if ($hasil['success']) {
+                        session()->setFlashdata('wa_success', $hasil['message']);
+                    } else {
+                        if (! empty($hasil['wa_link'])) {
+                            session()->setFlashdata('wa_link', $hasil['wa_link']);
+                        }
+                        session()->setFlashdata('wa_warning', $hasil['message']);
+                    }
+                }
+            }
         }
 
         session()->setFlashdata('success', 'Status berhasil diubah menjadi ' . ucfirst($status_baru));
@@ -352,6 +493,11 @@ class Transaksi extends BaseController
     // Form pembayaran
     public function pembayaran($id_transaksi)
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $transaksi    = $this->transaksiModel->find($id_transaksi);
         $pelanggan    = $this->pelangganModel->find($transaksi['id_pelanggan']);
         $namaPelanggan = $pelanggan['nama_pelanggan'] ?? '-';
@@ -389,6 +535,10 @@ class Transaksi extends BaseController
     // Simpan pembayaran
     public function simpanPembayaran()
     {
+        if (!in_array($this->level, ['admin', 'kasir'])) {
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $id_transaksi  = $this->request->getPost('id_transaksi');
         $nominal_bayar = $this->request->getPost('nominal_bayar');
         $metode_bayar  = $this->request->getPost('metode_bayar');

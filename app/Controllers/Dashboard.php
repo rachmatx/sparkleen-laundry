@@ -19,11 +19,6 @@ class Dashboard extends BaseController
 
     public function __construct()
     {
-        if (!session()->get('isLoggedIn')) {
-            header('Location: ' . base_url('/login'));
-            exit();
-        }
-
         $this->transaksiModel  = new MTransaksi();
         $this->pelangganModel  = new MPelanggan();
         $this->karyawanModel   = new MKaryawan();
@@ -218,15 +213,50 @@ class Dashboard extends BaseController
             $totalGajiKaryawan = 0;
         }
 
-        // Total harga beli inventaris yang digunakan bulan ini
+        // Total harga beli inventaris yang ditambahkan/restock bulan ini
         $totalBeliInventarisBulanIni = 0;
         try {
-            $beliRow = $this->db->table('tb_penggunaan_inventaris pi')
-                ->select('SUM(pi.jumlah_digunakan * inv.harga_beli) as total')
-                ->join('tb_inventaris inv', 'inv.id_inventaris = pi.id_inventaris')
-                ->where("DATE_FORMAT(pi.tgl_penggunaan, '%Y-%m')", $bulanIni)
-                ->get()->getRowArray();
-            $totalBeliInventarisBulanIni = (int)($beliRow['total'] ?? 0);
+            $logs = $this->db->table('tb_log_aktivitas')
+                ->where('modul', 'inventaris')
+                ->whereIn('aksi', ['tambah', 'ubah'])
+                ->where("DATE_FORMAT(created_at, '%Y-%m')", $bulanIni)
+                ->get()->getResultArray();
+
+            foreach ($logs as $log) {
+                $detail = json_decode($log['detail'] ?? '', true);
+                if (empty($detail)) {
+                    continue;
+                }
+
+                if ($log['aksi'] === 'tambah') {
+                    $stok = (float)($detail['stok'] ?? 0);
+                    $hargaBeli = (int)($detail['harga_beli'] ?? 0);
+                    $totalBeliInventarisBulanIni += ($stok * $hargaBeli);
+                } elseif ($log['aksi'] === 'ubah') {
+                    if (isset($detail['stok']['dari']) && isset($detail['stok']['ke'])) {
+                        $dari = (float)$detail['stok']['dari'];
+                        $ke = (float)$detail['stok']['ke'];
+                        
+                        if ($ke > $dari) {
+                            $selisih = $ke - $dari;
+                            $hargaBeli = 0;
+                            if (isset($detail['harga_beli']['ke'])) {
+                                $hargaBeli = (int)$detail['harga_beli']['ke'];
+                            } elseif (isset($detail['harga_beli']['dari'])) {
+                                $hargaBeli = (int)$detail['harga_beli']['dari'];
+                            } else {
+                                $item = $this->db->table('tb_inventaris')
+                                    ->where('id_inventaris', $log['id_referensi'])
+                                    ->get()->getRowArray();
+                                if ($item) {
+                                    $hargaBeli = (int)$item['harga_beli'];
+                                }
+                            }
+                            $totalBeliInventarisBulanIni += ($selisih * $hargaBeli);
+                        }
+                    }
+                }
+            }
         } catch (\Throwable $e) {
             $totalBeliInventarisBulanIni = 0;
         }

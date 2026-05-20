@@ -10,9 +10,11 @@
                         <?= $jumlahKritis ?> Stok Kritis
                     </a>
                     <?php endif; ?>
+                    <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                     <a href="/inventaris/create" class="btn btn-warning btn-sm text-dark">
                         <i class="fas fa-plus me-1"></i> Tambah Barang
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="card-body p-0">
@@ -81,6 +83,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
+                                    <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                                     <a href="/inventaris/edit/<?= $inv['id_inventaris'] ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
@@ -96,6 +99,9 @@
                                            class="btn btn-success btn-sm">
                                             <i class="fas fa-power-off me-1"></i> Aktifkan
                                         </a>
+                                    <?php endif; ?>
+                                    <?php else: ?>
+                                        <span class="text-muted small">-</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

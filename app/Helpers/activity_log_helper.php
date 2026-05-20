@@ -80,12 +80,16 @@ if (! function_exists('badge_aksi_log')) {
     function badge_aksi_log(string $aksi): string
     {
         return match ($aksi) {
-            'tambah'      => 'text-bg-success',
-            'ubah'        => 'text-bg-warning',
-            'hapus'       => 'text-bg-danger',
-            'aktifkan'    => 'text-bg-info',
-            'nonaktifkan' => 'text-bg-secondary',
-            default       => 'text-bg-light',
+            'tambah'          => 'text-bg-success',
+            'ubah'            => 'text-bg-warning',
+            'hapus'           => 'text-bg-danger',
+            'aktifkan'        => 'text-bg-info',
+            'nonaktifkan'     => 'text-bg-secondary',
+            'Login'           => 'text-bg-success',
+            'Gagal Login'     => 'text-bg-danger',
+            'Blokir Login'    => 'text-bg-dark',
+            'Backup Database' => 'text-bg-info',
+            default           => 'text-bg-light',
         };
     }
 }

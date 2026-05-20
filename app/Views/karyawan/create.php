@@ -49,7 +49,7 @@
                                 'id'          => 'password_karyawan_create',
                                 'name'        => 'password',
                                 'label'       => 'Password',
-                                'placeholder' => 'Minimal 6 karakter',
+                                'placeholder' => 'Min. 8 karakter (kombinasi huruf & angka/simbol)',
                                 'required'    => true,
                             ]) ?>
                         </div>

@@ -15,11 +15,6 @@ class Laporan extends BaseController
 
     public function __construct()
     {
-        if (!session()->get('isLoggedIn')) {
-            header('Location: ' . base_url('/login'));
-            exit();
-        }
-
         $level = session()->get('level');
         if ($level != 'admin' && $level != 'pemilik') {
             session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman laporan.');
@@ -112,7 +107,7 @@ class Laporan extends BaseController
 
         $data = [
             'title'             => 'Laporan Bulanan',
-            'activeMenu'        => 'laporan',
+            'activeMenu'        => 'laporan_bulanan',
             'transaksi'         => $transaksi,
             'bulan'             => $bulan,
             'tahun'             => $tahun,

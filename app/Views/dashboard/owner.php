@@ -132,6 +132,7 @@ $growthPositive = $growthNominal >= 0;
                 <canvas id="chartMetodeBayar" style="max-height:230px;"></canvas>
                 <div class="mt-3 w-100">
                     <?php
+                    $totalSemuaPembayaran = array_sum(array_column($metodePembayaran, 'total'));
                     $metodeLabelMap = [
                         'cash'     => ['label' => 'Cash',     'color' => '#198754'],
                         'qris'     => ['label' => 'QRIS',     'color' => '#0d6efd'],
@@ -140,12 +141,13 @@ $growthPositive = $growthNominal >= 0;
                     foreach ($metodePembayaran as $mp):
                         $key   = strtolower($mp['metode_bayar']);
                         $info  = $metodeLabelMap[$key] ?? ['label' => ucfirst($mp['metode_bayar']), 'color' => '#6c757d'];
+                        $persen = $totalSemuaPembayaran > 0 ? round(($mp['total'] / $totalSemuaPembayaran) * 100, 1) : 0;
                     ?>
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <div class="d-flex align-items-center gap-2">
                             <span class="rounded-circle d-inline-block"
                                   style="width:10px;height:10px;background:<?= $info['color'] ?>;"></span>
-                            <span class="small"><?= $info['label'] ?></span>
+                            <span class="small"><?= $info['label'] ?> <span class="text-muted ms-1">(<?= $persen ?>%)</span></span>
                         </div>
                         <span class="small fw-semibold">Rp <?= number_format($mp['total'], 0, ',', '.') ?></span>
                     </div>
@@ -455,7 +457,12 @@ $growthPositive = $growthNominal >= 0;
                 legend: { display: false },
                 tooltip: {
                     callbacks: {
-                        label: ctx => ctx.label + ': Rp ' + ctx.raw.toLocaleString('id-ID')
+                        label: ctx => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const val = ctx.raw;
+                            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                            return ctx.label + ': Rp ' + val.toLocaleString('id-ID') + ' (' + pct + '%)';
+                        }
                     }
                 }
             }

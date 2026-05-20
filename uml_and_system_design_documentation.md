@@ -36,18 +36,26 @@ graph TD
     Kasir --> UC_Bayar
     Kasir --> UC_InventarisPakai
     Kasir --> UC_WA
+    Kasir -.->|View Only| UC_Inventaris
 
     Admin --> UC_Login
     Admin --> UC_Karyawan
     Admin --> UC_Layanan
     Admin --> UC_Inventaris
     Admin --> UC_Transaksi
+    Admin --> UC_Pelanggan
+    Admin --> UC_Bayar
+    Admin --> UC_InventarisPakai
     Admin --> UC_Laporan
-    Admin --> UC_LogAktivitas
 
     Pemilik --> UC_Login
+    Pemilik --> UC_Karyawan
+    Pemilik --> UC_Layanan
+    Pemilik --> UC_Inventaris
     Pemilik --> UC_Laporan
     Pemilik --> UC_LogAktivitas
+    Pemilik -.->|View Only| UC_Transaksi
+    Pemilik -.->|View & Toggle| UC_Pelanggan
 
     UC_Transaksi -.->|include| UC_WA
     UC_Bayar -.->|include| UC_Transaksi
@@ -108,7 +116,16 @@ stateDiagram-v2
 stateDiagram-v2
     [*] --> BukaMenuPembayaran
     BukaMenuPembayaran --> CariNota : Masukkan No Nota / Cari Pelanggan
-    CariNota --> InputBayar : Input Nominal Uang Diterima
+    CariNota --> PilihMetodeBayar : Pilih Opsi (Cash, QRIS, Transfer Bank)
+    
+    state PilihMetodeBayar <<choice>>
+    PilihMetodeBayar --> TampilQRIS : Pilih QRIS
+    PilihMetodeBayar --> TampilTransfer : Pilih Transfer Bank
+    PilihMetodeBayar --> InputBayar : Pilih Cash
+    
+    TampilQRIS --> InputBayar : Tampilkan Kode QR Mockup & Pelanggan Scan
+    TampilTransfer --> InputBayar : Tampilkan No Rekening & Salin untuk Transfer
+    
     InputBayar --> HitungKembalian : Sistem Hitung (Uang - Tagihan)
     HitungKembalian --> CekLunas
     
@@ -315,9 +332,16 @@ classDiagram
     class WhatsAppNotifier {
         +apiToken: string
         +provider: string
-        +sendOrderReceived()
-        +sendOrderCompleted()
+        +notifyOrderBaru(array transaksi, array pelanggan)
+        +notifyOrderSelesai(array transaksi, array pelanggan)
+        +notifyOrderDiambil(array transaksi, array pelanggan)
         -sendRequest()
+    }
+
+    class Backup {
+        -level: string
+        +index()
+        +download()
     }
 
     class MTransaksi {
@@ -335,6 +359,12 @@ classDiagram
         +verifyLogin()
     }
 
+    class MLayananInventaris {
+        +table: string = tb_layanan_inventaris
+        +primaryKey: string = id_layanan_inventaris
+        +allowedFields: array
+    }
+
     class MLogAktivitas {
         +table: string = tb_log_aktivitas
         +primaryKey: string = id_log
@@ -345,15 +375,18 @@ classDiagram
     BaseController <|-- Transaksi
     BaseController <|-- Karyawan
     BaseController <|-- Laporan
+    BaseController <|-- Backup
 
     Auth ..> LoginThrottle : Menggunakan
     AuthFilter ..> BaseController : Mengamankan Akses Rute
     Transaksi ..> MTransaksi : Memakai
+    Transaksi ..> MLayananInventaris : Memakai
     Transaksi ..> WhatsAppNotifier : Menggunakan
     Karyawan ..> MKaryawan : Memakai
     Karyawan ..> activity_log_helper : Mencatat Aksi
     activity_log_helper ..> MLogAktivitas : Menyimpan ke
     Laporan ..> MTransaksi : Memakai
+    Backup ..> MLogAktivitas : Mencatat Log Keamanan
 ```
 
 ---
@@ -374,6 +407,8 @@ erDiagram
     TRANSAKSI ||--o{ PENGGUNAAN_INVENTARIS : "memakai"
     INVENTARIS ||--o{ PENGGUNAAN_INVENTARIS : "digunakan di"
     KARYAWAN ||--o{ LOG_AKTIVITAS : "melakukan aksi"
+    LAYANAN ||--o{ LAYANAN_INVENTARIS : "memiliki resep"
+    INVENTARIS ||--o{ LAYANAN_INVENTARIS : "dipakai dalam resep"
 
     KARYAWAN {
         int id_karyawan PK
@@ -392,6 +427,7 @@ erDiagram
         varchar nama_pelanggan
         varchar no_hp
         text alamat
+        int poin
         datetime created_at
         datetime updated_at
     }
@@ -417,6 +453,8 @@ erDiagram
         decimal total_biaya
         decimal diskon
         decimal grand_total
+        int poin_ditebus
+        int poin_diperoleh
         enum status "menunggu, proses, setrika, selesai, diambil"
         enum status_pembayaran "lunas, cicil, belum"
         enum metode_pembayaran "cash, qris, transfer"
@@ -472,13 +510,22 @@ erDiagram
         text keterangan
     }
 
+    LAYANAN_INVENTARIS {
+        int id_layanan_inventaris PK
+        int id_layanan FK
+        int id_inventaris FK
+        decimal jumlah_default
+        datetime created_at
+        datetime updated_at
+    }
+
     LOG_AKTIVITAS {
         int id_log PK
         int id_karyawan FK
         varchar nama_karyawan
         enum level_karyawan "admin, kasir, pemilik"
-        enum modul "karyawan, inventaris"
-        enum aksi "tambah, ubah, hapus, aktifkan, nonaktifkan"
+        enum modul "karyawan, inventaris, Keamanan, Autentikasi"
+        enum aksi "tambah, ubah, hapus, aktifkan, nonaktifkan, Login, Gagal Login, Blokir Login, Backup Database"
         int id_referensi
         varchar nama_referensi
         text detail
@@ -529,6 +576,7 @@ tb_pelanggan (                                        |
    nama_pelanggan: VARCHAR(100)                       |
    no_hp: VARCHAR(20)                                 |
    alamat: TEXT                                       |
+   poin: INT                                          |
    is_aktif: TINYINT(1)                               |
    created_at: DATETIME                               |
    updated_at: DATETIME                               |
@@ -548,6 +596,8 @@ tb_pelanggan (                                        |
                               total_biaya: DECIMAL(10,2)
                               diskon: DECIMAL(10,2)
                               grand_total: DECIMAL(10,2)
+                              poin_ditebus: INT
+                              poin_diperoleh: INT
                               status: ENUM('menunggu', 'proses', 'setrika', 'selesai', 'diambil')
                               status_pembayaran: ENUM('lunas', 'cicil', 'belum')
                               metode_pembayaran: ENUM('cash', 'qris', 'transfer')
@@ -590,17 +640,26 @@ tb_pelanggan (                                        |
                               |                                  estimasi_hari: INT
                               |                                  is_aktif: TINYINT
                               |                               )
-                              |
-                              |-- digunakan (1:N) ----------> tb_penggunaan_inventaris (
-                                                                 id_penggunaan: INT (PK)
-                                                                 id_transaksi: INT (FK)
-                                                                 id_inventaris: INT (FK) --+
-                                                                 jumlah_pakai: INT         |
-                                                                 keterangan: TEXT          |
-                                                              )                            |
-                                                                                           |
-                                                              tb_inventaris (              |
-                                                                 id_inventaris: INT (PK) <-+
+                              |                                  |
+                              |                                  |-- memiliki resep (1:N) --> tb_layanan_inventaris (
+                              |                                                                  id_layanan_inventaris: INT (PK)
+                              |                                                                  id_layanan: INT (FK)
+                              |                                                                  id_inventaris: INT (FK) --+
+                              |                                                                  jumlah_default: DECIMAL   |
+                              |                                                                  created_at: DATETIME      |
+                              |                                                                  updated_at: DATETIME      |
+                              |                                                               )                           |
+                              |                                                                                            |
+                              |-- digunakan (1:N) ----------> tb_penggunaan_inventaris (                                   |
+                                                                 id_penggunaan: INT (PK)                                   |
+                                                                 id_transaksi: INT (FK)                                    |
+                                                                 id_inventaris: INT (FK) --+                               |
+                                                                 jumlah_pakai: INT         |                               |
+                                                                 keterangan: TEXT          |                               |
+                                                              )                            |                               |
+                                                                                           |                               |
+                                                              tb_inventaris (              |                               |
+                                                                 id_inventaris: INT (PK) <-+<-----------------------------+
                                                                  nama_barang: VARCHAR
                                                                  stok: INT
                                                                  satuan: VARCHAR
@@ -722,6 +781,59 @@ flowchart TD
 
     SelesaiAksi --> ReloadTabel[Reload Tabel Pelanggan & Tampilkan Toast Sukses]
     ReloadTabel --> End([Selesai])
+```
+
+---
+
+## 7. Business Process Model and Notation (BPMN)
+Menggambarkan alur kerja utama bisnis dari pelanggan datang, pelayanan kasir, otomatisasi sistem, hingga pengambilan cucian menggunakan format Flowchart ber-Swimlanes yang mensimulasikan standar BPMN.
+
+```mermaid
+graph TD
+    %% BPMN Swimlanes for Sparkleen Laundry
+    subgraph Pelanggan [LANE: Pelanggan]
+        Start([Mulai]) --> B1[Datang Bawa Pakaian]
+        B1 --> B2[Pilih Layanan & Wangi]
+        B5[Melakukan Pembayaran] --> B6[Menerima Struk & Pakaian]
+        B6 --> End([Selesai])
+    end
+
+    subgraph Kasir [LANE: Kasir]
+        B2 --> K1[Input Pelanggan & Timbang Pakaian]
+        K1 --> K2{Pilihan Pembayaran?}
+        K2 -->|DP / Lunas| K3[Proses Pembayaran]
+        K2 -->|Belum Bayar| K4[Simpan Transaksi]
+        K3 --> K4
+        K4 --> K5[Serahkan Pakaian ke Bagian Cuci]
+        K5 --> K6[Proses Cuci, Kering, Setrika]
+        K6 --> K7[Ubah Status: Selesai]
+        K7 --> K8[Pakaian Siap di Rak]
+        K8 --> K9[Serahkan Pakaian & Konfirmasi Selesai]
+    end
+
+    subgraph Sistem [LANE: Sistem Sparkleen]
+        K4 -.-> S1[Simpan ke Database & Potong Inventaris]
+        S1 -.-> S2[Kirim WA: Order Baru]
+        K3 -.-> S3[Simpan Detail Pembayaran]
+        K7 -.-> S4[Kirim WA: Pakaian Selesai]
+        K9 -.-> S5[Simpan Log Aktivitas & Kirim WA: Diambil]
+        S2 -.-> B5
+        S4 -.-> B5
+        S5 -.-> End
+    end
+
+    %% Styling BPMN Elements
+    classDef laneStyle fill:#1e293b,stroke:#475569,stroke-width:2px,color:#e2e8f0;
+    classDef startEnd fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff,rx:20px,ry:20px;
+    classDef taskStyle fill:#3b82f6,stroke:#2563eb,stroke-width:2px,color:#fff;
+    classDef gatewayStyle fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff;
+    classDef systemStyle fill:#06b6d4,stroke:#0891b2,stroke-width:2px,color:#fff;
+
+    class Pelanggan,Kasir,Sistem laneStyle;
+    class Start,End startEnd;
+    class B1,B2,B5,B6,K1,K3,K4,K5,K6,K7,K8,K9 taskStyle;
+    class K2 gatewayStyle;
+    class S1,S2,S3,S4,S5 systemStyle;
 ```
 
 ---

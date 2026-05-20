@@ -5,6 +5,7 @@
                 <h3 class="card-title">Edit Data Pelanggan</h3>
             </div>
             <form action="/pelanggan/update/<?= $pelanggan['id_pelanggan'] ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="card-body">
                     <?php if(session()->getFlashdata('errors')): ?>
                     <div class="alert alert-danger alert-dismissible">
@@ -26,6 +27,7 @@
                         <label class="form-label fw-semibold">No Telepon <span class="text-danger">*</span></label>
                         <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control" name="no_telp"
                                value="<?= esc($pelanggan['no_telp']) ?>" required>
+                        <div class="form-text">Harus diawali dengan 08 atau 62, panjang 9-14 digit.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Alamat <span class="text-danger">*</span></label>
