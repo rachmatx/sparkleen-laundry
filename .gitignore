@@ -132,3 +132,11 @@ scratch.php
 *.sql
 .phpunit.result.cache
 
+# Temporary Analysis, Draft Reports, and Generated Diagrams
+*.docx
+analisis_keselarasan_laporan*.md
+generate_diagrams.py
+scratch_extracted_laporan*.txt
+/visualisasi_diagram/
+
+

@@ -27,7 +27,7 @@ class LogAktivitas extends BaseController
         $sampai = $this->request->getGet('sampai');
 
         $data = [
-            'title'      => 'Log Aktivitas Admin',
+            'title'      => 'Log Aktivitas',
             'activeMenu' => 'log_aktivitas',
             'logs'       => $this->logModel->getDaftarLog($modul, $aksi, $dari, $sampai),
             'filter'     => [

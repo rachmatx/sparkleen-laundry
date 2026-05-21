@@ -93,3 +93,16 @@ if (! function_exists('badge_aksi_log')) {
         };
     }
 }
+
+if (! function_exists('badge_level_karyawan')) {
+    function badge_level_karyawan(string $level): string
+    {
+        return match (strtolower($level)) {
+            'pemilik' => 'text-bg-primary',
+            'admin'   => 'text-bg-success',
+            'kasir'   => 'text-bg-secondary',
+            default   => 'text-bg-secondary',
+        };
+    }
+}
+

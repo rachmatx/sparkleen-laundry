@@ -151,3 +151,14 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
 30. DOKUMENTASI BUSINESS PROCESS MODEL AND NOTATION (BPMN)
     - [UML/Dokumentasi] Menambahkan rancangan alur bisnis menggunakan standar notasi BPMN dengan sistem *Swimlanes* yang melibatkan tiga pilar utama: Pelanggan, Kasir, dan Sistem Sparkleen. Diagram ini telah dimuat pada berkas `uml_and_system_design_documentation.md`.
     - [UX/UI] Menambahkan preset tombol **BPMN Diagram** pada bagian kiri halaman `mermaid_renderer.html` untuk memvisualisasikan seluruh alur operasional bisnis secara utuh.
+
+31. DINAMISASI WARNA BADGE PERAN & PENYEMPURNAAN PENAMAAN LOG AKTIVITAS
+    - [UI/UX] Mengubah warna badge pelaku log aktivitas berdasarkan perannya agar lebih dinamis dan mudah dibedakan:
+      - **Pemilik**: Biru (`text-bg-primary`)
+      - **Admin**: Hijau (`text-bg-success`)
+      - **Kasir**: Abu-abu (`text-bg-secondary`)
+    - [Backend] Menambahkan fungsi helper `badge_level_karyawan` di `app/Helpers/activity_log_helper.php` untuk memetakan level/peran pengguna ke kelas warna CSS Bootstrap yang sesuai.
+    - [UI/UX] Memperbarui penamaan halaman dan card header dari "Log Aktivitas Admin" menjadi "Log Aktivitas" di Controller `LogAktivitas.php` dan View `log_aktivitas/index.php` karena halaman ini mencatat aktivitas seluruh pengguna (Pemilik, Admin, dan Kasir).
+    - [UI/UX] Menghilangkan batasan kata "oleh Admin/Pemilik" pada keterangan ringkasan halaman log aktivitas agar selaras dengan cakupan data log sebenarnya.
+    - [Dokumentasi] Mengonfirmasi bahwa seluruh perubahan ini murni di sisi presentasi (Frontend/UI) dan tidak memengaruhi struktur database (`tb_log_aktivitas`) maupun data log historis.
+

@@ -2,7 +2,7 @@
     <div class="col-12">
         <div class="card card-outline card-info">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-history me-1"></i> Log Aktivitas Admin</h3>
+                <h3 class="card-title"><i class="fas fa-history me-1"></i> Log Aktivitas</h3>
             </div>
             <div class="card-body">
                 <form method="get" action="/log-aktivitas" class="row g-2 align-items-end mb-3">
@@ -42,7 +42,7 @@
                 </form>
 
                 <p class="text-muted small mb-0">
-                    Mencatat aktivitas perubahan data (Karyawan, Inventaris) serta log keamanan sistem oleh Admin/Pemilik (maks. 500 entri terbaru).
+                    Mencatat aktivitas perubahan data (Karyawan, Inventaris) serta log keamanan sistem (maks. 500 entri terbaru).
                 </p>
             </div>
             <div class="card-body p-0 border-top">
@@ -76,7 +76,7 @@
                                 <td class="text-nowrap small"><?= date('d/m/Y H:i', strtotime($log['created_at'])) ?></td>
                                 <td>
                                     <strong><?= esc($log['nama_karyawan']) ?></strong>
-                                    <br><span class="badge text-bg-secondary"><?= ucfirst($log['level_karyawan']) ?></span>
+                                    <br><span class="badge <?= badge_level_karyawan($log['level_karyawan']) ?>"><?= ucfirst($log['level_karyawan']) ?></span>
                                 </td>
                                 <td><?= label_modul_log($log['modul']) ?></td>
                                 <td><span class="badge <?= badge_aksi_log($log['aksi']) ?>"><?= label_aksi_log($log['aksi']) ?></span></td>
