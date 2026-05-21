@@ -1,6 +1,6 @@
 LOG PERUBAHAN & PENAMBAHAN FITUR - SPARKLEEN LAUNDRY
 ====================================================
-Tanggal Update: 19 Mei 2026
+Tanggal Update: 22 Mei 2026
 
 Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur yang telah dilakukan pada sistem:
 
@@ -162,3 +162,6 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
     - [UI/UX] Menghilangkan batasan kata "oleh Admin/Pemilik" pada keterangan ringkasan halaman log aktivitas agar selaras dengan cakupan data log sebenarnya.
     - [Dokumentasi] Mengonfirmasi bahwa seluruh perubahan ini murni di sisi presentasi (Frontend/UI) dan tidak memengaruhi struktur database (`tb_log_aktivitas`) maupun data log historis.
 
+32. PERBAIKAN VALIDASI DAN ALUR UBAH PASSWORD KARYAWAN
+    - [BugFix] Mengatasi bug pada form edit data karyawan di mana pesan kesalahan "Password dan konfirmasi password tidak sama" tetap muncul dan memblokir pengiriman data meskipun pengguna telah memperbaiki nilai kedua kolom tersebut agar sama.
+    - [Fungsional/UX] Memperbarui script `password-toggle.js` agar event pengetikan (`input`) pada salah satu input password (baik Password Baru maupun Konfirmasi) akan secara otomatis membersihkan status validasi error (custom validity) pada kedua kolom tersebut secara bersamaan. Hal ini memastikan browser dapat memproses klik tombol "Simpan Perubahan" tanpa terhambat status validasi yang lama.

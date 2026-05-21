@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         [passwordInput, confirmInput].forEach(function (input) {
             input.addEventListener('input', function () {
-                input.setCustomValidity('');
+                passwordInput.setCustomValidity('');
+                confirmInput.setCustomValidity('');
             });
         });
     });
