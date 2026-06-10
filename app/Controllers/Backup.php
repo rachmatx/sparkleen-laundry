@@ -15,7 +15,7 @@ class Backup extends BaseController
 
     public function index()
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
+        if ($this->level !== 'pemilik') {
             session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
             return redirect()->to('/dashboard');
         }
@@ -33,8 +33,23 @@ class Backup extends BaseController
 
     public function download()
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
+        if ($this->level !== 'pemilik') {
             return redirect()->to('/dashboard');
+        }
+
+        $password = $this->request->getPost('password');
+        if (empty($password)) {
+            session()->setFlashdata('error', 'Password otorisasi wajib diisi.');
+            return redirect()->to('/backup');
+        }
+
+        $id_karyawan = session()->get('id_karyawan');
+        $karyawanModel = new \App\Models\MKaryawan();
+        $user = $karyawanModel->find($id_karyawan);
+
+        if (!$user || !password_verify($password, $user['password'])) {
+            session()->setFlashdata('error', 'Otorisasi gagal! Password tidak sesuai.');
+            return redirect()->to('/backup');
         }
 
         $db = \Config\Database::connect();

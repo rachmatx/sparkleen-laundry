@@ -3,8 +3,24 @@
         <div class="card card-outline card-success">
             <div class="card-header">
                 <h3 class="card-title">Daftar Karyawan</h3>
-                <div class="card-tools">
-                    <a href="/karyawan/create" class="btn btn-success btn-sm">
+                <div class="card-tools d-flex gap-2 align-items-center">
+                    <form method="get" action="/karyawan" class="m-0">
+                        <div class="input-group input-group-sm" style="width: 240px;">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" id="liveSearchInput"
+                                   name="q"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Cari nama, username, level..."
+                                   data-page="karyawan"
+                                   data-sort="<?= esc($sort ?? 'id_karyawan') ?>"
+                                   data-dir="<?= esc($dir ?? 'ASC') ?>"
+                                   autocomplete="off">
+                        </div>
+                    </form>
+                    <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
+                    <a href="/karyawan/create" class="btn btn-success btn-sm text-nowrap">
                         <i class="fas fa-plus"></i> Tambah Karyawan
                     </a>
                 </div>
@@ -13,7 +29,7 @@
                 <?php if(session()->getFlashdata('success')): ?>
                     <div class="alert alert-success alert-dismissible m-3">
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        <i class="fas fa-check-circle me-1"></i> <?= session()->getFlashdata('success') ?>
+                        <i class="fas fa-check-circle me-1"></i> <?= esc(session()->getFlashdata('success')) ?>
                     </div>
                 <?php endif; ?>
                 <div class="table-responsive">
@@ -21,16 +37,16 @@
                         <thead class="table-light">
                             <tr>
                                 <th width="50px">No</th>
-                                <th>Nama Karyawan</th>
-                                <th>Username</th>
-                                <th>Level</th>
-                                <th>No Telepon</th>
-                                <th>Gaji Pokok</th>
-                                <th class="text-center">Status</th>
+                                <th data-sort="nama_karyawan">Nama Karyawan</th>
+                                <th data-sort="username">Username</th>
+                                <th data-sort="level">Level</th>
+                                <th data-sort="no_telp">No Telepon</th>
+                                <th data-sort="gaji_pokok">Gaji Pokok</th>
+                                <th data-sort="is_aktif" class="text-center">Status</th>
                                 <th width="160px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="liveSearchTbody">
                             <?php if(empty($karyawan)): ?>
                             <tr>
                                 <td colspan="7" class="text-center text-muted py-4">
@@ -39,7 +55,7 @@
                                 </td>
                             </tr>
                             <?php else: ?>
-                            <?php $no = 1; foreach($karyawan as $k): ?>
+                            <?php $no = ($page - 1) * $limit + 1; foreach($karyawan as $k): ?>
                             <tr>
                                 <td class="text-center"><?= $no++ ?></td>
                                 <td><?= esc($k['nama_karyawan']) ?></td>
@@ -77,17 +93,19 @@
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
                                     <?php if ($k['is_aktif'] == 1): ?>
-                                        <a href="#"
-                                           onclick="if(confirm('Yakin ingin menonaktifkan karyawan ini?')) window.location.href='/karyawan/toggle/<?= $k['id_karyawan'] ?>'"
-                                           class="btn btn-danger btn-sm">
-                                            <i class="fas fa-power-off"></i> Nonaktif
-                                        </a>
+                                        <form action="/karyawan/toggle/<?= $k['id_karyawan'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan karyawan ini?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-power-off"></i> Nonaktif
+                                            </button>
+                                        </form>
                                     <?php else: ?>
-                                        <a href="#"
-                                           onclick="if(confirm('Yakin ingin mengaktifkan karyawan ini?')) window.location.href='/karyawan/toggle/<?= $k['id_karyawan'] ?>'"
-                                           class="btn btn-success btn-sm">
-                                            <i class="fas fa-power-off"></i> Aktifkan
-                                        </a>
+                                        <form action="/karyawan/toggle/<?= $k['id_karyawan'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan karyawan ini?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-power-off"></i> Aktifkan
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                     <?php else: ?>
                                         <span class="text-muted"><i class="fas fa-lock"></i></span>
@@ -100,6 +118,25 @@
                     </table>
                 </div>
             </div>
+            <?php if ($hasPrev || $hasNext): ?>
+            <div class="card-footer live-search-pagination d-flex justify-content-between align-items-center bg-transparent border-top">
+                <div>
+                    <span class="text-muted small">Halaman <strong><?= $page ?></strong></span>
+                </div>
+                <div class="btn-group">
+                    <?php if ($hasPrev): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-chevron-left me-1"></i> Sebelumnya
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($hasNext): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="btn btn-outline-secondary btn-sm ms-2">
+                            Selanjutnya <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

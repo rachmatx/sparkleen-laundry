@@ -1,3 +1,6 @@
+<?= $this->extend('backend/template/layout') ?>
+<?= $this->section('content') ?>
+
 <?php
 // Helper: status badge class
 function statusBadgeClass(string $status): string {
@@ -61,8 +64,15 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
             <?php endif; ?>
             <?php if (!empty($waHref) && $transaksi['status'] === 'selesai'): ?>
             <a href="<?= esc($waHref) ?>" target="_blank" rel="noopener" class="btn btn-success">
-                <i class="fab fa-whatsapp me-1"></i> Kirim WhatsApp
+                <i class="fab fa-whatsapp me-1"></i> Kirim WhatsApp Manual
             </a>
+            <?php endif; ?>
+            <?php if (in_array($transaksi['status'], ['selesai', 'diambil'])): ?>
+            <form action="/transaksi/kirim-wa-api/<?= $transaksi['id_transaksi'] ?>/<?= $transaksi['status'] ?>" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-success" onclick="return confirm('Kirim (ulang) notifikasi WhatsApp via API ke pelanggan?')">
+                    <i class="fab fa-whatsapp me-1"></i> Kirim Ulang WA (API)
+                </button>
+            </form>
             <?php endif; ?>
             <?php endif; ?>
         </div>
@@ -204,3 +214,5 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
         <?php endif; ?>
     </div>
 </div>
+
+<?= $this->endSection() ?>

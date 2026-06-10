@@ -15,12 +15,7 @@ class Laporan extends BaseController
 
     public function __construct()
     {
-        $level = session()->get('level');
-        if ($level != 'admin' && $level != 'pemilik') {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman laporan.');
-            header('Location: ' . base_url('/dashboard'));
-            exit();
-        }
+
 
         $this->transaksiModel = new MTransaksi();
     }
@@ -44,12 +39,23 @@ class Laporan extends BaseController
     {
         $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
 
-        $transaksi = $this->transaksiModel
+        $page = (int)($this->request->getGet('page') ?? 1);
+        if ($page < 1) $page = 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $items = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->where('DATE(tgl_masuk)', $tanggal)
             ->orderBy('id_transaksi', 'DESC')
-            ->findAll();
+            ->findAll($limit + 1, $offset);
+
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
 
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
@@ -61,13 +67,21 @@ class Laporan extends BaseController
             ->where('DATE(tgl_masuk)', $tanggal)
             ->first();
 
+        $jumlahTransaksi = $this->transaksiModel
+            ->where('DATE(tgl_masuk)', $tanggal)
+            ->countAllResults();
+
         $data = [
             'title'            => 'Laporan Harian',
             'activeMenu'       => 'laporan',
-            'transaksi'        => $transaksi,
+            'transaksi'        => $items,
+            'page'             => $page,
+            'hasPrev'          => $hasPrev,
+            'hasNext'          => $hasNext,
+            'limit'            => $limit,
             'tanggal'          => $tanggal,
             'totalPendapatan'  => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi'  => count($transaksi),
+            'jumlahTransaksi'  => $jumlahTransaksi,
             'totalBerat'       => $totalBerat['berat'] ?? 0,
         ];
 
@@ -83,13 +97,24 @@ class Laporan extends BaseController
         $bulan = $this->request->getGet('bulan') ?? date('m');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
 
-        $transaksi = $this->transaksiModel
+        $page = (int)($this->request->getGet('page') ?? 1);
+        if ($page < 1) $page = 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $items = $this->transaksiModel
             ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->where('MONTH(tgl_masuk)', $bulan)
             ->where('YEAR(tgl_masuk)', $tahun)
             ->orderBy('tgl_masuk', 'ASC')
-            ->findAll();
+            ->findAll($limit + 1, $offset);
+
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
 
         $totalPendapatan = $this->transaksiModel
             ->select('SUM(grand_total) as total')
@@ -105,14 +130,23 @@ class Laporan extends BaseController
             ->orderBy('tanggal', 'ASC')
             ->findAll();
 
+        $jumlahTransaksi = $this->transaksiModel
+            ->where('MONTH(tgl_masuk)', $bulan)
+            ->where('YEAR(tgl_masuk)', $tahun)
+            ->countAllResults();
+
         $data = [
             'title'             => 'Laporan Bulanan',
             'activeMenu'        => 'laporan_bulanan',
-            'transaksi'         => $transaksi,
+            'transaksi'         => $items,
+            'page'              => $page,
+            'hasPrev'           => $hasPrev,
+            'hasNext'           => $hasNext,
+            'limit'             => $limit,
             'bulan'             => $bulan,
             'tahun'             => $tahun,
             'totalPendapatan'   => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi'   => count($transaksi),
+            'jumlahTransaksi'   => $jumlahTransaksi,
             'pendapatanPerHari' => $pendapatanPerHari,
         ];
 

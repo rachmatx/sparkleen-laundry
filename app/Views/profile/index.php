@@ -23,7 +23,7 @@
                     <?php if(session()->getFlashdata('success')): ?>
                     <div class="alert alert-success alert-dismissible">
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        <strong><i class="fas fa-check-circle me-1"></i> Berhasil:</strong> <?= session()->getFlashdata('success') ?>
+                        <strong><i class="fas fa-check-circle me-1"></i> Berhasil:</strong> <?= esc(session()->getFlashdata('success')) ?>
                     </div>
                     <?php endif; ?>
 

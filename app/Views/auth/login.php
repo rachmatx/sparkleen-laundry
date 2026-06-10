@@ -181,14 +181,14 @@
                 <?php if(session()->getFlashdata('error')): ?>
                     <div class="alert alert-danger mb-4" role="alert">
                         <i class="fas fa-exclamation-circle"></i>
-                        <div><?= session()->getFlashdata('error') ?></div>
+                        <div><?= esc(session()->getFlashdata('error')) ?></div>
                     </div>
                 <?php endif; ?>
                 
                 <?php if(session()->getFlashdata('success')): ?>
                     <div class="alert alert-success mb-4" role="alert">
                         <i class="fas fa-check-circle"></i>
-                        <div><?= session()->getFlashdata('success') ?></div>
+                        <div><?= esc(session()->getFlashdata('success')) ?></div>
                     </div>
                 <?php endif; ?>
 

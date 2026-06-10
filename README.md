@@ -95,3 +95,21 @@ whatsapp.businessName = "Sparkleen Laundry"
 ### Jenis Provider:
 * **`fonnte` / `wablas`**: Mengirimkan notifikasi WhatsApp secara **otomatis** di latar belakang menggunakan jalur API Gateway masing-masing.
 * **`link` (Manual)**: Tidak mengirim otomatis, melainkan menampilkan tombol **"Kirim WhatsApp"** di halaman Detail Transaksi yang mengarah ke tautan `wa.me` (berisi nomor tujuan & teks template pesan otomatis yang siap dikirim lewat web/aplikasi WhatsApp).
+
+---
+
+## 📝 Changelog & Pembaruan Sistem Terkini
+
+Berbagai peningkatan **UI/UX dan Performa** telah diimplementasikan:
+
+1. **POS Layout (Transaksi Baru)**: Mengubah form vertikal menjadi format Grid modern yang memisahkan Input Form di kiri dan Struk Ringkasan di kanan untuk mempercepat kerja kasir.
+2. **Struk Thermal 58mm**: Menyesuaikan CSS *print media* agar hasil cetakan nota termal lebih presisi, menghilangkan margin besar, dan membuang elemen tabel/border yang tidak perlu.
+3. **Dashboard Informatif**: Mengubah grafik pendapatan dari bar ke line chart yang lebih halus animasinya. Menambahkan tabel cerdas **"Daftar Prioritas Cucian"** (menampilkan pesanan jatuh tempo hari ini/lewat batas yang belum diambil).
+4. **Notifikasi SweetAlert2**: Mencegah layout meloncat dengan mengganti Bootstrap Flashdata default menjadi notifikasi "Toast" SweetAlert2 yang mengambang mulus di pojok kanan atas (dengan durasi baca 5 detik).
+5. **Navigasi Sidebar Kategorikal**: Sidebar kini dikelompokkan menjadi kategori fungsional (MAIN NAVIGATION, MASTER DATA, REPORTING & LOGS, SISTEM) dengan jarak visual (*spacing*) agar bersih dan intuitif.
+6. **Quick View Detail Transaksi (AJAX)**: Kasir dapat melihat rincian sebuah transaksi secara instan dari halaman "Daftar Transaksi" melalui *Pop-up Modal* berbasis AJAX, tanpa harus memuat ulang halaman (*page reload*).
+7. **Penyempurnaan UML & Desain Sistem**: Pemutakhiran otomatis dokumentasi `uml_and_system_design_documentation.md` yang merangkum *Class Diagram*, fitur *Quick View*, dan penyesuaian ERD/LRS yang kini mencakup rekam jejak `tb_log_whatsapp`.
+8. **Live Search (AJAX)**: Pencarian pelanggan, transaksi, layanan, dan inventaris secara real-time tanpa perlu *reload* halaman.
+9. **Pelacakan Order Publik**: Pelanggan dapat mengecek status cucian lewat fitur "Lacak" dengan 5-tahapan proses yang disajikan dengan UI modern secara publik tanpa login.
+10. **Sistem PIN Pengambilan**: Tambahan keamanan dengan 4 digit PIN yang terintegrasi di tabel transaksi untuk pengambilan laundry.
+11. **Automated Testing Suite**: Peningkatan reliabilitas aplikasi melalui implementasi PHPUnit (Unit & Feature Testing), Data Seeder otomatis, dan detektor typo email (`validation_helper`).

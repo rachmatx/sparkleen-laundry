@@ -48,7 +48,7 @@ class Profile extends BaseController
         $data['is_aktif'] = $user['is_aktif'];
 
         // Cek typo email
-        if ($data['email'] && !$this->cekTypoEmail($data['email'])) {
+        if ($data['email'] && !cekTypoEmail($data['email'])) {
             session()->setFlashdata('errors', ['email' => 'Domain email sepertinya salah ketik (typo). Pastikan menggunakan domain yang benar.']);
             return redirect()->to('/profile')->withInput();
         }
@@ -82,22 +82,5 @@ class Profile extends BaseController
         return redirect()->to('/profile');
     }
 
-    private function cekTypoEmail($email)
-    {
-        if (empty($email)) return true;
-        
-        $domain = strtolower(substr(strrchr($email, "@"), 1));
-        
-        $typoDomains = [
-            'gmaill.com', 'gmail.con', 'gamil.com', 'gmai.com', 'gmail.co', 'gmail.cpm', 'gmail.com.com',
-            'yaho.com', 'yahoo.con', 'yahoo.cpm', 'yahool.com',
-            'outlok.com', 'outlook.con', 
-            'hotmai.com', 'hotmail.con'
-        ];
-        
-        if (in_array($domain, $typoDomains)) {
-            return false;
-        }
-        return true;
-    }
+    // Fungsi cekTypoEmail telah dipindahkan ke validation_helper.php
 }

@@ -211,6 +211,151 @@
     </div>
 </div>
 
+<!-- ═══ 5 Transaksi Terbaru & Cucian Jatuh Tempo ═════════════════════════════════════ -->
+<div class="row mb-3">
+    <!-- 5 Transaksi Terbaru -->
+    <div class="col-lg-7 mb-3 mb-lg-0">
+        <div class="card card-outline card-secondary h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-clock me-2"></i>
+                    5 Transaksi Terbaru
+                </h3>
+                <div class="card-tools">
+                    <a href="/transaksi/daftar" class="btn btn-sm btn-outline-secondary" id="btn-lihat-semua-trx-admin">
+                        Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No Nota</th>
+                                <th>Pelanggan</th>
+                                <th>Waktu & Shift</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Pembayaran</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($transaksiTerbaru)): ?>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2 d-block text-muted"></i>
+                                    Belum ada transaksi.
+                                </td>
+                            </tr>
+                            <?php else: ?>
+                            <?php foreach ($transaksiTerbaru as $t): ?>
+                            <tr>
+                                <td>
+                                    <code class="text-primary"><?= esc($t['no_nota']) ?></code>
+                                </td>
+                                <td><?= esc($t['nama_pelanggan']) ?></td>
+                                <td>
+                                    <?= date('d/m/Y H:i', strtotime($t['tgl_masuk'])) ?><br>
+                                    <small class="text-muted"><i class="fas fa-clock"></i> <?= function_exists('deteksi_shift') ? deteksi_shift($t['tgl_masuk']) : '' ?></small>
+                                </td>
+                                <td class="text-end fw-semibold">
+                                    Rp <?= number_format($t['grand_total'], 0, ',', '.') ?>
+                                </td>
+                                <td class="text-center">
+                                    <?php
+                                    $sc = match($t['status']) {
+                                        'menunggu' => 'text-bg-warning',
+                                        'proses'   => 'text-bg-info',
+                                        'setrika'  => 'text-bg-secondary',
+                                        'selesai'  => 'text-bg-success',
+                                        'diambil'  => 'text-bg-primary',
+                                        default    => 'text-bg-dark',
+                                    };
+                                    ?>
+                                    <span class="badge <?= $sc ?>"><?= ucfirst($t['status']) ?></span>
+                                </td>
+                                <td class="text-center">
+                                    <?php
+                                    $bc = match($t['status_pembayaran']) {
+                                        'lunas' => 'text-bg-success',
+                                        'cicil' => 'text-bg-warning',
+                                        default => 'text-bg-danger',
+                                    };
+                                    ?>
+                                    <span class="badge <?= $bc ?>"><?= ucfirst($t['status_pembayaran']) ?></span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="/transaksi/detail/<?= $t['id_transaksi'] ?>"
+                                       class="btn btn-sm btn-outline-primary" title="Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cucian Jatuh Tempo Hari Ini -->
+    <div class="col-lg-5">
+        <div class="card card-outline card-danger h-100">
+            <div class="card-header">
+                <h3 class="card-title text-danger fw-bold">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Daftar Prioritas (Jatuh Tempo)
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No Nota</th>
+                                <th>Pelanggan</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($cucianJatuhTempo)): ?>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">
+                                    <i class="fas fa-check-circle fa-2x mb-2 d-block text-success"></i>
+                                    Tidak ada cucian yang menunggak hari ini.
+                                </td>
+                            </tr>
+                            <?php else: ?>
+                            <?php foreach ($cucianJatuhTempo as $ct): ?>
+                            <tr>
+                                <td>
+                                    <code class="text-danger"><?= esc($ct['no_nota']) ?></code><br>
+                                    <span class="badge text-bg-warning"><?= ucfirst($ct['status']) ?></span>
+                                </td>
+                                <td>
+                                    <?= esc($ct['nama_pelanggan']) ?><br>
+                                    <small class="text-danger"><i class="fas fa-clock"></i> <?= date('d/m/Y', strtotime($ct['tgl_selesai_estimasi'])) ?></small>
+                                </td>
+                                <td class="text-center">
+                                    <a href="/transaksi/detail/<?= $ct['id_transaksi'] ?>" class="btn btn-sm btn-outline-danger" title="Selesaikan">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ Chart.js ═════════════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

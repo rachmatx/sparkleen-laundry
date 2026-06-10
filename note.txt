@@ -165,3 +165,64 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
 32. PERBAIKAN VALIDASI DAN ALUR UBAH PASSWORD KARYAWAN
     - [BugFix] Mengatasi bug pada form edit data karyawan di mana pesan kesalahan "Password dan konfirmasi password tidak sama" tetap muncul dan memblokir pengiriman data meskipun pengguna telah memperbaiki nilai kedua kolom tersebut agar sama.
     - [Fungsional/UX] Memperbarui script `password-toggle.js` agar event pengetikan (`input`) pada salah satu input password (baik Password Baru maupun Konfirmasi) akan secara otomatis membersihkan status validasi error (custom validity) pada kedua kolom tersebut secara bersamaan. Hal ini memastikan browser dapat memproses klik tombol "Simpan Perubahan" tanpa terhambat status validasi yang lama.
+
+33. HALAMAN LACAK ORDER PUBLIK (BYPASS AUTH & 5 TAHAPAN STEPPER)
+    - [Fitur Baru] Mengimplementasikan halaman pelacakan order publik pada rute `/lacak` yang memungkinkan pelanggan memantau status cucian mereka secara real-time secara mandiri tanpa perlu masuk (login) ke sistem.
+    - [Keamanan] Memastikan rute `/lacak` dan `/lacak/*` dikecualikan dari `AuthFilter` secara global di `Config\Filters.php` agar dapat diakses oleh publik secara aman.
+    - [Keamanan/Privasi] Menerapkan penyamaran (masking) otomatis pada informasi sensitif pelanggan (Nama Pelanggan dan Nomor Telepon) untuk mencegah kebocoran privasi di halaman publik.
+    - [UI/UX] Merancang visual stepper horizontal 5-tahapan pelacakan (Menunggu Antrean -> Sedang Dicuci -> Sedang Disetrika -> Siap Diambil -> Sudah Diambil) yang responsif (otomatis berubah menjadi vertikal pada layar ponsel).
+    - [UI/UX] Menggunakan gaya desain premium glassmorphism, efek glowing pada tahapan aktif, tabel rincian biaya terperinci, dan log riwayat status yang dapat dibuka secara interaktif dalam bentuk akordeon.
+
+
+
+22. UPDATE DOKUMENTASI & FITUR QUICK VIEW AJAX
+    - [Dokumentasi] Menambahkan diagram Sequence "Proses Quick View Modal Transaksi (AJAX)" dalam file `uml_and_system_design_documentation.md`.
+    - [Model] Menambahkan Model `MLogWhatsapp` serta tabel `tb_log_whatsapp` ke diagram ERD/LRS.
+    - [Class Diagram] Memperbarui Class Diagram dengan `MLogWhatsapp` dan `Dashboard` serta relasi baru.
+    - [README] Menambahkan bagian Changelog dengan ringkasan semua perubahan UI/UX, Dashboard, notifikasi, dan Quick View.
+    - [note.txt] Memperbarui log perubahan ini untuk mencatat semua pembaruan terbaru.
+
+34. FITUR PENCARIAN DATA LIVE (SEARCH/FILTER) - TANPA RELOAD HALAMAN
+    - [Fitur Baru] Mengimplementasikan sistem pencarian data real-time (live search) di seluruh halaman daftar: Pelanggan, Karyawan, Layanan, Inventaris, dan Transaksi.
+    - [Backend] Menambahkan 5 endpoint AJAX baru:
+      - `GET /pelanggan/ajaxSearchTable` — cari nama, HP, kode pelanggan
+      - `GET /karyawan/ajaxSearch` — cari nama, username, no telp, level
+      - `GET /layanan/ajaxSearch` — cari nama layanan
+      - `GET /inventaris/ajaxSearch` — cari nama barang
+      - `GET /transaksi/ajaxSearch` — cari no nota, nama pelanggan (+ support filter tab status)
+    - [Frontend] Membuat script `public/js/live-search.js` dengan fitur:
+      - Debounce 400ms saat user mengetik (mengurangi request berlebih)
+      - Spinner loading di icon search dan di tbody tabel
+      - Menampilkan jumlah hasil ("X hasil") di samping input
+      - Pagination otomatis disembunyikan saat search aktif
+      - Setelah input dikosongkan, pagination muncul kembali
+      - Tombol aksi (Edit, Toggle, Quick View) tetap berfungsi di hasil AJAX
+    - [UI/UX] Memperbarui 5 view dengan:
+      - Input search baru dengan ikon (tanpa tombol submit)
+      - `id="liveSearchTbody"` pada tbody untuk target update AJAX
+      - `live-search-pagination` class pada card-footer
+      - Halaman Transaksi: klik tab filter saat ada keyword → filter via AJAX tanpa reload
+    - [Keamanan] Endpoint AJAX hanya menerima request AJAX (`isAJAX()`) dan mengembalikan 403 untuk akses langsung via browser.
+    - [UX] Quick View modal di halaman Transaksi tetap berfungsi di baris hasil live search dengan re-bind event handler setelah render baru.
+
+35. SINKRONISASI DOKUMENTASI UML & MERMAID RENDERER
+    - [Analisis] Ditemukan 9 ketidaksesuaian antara dokumentasi dan sistem aktual setelah penambahan fitur live search dan controller baru.
+    - [Use Case Diagram] Ditambahkan aktor baru "Pelanggan Publik" beserta use case UC_LacakOrder. Ditambahkan 6 use case yang sebelumnya hilang: UC_Profil, UC_LiveSearch, UC_ResepLayanan, UC_LogWhatsapp, UC_Backup, UC_LacakOrder. Ditambahkan relasi include UC_LiveSearch ke 5 modul (Pelanggan, Karyawan, Layanan, Inventaris, Transaksi). Diperbarui di kedua file (UML doc & renderer).
+    - [Class Diagram] Ditambahkan 7 controller yang sebelumnya tidak terdokumentasi: Pelanggan, Inventaris, Layanan, Profile, LogAktivitas, LogWhatsapp, Lacak. Diperbarui method Transaksi (method lama diganti dengan method aktual). Ditambahkan method ajaxSearch() dan ajaxSearchTable() ke controller terkait. Ditambahkan model MPelanggan, MLayanan, MInventaris. Diperbarui di kedua file.
+    - [Sequence Diagram] Ditambahkan diagram baru "D. Proses Pencarian Data Live (AJAX Live Search)" yang menggambarkan alur debounce, AJAX request, render tbody, dan re-bind Quick View. Ditambahkan preset "Seq: Live Search" di mermaid_renderer.html.
+    - [Flowchart CRUD Pelanggan] Diperbarui untuk mencerminkan alur live search AJAX (ketik keyword → debounce → AJAX → render tabel tanpa reload) sebelum aksi CRUD lainnya.
+    - [Deployment Diagram] Diperbarui dengan menambahkan komponen static assets (live-search.js, password-toggle.js, AdminLTE), sub-diagram Controllers dengan endpoint AJAX, dan koneksi AJAX XHR dari browser ke masing-masing controller.
+
+36. IMPLEMENTASI TESTING SUITE & QA AUTOMATION
+    - [Testing] Mengintegrasikan PHPUnit untuk melakukan pengujian fitur (Feature Test) dan unit testing (Unit Test) guna memastikan stabilitas aplikasi.
+    - [Testing] Menambahkan `TestDataSeeder` dan script `generate_report.php` untuk memfasilitasi pembuatan data dummy dan laporan hasil test secara otomatis.
+
+37. PENINGKATAN KEAMANAN PENGAMBILAN LAUNDRY (PIN)
+    - [Fitur Baru] Menambahkan kolom `pin_pengambilan` (VARCHAR 4 digit) pada tabel `tb_transaksi` via Migration. PIN ini berfungsi sebagai lapis keamanan tambahan saat pelanggan mengambil cucian mereka.
+    
+38. RESTRUKTURISASI DATABASE KERANJANG
+    - [Database] Mengubah nama tabel sementara dari `tb_temp_peminjaman` menjadi `tb_temp_keranjang` agar penamaannya lebih relevan dengan konteks bisnis laundry (keranjang cucian).
+
+39. VALIDASI TYPO EMAIL & RESEQUENCING DATA
+    - [Fitur Baru] Menambahkan `validation_helper.php` yang berisi fungsi `cekTypoEmail` untuk memblokir kesalahan pengetikan domain email populer (misal: `gmaill.com`, `yahoo.con`).
+    - [Maintenance] Menambahkan skrip `resequence.php` dan `ResequenceSeeder.php` untuk merapikan kembali urutan `kode_pelanggan` (PLG0001, PLG0002) yang mungkin loncat.

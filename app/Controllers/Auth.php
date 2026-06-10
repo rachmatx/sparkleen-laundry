@@ -135,8 +135,8 @@ class Auth extends BaseController
 
     public function logout()
     {
-        session()->destroy();
         session()->setFlashdata('success', 'Anda telah berhasil logout.');
+        session()->destroy();
 
         return redirect()->to('/login');
     }

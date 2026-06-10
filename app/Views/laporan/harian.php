@@ -143,9 +143,29 @@
                     </table>
                 </div>
             </div>
+            <?php if ($hasPrev || $hasNext): ?>
+            <div class="card-footer d-flex justify-content-between align-items-center bg-transparent border-top">
+                <div>
+                    <span class="text-muted small">Halaman <strong><?= $page ?></strong> | Dicetak pada: <?= date('d/m/Y H:i:s') ?></span>
+                </div>
+                <div class="btn-group">
+                    <?php if ($hasPrev): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-chevron-left me-1"></i> Sebelumnya
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($hasNext): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="btn btn-outline-secondary btn-sm ms-2">
+                            Selanjutnya <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php else: ?>
             <div class="card-footer text-muted small">
                 Dicetak pada: <?= date('d/m/Y H:i:s') ?>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

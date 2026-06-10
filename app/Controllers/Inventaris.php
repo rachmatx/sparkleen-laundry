@@ -23,14 +23,50 @@ class Inventaris extends BaseController
     // Daftar inventaris
     public function index()
     {
-        $semuaInventaris = $this->inventarisModel->getSemuaInventaris();
-        $stokKritis      = array_filter($semuaInventaris, fn($i) => $i['stok_kritis']);
+        $page = (int)($this->request->getGet('page') ?? 1);
+        $keyword = $this->request->getGet('q');
+        if ($page < 1) $page = 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $sort = $this->request->getGet('sort') ?? 'nama_barang';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_barang', 'stok', 'satuan', 'harga_beli', 'is_aktif'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'nama_barang';
+        }
+
+        $query = $this->inventarisModel->orderBy($sort, $dir);
+        if (!empty($keyword)) {
+            $query->like('nama_barang', $keyword);
+        }
+
+        $items = $query->findAll($limit + 1, $offset);
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
+
+        // Tambahkan flag stok_kritis
+        foreach ($items as &$row) {
+            $row['stok_kritis'] = ($row['stok'] <= $row['stok_minimal']) ? 1 : 0;
+        }
+
+        $stokKritis = $this->inventarisModel->getStokKritis();
 
         $data = [
             'title'        => 'Data Inventaris',
             'activeMenu'   => 'inventaris',
-            'inventaris'   => $semuaInventaris,
+            'inventaris'   => $items,
+            'page'         => $page,
+            'hasPrev'      => $hasPrev,
+            'hasNext'      => $hasNext,
+            'limit'        => $limit,
+            'keyword'      => $keyword,
             'jumlahKritis' => count($stokKritis),
+            'sort'         => $sort,
+            'dir'          => $dir,
         ];
 
         return view('backend/template/header', $data)
@@ -166,5 +202,67 @@ class Inventaris extends BaseController
              . view('backend/template/sidebar', $data)
              . view('inventaris/warning', $data)
              . view('backend/template/footer');
+    }
+
+    // Endpoint live search tabel inventaris
+    public function ajaxSearch()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Akses ditolak']);
+        }
+
+        $keyword = $this->request->getGet('q');
+        
+        $sort = $this->request->getGet('sort') ?? 'nama_barang';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_barang', 'stok', 'satuan', 'harga_beli', 'is_aktif'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'nama_barang';
+        }
+
+        $query   = $this->inventarisModel->orderBy($sort, $dir);
+
+        if (!empty($keyword)) {
+            $query->like('nama_barang', $keyword);
+        }
+
+        $items = $query->findAll(100);
+
+        // Tambahkan flag stok_kritis
+        foreach ($items as &$row) {
+            $row['stok_kritis'] = ($row['stok'] <= $row['stok_minimal']) ? 1 : 0;
+        }
+
+        $level = session()->get('level');
+
+        return $this->response->setJSON([
+            'data'      => $items,
+            'total'     => count($items),
+            'canManage' => in_array($level, ['admin', 'pemilik']),
+        ]);
+    }
+
+    // Endpoint untuk mengecek stok kritis via AJAX (dipanggil di header/footer global)
+    public function ajaxCekStokKritis()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Akses ditolak']);
+        }
+
+        $kritis = $this->inventarisModel->getStokKritis();
+        
+        $items = [];
+        foreach ($kritis as $item) {
+            $items[] = [
+                'nama' => $item['nama_barang'],
+                'stok' => $item['stok'],
+                'satuan' => $item['satuan']
+            ];
+        }
+
+        return $this->response->setJSON([
+            'count' => count($kritis),
+            'items' => $items
+        ]);
     }
 }

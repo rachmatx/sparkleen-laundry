@@ -3,16 +3,33 @@
         <div class="card card-outline card-warning">
             <div class="card-header">
                 <h3 class="card-title">Data Inventaris</h3>
-                <div class="card-tools d-flex gap-2">
+                <div class="card-tools d-flex gap-2 align-items-center">
+                    <form method="get" action="/inventaris" class="m-0">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" id="liveSearchInput"
+                                   name="q"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Cari nama barang..."
+                                   value="<?= esc($keyword ?? '') ?>"
+                                   data-page="inventaris"
+                                   data-sort="<?= esc($sort ?? 'nama_barang') ?>"
+                                   data-dir="<?= esc($dir ?? 'ASC') ?>"
+                                   autocomplete="off">
+                        </div>
+                    </form>
+                    <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
                     <?php if($jumlahKritis > 0): ?>
-                    <a href="/inventaris/warning" class="btn btn-danger btn-sm">
+                    <a href="/inventaris/warning" class="btn btn-danger btn-sm text-nowrap">
                         <i class="fas fa-exclamation-triangle me-1"></i>
                         <?= $jumlahKritis ?> Stok Kritis
                     </a>
                     <?php endif; ?>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="/inventaris/create" class="btn btn-warning btn-sm text-dark">
-                        <i class="fas fa-plus me-1"></i> Tambah Barang
+                    <a href="/inventaris/create" class="btn btn-warning btn-sm text-dark text-nowrap">
+                        <i class="fas fa-plus me-1"></i> Tambah
                     </a>
                     <?php endif; ?>
                 </div>
@@ -21,7 +38,7 @@
                 <?php if(session()->getFlashdata('success')): ?>
                     <div class="alert alert-success alert-dismissible m-3 mb-0">
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        <i class="fas fa-check-circle me-1"></i> <?= session()->getFlashdata('success') ?>
+                        <i class="fas fa-check-circle me-1"></i> <?= esc(session()->getFlashdata('success')) ?>
                     </div>
                 <?php endif; ?>
                 <div class="table-responsive">
@@ -29,17 +46,17 @@
                         <thead class="table-light">
                             <tr>
                                 <th width="50" class="text-center">No</th>
-                                <th class="text-center">Nama Barang</th>
-                                <th class="text-center">Stok</th>
-                                <th class="text-center">Satuan</th>
-                                <th class="text-center">Harga Beli</th>
+                                <th data-sort="nama_barang" class="text-center">Nama Barang</th>
+                                <th data-sort="stok" class="text-center">Stok</th>
+                                <th data-sort="satuan" class="text-center">Satuan</th>
+                                <th data-sort="harga_beli" class="text-center">Harga Beli</th>
                                 <th class="text-center">Stok Minimal</th>
                                 <th class="text-center">Status Stok</th>
-                                <th class="text-center">Status Aktif</th>
+                                <th data-sort="is_aktif" class="text-center">Status Aktif</th>
                                 <th width="160" class="text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="liveSearchTbody">
                             <?php if(empty($inventaris)): ?>
                             <tr>
                                 <td colspan="8" class="text-center text-muted py-5">
@@ -48,7 +65,7 @@
                                 </td>
                             </tr>
                             <?php else: ?>
-                            <?php $no = 1; foreach($inventaris as $inv): ?>
+                            <?php $no = ($page - 1) * $limit + 1; foreach($inventaris as $inv): ?>
                             <?php $kritis = $inv['stok'] <= $inv['stok_minimal']; ?>
                             <tr class="<?= $kritis ? 'table-danger' : '' ?>">
                                 <td class="text-center"><?= $no++ ?></td>
@@ -88,17 +105,19 @@
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
                                     <?php if ($inv['is_aktif'] == 1): ?>
-                                        <a href="#"
-                                           onclick="if(confirm('Yakin ingin menonaktifkan barang ini?')) window.location.href='/inventaris/toggle/<?= $inv['id_inventaris'] ?>'"
-                                           class="btn btn-danger btn-sm">
-                                            <i class="fas fa-power-off me-1"></i> Nonaktif
-                                        </a>
+                                        <form action="/inventaris/toggle/<?= $inv['id_inventaris'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan barang ini?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-power-off me-1"></i> Nonaktif
+                                            </button>
+                                        </form>
                                     <?php else: ?>
-                                        <a href="#"
-                                           onclick="if(confirm('Yakin ingin mengaktifkan barang ini?')) window.location.href='/inventaris/toggle/<?= $inv['id_inventaris'] ?>'"
-                                           class="btn btn-success btn-sm">
-                                            <i class="fas fa-power-off me-1"></i> Aktifkan
-                                        </a>
+                                        <form action="/inventaris/toggle/<?= $inv['id_inventaris'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan barang ini?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-power-off me-1"></i> Aktifkan
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                     <?php else: ?>
                                         <span class="text-muted small">-</span>
@@ -111,6 +130,25 @@
                     </table>
                 </div>
             </div>
+            <?php if ($hasPrev || $hasNext): ?>
+            <div class="card-footer live-search-pagination d-flex justify-content-between align-items-center bg-transparent border-top">
+                <div>
+                    <span class="text-muted small">Halaman <strong><?= $page ?></strong></span>
+                </div>
+                <div class="btn-group">
+                    <?php if ($hasPrev): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-chevron-left me-1"></i> Sebelumnya
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($hasNext): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="btn btn-outline-secondary btn-sm ms-2">
+                            Selanjutnya <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

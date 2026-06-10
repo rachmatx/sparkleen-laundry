@@ -10,44 +10,44 @@ class Karyawan extends BaseController
 
     public function __construct()
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            header('Location: ' . base_url('/dashboard'));
-            exit();
-        }
+
 
         $this->karyawanModel = new MKaryawan();
     }
 
-    /**
-     * Memeriksa apakah domain email merupakan typo dari domain populer.
-     * Mengembalikan false jika terdeteksi typo, true jika aman.
-     */
-    private function cekTypoEmail($email)
-    {
-        if (empty($email)) return true;
-        
-        $domain = strtolower(substr(strrchr($email, "@"), 1));
-        
-        $typoDomains = [
-            'gmaill.com', 'gmail.con', 'gamil.com', 'gmai.com', 'gmail.co', 'gmail.cpm', 'gmail.com.com',
-            'yaho.com', 'yahoo.con', 'yahoo.cpm', 'yahool.com',
-            'outlok.com', 'outlook.con', 
-            'hotmai.com', 'hotmail.con'
-        ];
-        
-        if (in_array($domain, $typoDomains)) {
-            return false;
-        }
-        return true;
-    }
+    // Fungsi cekTypoEmail telah dipindahkan ke validation_helper.php
 
     public function index()
     {
+        $page = (int)($this->request->getGet('page') ?? 1);
+        if ($page < 1) $page = 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $sort = $this->request->getGet('sort') ?? 'id_karyawan';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_karyawan', 'username', 'level', 'no_telp', 'gaji_pokok', 'is_aktif', 'id_karyawan'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'id_karyawan';
+        }
+
+        $items = $this->karyawanModel->orderBy($sort, $dir)->findAll($limit + 1, $offset);
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
+
         $data = [
             'title'      => 'Data Karyawan',
             'activeMenu' => 'karyawan',
-            'karyawan'   => $this->karyawanModel->findAll(),
+            'karyawan'   => $items,
+            'page'       => $page,
+            'hasPrev'    => $hasPrev,
+            'hasNext'    => $hasNext,
+            'limit'      => $limit,
+            'sort'       => $sort,
+            'dir'        => $dir,
         ];
 
         return view('backend/template/header', $data)
@@ -91,7 +91,7 @@ class Karyawan extends BaseController
             'gaji_pokok'    => $this->request->getPost('gaji_pokok') ?? 0,
         ];
 
-        if ($data['email'] && !$this->cekTypoEmail($data['email'])) {
+        if ($data['email'] && !cekTypoEmail($data['email'])) {
             session()->setFlashdata('errors', ['email' => 'Domain email sepertinya salah ketik (typo). Pastikan menggunakan domain yang benar.']);
             return redirect()->to('/karyawan/create')->withInput();
         }
@@ -149,7 +149,7 @@ class Karyawan extends BaseController
             'id_karyawan'   => $id,  // Diperlukan untuk is_unique exception
         ];
 
-        if ($data['email'] && !$this->cekTypoEmail($data['email'])) {
+        if ($data['email'] && !cekTypoEmail($data['email'])) {
             session()->setFlashdata('errors', ['email' => 'Domain email sepertinya salah ketik (typo). Pastikan menggunakan domain yang benar.']);
             return redirect()->to('/karyawan/edit/' . $id)->withInput();
         }
@@ -197,23 +197,6 @@ class Karyawan extends BaseController
         return redirect()->to('/karyawan');
     }
 
-    public function delete($id)
-    {
-        $target = $this->karyawanModel->find($id);
-        if (session()->get('level') === 'admin' && in_array($target['level'], ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Admin tidak dapat menghapus akun Admin atau Pemilik.');
-            return redirect()->to('/karyawan');
-        }
-
-        log_aktivitas('karyawan', 'hapus', (int) $id, $target['nama_karyawan'], [
-            'username' => $target['username'],
-            'level'    => $target['level'],
-        ]);
-
-        $this->karyawanModel->delete($id);
-        session()->setFlashdata('success', 'Data karyawan berhasil dihapus.');
-        return redirect()->to('/karyawan');
-    }
 
     public function toggleStatus($id)
     {
@@ -235,5 +218,52 @@ class Karyawan extends BaseController
             session()->setFlashdata('success', "Karyawan berhasil $pesan.");
         }
         return redirect()->to('/karyawan');
+    }
+
+    // Endpoint live search tabel karyawan
+    public function ajaxSearch()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Akses ditolak']);
+        }
+
+        $keyword    = $this->request->getGet('q');
+        $sessionLevel = session()->get('level');
+        
+        $sort = $this->request->getGet('sort') ?? 'id_karyawan';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_karyawan', 'username', 'level', 'no_telp', 'gaji_pokok', 'is_aktif', 'id_karyawan'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'id_karyawan';
+        }
+
+        $query      = $this->karyawanModel->orderBy($sort, $dir);
+
+        if (!empty($keyword)) {
+            $query->groupStart()
+                  ->like('nama_karyawan', $keyword)
+                  ->orLike('username', $keyword)
+                  ->orLike('no_telp', $keyword)
+                  ->orLike('level', $keyword)
+                  ->groupEnd();
+        }
+
+        $items = $query->findAll(100);
+
+        // Tentukan id karyawan mana yang boleh dikelola oleh session user
+        $canManageIds = [];
+        foreach ($items as $k) {
+            if ($sessionLevel === 'pemilik') {
+                $canManageIds[] = (string) $k['id_karyawan'];
+            } elseif ($sessionLevel === 'admin' && $k['level'] === 'kasir') {
+                $canManageIds[] = (string) $k['id_karyawan'];
+            }
+        }
+
+        return $this->response->setJSON([
+            'data'      => $items,
+            'total'     => count($items),
+            'canManage' => $canManageIds,
+        ]);
     }
 }

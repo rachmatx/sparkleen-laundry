@@ -1,0 +1,66 @@
+Created At: 2026-06-10T14:30:55Z
+Completed At: 2026-06-10T14:30:55Z
+File Path: `file:///c:/xampp/htdocs/laundry_app/audit_full.txt`
+Total Lines: 67
+Total Bytes: 4187
+Showing lines 1 to 67
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: <USER_REQUEST>
+2: Saya sedang membangun proyek sistem informasi laundry menggunakan CodeIgniter 4. Berdasarkan hasil audit, berkas [Nama_File.php] saya memiliki celah keamanan/arsitektur berikut: 
+3: # Sparkleen Laundry — Full Codebase Audit
+4: 
+5: > **Scope**: All 15 Controllers, 12 Models, 2 Filters, 2 Helpers, `Routes.php`, `Filters.php`, `Autoload.php`, and View-layer patterns (sampled).
+6: > **Auditor Role**: Senior Backend Engineer / PHP 8.x + CI4 Expert.
+7: 
+8: ---
+9: 
+10: ## Status Analysis
+11: 
+12: The application is **partially functional** and demonstrates a reasonable understanding of CI4's Model/Controller/View split. However, the audit reveals **8 CRITICAL**, **12 HIGH**, and **14 MEDIUM** severity findings that span security, architecture, transaction integrity, and code quality. **The application is NOT production-ready** in its current state.
+13: 
+14: **What is done well:**
+15: - CI4 Query Builder is used consistently (no raw SQL injection vectors via string concatenation).
+16: - CSRF is enabled globally for POST via `$methods` in `Filters.php`.
+17: - Login throttling is implemented with IP + identifier blocking.
+18: - Password hashing uses `password_hash(PASSWORD_DEFAULT)`.
+19: - Sort columns are whitelisted before being injected into `ORDER BY`.
+20: - `esc()` is used in most Views (confirmed in pelanggan, karyawan, transaksi views).
+21: - Activity logging helper is well-structured and consistently used.
+22: 
+23: ---
+24: 
+25: ## Critical Issues Found
+26: 
+27: ### 🔴 CRITICAL — Security
+28: 
+29: #### C1. State-changing operations via GET 
+<truncated 863 bytes>
+ high-impact fixes.
+41: 
+42: ### 3. MVC Compliance (H1, H3, H4)
+43: The `header()`/`exit()` pattern in constructors is the most egregious violation — it completely bypasses CI4's lifecycle. The Dashboard controller's 400 lines of raw queries should be extracted into Model/Service methods. The `->db->table()` pattern in Transaksi should be replaced with proper Model method calls.
+44: 
+45: ### 4. Transaction Integrity (C8, H5, H11)
+46: The nota generation race condition, the mixed transaction API, and the non-atomic stock deduction are the three most dangerous data integrity issues. All three should be fixed before going to production.
+47: 
+48: ### 5. Input Validation (H6, H7, H10)
+49: Several controllers blindly trust POST data without any CI4 validation. This is especially dangerous for financial fields (`nominal_bayar`, `berat`, `harga_per_kg`).
+50: 
+51: </USER_REQUEST>
+52: <ADDITIONAL_METADATA>
+53: The current local time is: 2026-06-10T20:39:32+07:00.
+54: 
+55: The user's current state is as follows:
+56: Active Document: c:\xampp\htdocs\laundry_app\app\Config\Routes.php (LANGUAGE_PHP)
+57: Cursor is on line: 1
+58: Other open documents:
+59: - c:\xampp\htdocs\laundry_app\public\js\live-search.js (LANGUAGE_JAVASCRIPT)
+60: - c:\xampp\htdocs\laundry_app\app\Database\Seeds\KaryawanSeeder.php (LANGUAGE_PHP)
+61: - c:\xampp\htdocs\laundry_app\app\Database\Seeds\ResequenceSeeder.php (LANGUAGE_PHP)
+62: - c:\xampp\htdocs\laundry_app\app\Database\Migrations\2026-06-10-124000_AddPinPengambilanToTransaksi.php (LANGUAGE_PHP)
+63: - c:\xampp\htdocs\laundry_app\app\Models\MTransaksi.php (LANGUAGE_PHP)
+64: </ADDITIONAL_METADATA>
+65: <USER_SETTINGS_CHANGE>
+66: The user changed setting `Model Selection` from None to Gemini 3.1 Pro (Low). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+67: </USER_SETTINGS_CHANGE>
+The above content shows the entire, complete file contents of the requested file.
