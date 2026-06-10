@@ -13,7 +13,7 @@ class MKaryawan extends Model
 
     protected $allowedFields = [
         'nama_karyawan', 'username', 'password',
-        'level', 'no_telp', 'email', 'gaji_pokok', 'is_aktif',
+        'id_level', 'no_telp', 'email', 'gaji_pokok', 'is_aktif',
     ];
 
     protected $useTimestamps = true;
@@ -27,7 +27,7 @@ class MKaryawan extends Model
         'username'      => 'required|max_length[50]|is_unique[tb_karyawan.username,id_karyawan,{id_karyawan}]',
         'no_telp'       => 'required|max_length[20]|is_unique[tb_karyawan.no_telp,id_karyawan,{id_karyawan}]',
         'email'         => 'permit_empty|valid_email|max_length[100]|is_unique[tb_karyawan.email,id_karyawan,{id_karyawan}]',
-        'level'         => 'required|in_list[kasir,admin,pemilik]',
+        'id_level'      => 'required|is_not_unique[tb_master_level_karyawan.id]',
     ];
 
     protected $validationMessages = [
@@ -51,6 +51,8 @@ class MKaryawan extends Model
     public function getUserByIdentifier(string $identifier)
     {
         $builder = $this->db->table($this->table);
+        $builder->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level');
+        $builder->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level');
 
         if (str_contains($identifier, '@')) {
             $builder->where('email', $identifier);

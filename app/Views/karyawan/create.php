@@ -68,13 +68,19 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Level Akses <span class="text-danger">*</span></label>
-                            <select class="form-select" name="level" required>
+                            <select class="form-select" name="id_level" required>
                                 <option value="">-- Pilih Level --</option>
-                                <option value="kasir"   <?= old('level') == 'kasir'   ? 'selected' : '' ?>>Kasir</option>
-                                <?php if(session()->get('level') === 'pemilik'): ?>
-                                <option value="admin"   <?= old('level') == 'admin'   ? 'selected' : '' ?>>Admin</option>
-                                <option value="pemilik" <?= old('level') == 'pemilik' ? 'selected' : '' ?>>Pemilik</option>
-                                <?php endif; ?>
+                                <?php foreach($level_list as $lvl): ?>
+                                    <?php 
+                                        // Pemilik bisa lihat semua, Admin hanya bisa lihat kasir (id=2)
+                                        if (session()->get('level') === 'admin' && $lvl['nama_level'] !== 'kasir') {
+                                            continue;
+                                        }
+                                    ?>
+                                    <option value="<?= $lvl['id'] ?>" <?= old('id_level') == $lvl['id'] ? 'selected' : '' ?>>
+                                        <?= ucfirst($lvl['nama_level']) ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">

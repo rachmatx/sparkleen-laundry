@@ -10,11 +10,7 @@ class LogAktivitas extends BaseController
 
     public function __construct()
     {
-        if (session()->get('level') !== 'pemilik') {
-            session()->setFlashdata('error', 'Hanya Pemilik yang dapat melihat log aktivitas.');
-            header('Location: ' . base_url('/dashboard'));
-            exit();
-        }
+
 
         $this->logModel = new MLogAktivitas();
     }
@@ -25,16 +21,34 @@ class LogAktivitas extends BaseController
         $aksi   = $this->request->getGet('aksi');
         $dari   = $this->request->getGet('dari');
         $sampai = $this->request->getGet('sampai');
+        $search = $this->request->getGet('search');
+
+        $page = (int)($this->request->getGet('page') ?? 1);
+        if ($page < 1) $page = 1;
+        $limit = 30;
+        $offset = ($page - 1) * $limit;
+
+        $items = $this->logModel->getDaftarLog($modul, $aksi, $dari, $sampai, $search, $limit + 1, $offset);
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
 
         $data = [
             'title'      => 'Log Aktivitas',
             'activeMenu' => 'log_aktivitas',
-            'logs'       => $this->logModel->getDaftarLog($modul, $aksi, $dari, $sampai),
+            'logs'       => $items,
+            'page'       => $page,
+            'hasPrev'    => $hasPrev,
+            'hasNext'    => $hasNext,
+            'limit'      => $limit,
             'filter'     => [
                 'modul'  => $modul ?? '',
                 'aksi'   => $aksi ?? '',
                 'dari'   => $dari ?? '',
                 'sampai' => $sampai ?? '',
+                'search' => $search ?? '',
             ],
         ];
 

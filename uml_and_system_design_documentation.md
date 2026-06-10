@@ -6,11 +6,12 @@ Dokumentasi ini menyajikan rancangan arsitektur, aliran logika, dan struktur dat
 
 ## 1. Use Case Diagram
 
-Diagram Use Case mendefinisikan batas sistem, fungsionalitas utama, dan hak akses dari masing-masing aktor (Kasir, Admin, dan Pemilik).
+Diagram Use Case mendefinisikan batas sistem, fungsionalitas utama, dan hak akses dari masing-masing aktor (Kasir, Admin, Pemilik, dan Pelanggan Publik).
 
 ```mermaid
 graph TD
     subgraph Aktor
+        Pelanggan((Pelanggan Publik))
         Kasir((Kasir))
         Admin((Admin))
         Pemilik((Pemilik))
@@ -18,7 +19,9 @@ graph TD
 
     subgraph "Sistem Sparkleen Laundry (Use Cases)"
         UC_Login([Melakukan Login])
+        UC_Profil([Kelola Profil & Ganti Password])
         UC_Transaksi([Kelola Transaksi & Detail])
+        UC_LiveSearch([Pencarian Data Live / Filter])
         UC_CariPelanggan([Cari Data Pelanggan])
         UC_Pelanggan([Kelola Data Pelanggan])
         UC_Bayar([Kelola Pembayaran & Cicilan])
@@ -27,44 +30,65 @@ graph TD
         UC_UbahStatus([Ubah Status Laundry])
         UC_Karyawan([Kelola Data Karyawan])
         UC_Layanan([Kelola Data Layanan])
+        UC_ResepLayanan([Kelola Resep Bahan Baku])
         UC_Inventaris([Kelola Stok & Inventaris])
         UC_Laporan([Lihat & Cetak Laporan Keuangan])
         UC_LogAktivitas([Lihat/Monitor Log Aktivitas])
+        UC_LogWhatsapp([Lihat Log WhatsApp])
+        UC_Backup([Backup Database])
+        UC_LacakOrder([Lacak Status Order])
     end
 
+    Pelanggan --> UC_LacakOrder
+
     Kasir --> UC_Login
+    Kasir --> UC_Profil
     Kasir --> UC_Transaksi
     Kasir --> UC_UbahStatus
     Kasir --> UC_Pelanggan
     Kasir --> UC_Bayar
+    Kasir --> UC_LogWhatsapp
     Kasir -.->|view only| UC_Inventaris
 
     Admin --> UC_Login
+    Admin --> UC_Profil
     Admin --> UC_Karyawan
     Admin --> UC_Layanan
+    Admin --> UC_ResepLayanan
     Admin --> UC_Inventaris
     Admin --> UC_Transaksi
     Admin --> UC_UbahStatus
     Admin --> UC_Pelanggan
     Admin --> UC_Bayar
     Admin --> UC_Laporan
+    Admin --> UC_LogWhatsapp
+    Admin --> UC_Backup
 
     Pemilik --> UC_Login
+    Pemilik --> UC_Profil
     Pemilik --> UC_Karyawan
     Pemilik --> UC_Layanan
     Pemilik --> UC_Inventaris
     Pemilik --> UC_Laporan
     Pemilik --> UC_LogAktivitas
+    Pemilik --> UC_LogWhatsapp
+    Pemilik --> UC_Backup
     Pemilik -.->|view only| UC_Transaksi
     Pemilik -.->|view & toggle| UC_Pelanggan
 
     %% Hubungan Include & Extend
     UC_Transaksi -.->|include| UC_CariPelanggan
     UC_Pelanggan -.->|extend| UC_CariPelanggan
+    UC_Pelanggan -.->|include| UC_LiveSearch
+    UC_Karyawan -.->|include| UC_LiveSearch
+    UC_Layanan -.->|include| UC_LiveSearch
+    UC_Inventaris -.->|include| UC_LiveSearch
+    UC_Transaksi -.->|include| UC_LiveSearch
     UC_InventarisPakai -.->|extend| UC_Transaksi
     UC_Transaksi -.->|include| UC_WA
     UC_UbahStatus -.->|include| UC_WA
     UC_Bayar -.->|include| UC_Transaksi
+    UC_ResepLayanan -.->|extend| UC_Layanan
 ```
 
 ---
@@ -266,6 +290,95 @@ sequenceDiagram
     deactivate Controller
 ```
 
+### C. Proses Quick View Modal Transaksi (AJAX)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Kasir
+    participant View as Daftar Transaksi (Browser)
+    participant Controller as TransaksiController
+    participant ModelT as MTransaksi
+    participant ModelD as MDetailTransaksi
+    participant DB as MySQL Database
+
+    Kasir->>View: Klik tombol 'Quick View'
+    View->>Controller: GET /transaksi/ajaxDetail/{id} (AJAX)
+    activate Controller
+    
+    Controller->>ModelT: Fetch data transaksi & pelanggan
+    activate ModelT
+    ModelT->>DB: SELECT Query
+    DB-->>ModelT: Data
+    ModelT-->>Controller: Data
+    deactivate ModelT
+    
+    Controller->>ModelD: Fetch detail layanan
+    activate ModelD
+    ModelD->>DB: SELECT Query
+    DB-->>ModelD: Data
+    ModelD-->>Controller: Data
+    deactivate ModelD
+    
+    Controller->>DB: Fetch riwayat pembayaran
+    DB-->>Controller: Data
+    
+    Controller-->>View: Kembalikan respon JSON (success)
+    deactivate Controller
+    
+    View->>View: Render HTML & Tampilkan Modal Bootstrap
+```
+
+### D. Proses Pencarian Data Live (AJAX Live Search)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Pengguna (Kasir/Admin/Pemilik)
+    participant Input as Input Search (Browser)
+    participant JS as live-search.js (Debounce 400ms)
+    participant Controller as Controller (Pelanggan/Karyawan/Layanan/Inventaris/Transaksi)
+    participant Model as Model Terkait
+    participant DB as MySQL Database
+
+    User->>Input: Mengetik keyword di kolom pencarian
+    Input->>JS: Event 'input' terpicu
+    JS->>JS: Mulai timer debounce 400ms
+    
+    alt User masih mengetik sebelum 400ms
+        JS->>JS: Reset timer (batalkan request sebelumnya)
+    else User berhenti mengetik 400ms
+        JS->>JS: Timer habis, jalankan doSearch()
+        JS->>Input: Ubah icon menjadi spinner loading
+        JS->>Controller: GET /{modul}/ajaxSearch?q={keyword} (AJAX, X-Requested-With)
+        activate Controller
+        
+        Controller->>Controller: Cek isAJAX() - tolak jika bukan AJAX
+        Controller->>Model: Query LIKE keyword pada kolom terkait
+        activate Model
+        Model->>DB: SELECT ... WHERE kolom LIKE '%keyword%'
+        DB-->>Model: Array hasil data
+        Model-->>Controller: Array hasil data
+        deactivate Model
+        
+        Controller-->>JS: JSON response (data, total, permission flags)
+        deactivate Controller
+        
+        JS->>Input: Kembalikan icon search
+        JS->>Input: Tampilkan info jumlah hasil (X hasil)
+        JS->>JS: Render baris tabel baru via renderFn(data)
+        JS->>JS: Update innerHTML tbody#liveSearchTbody
+        JS->>JS: Sembunyikan pagination jika keyword aktif
+        
+        opt Halaman Transaksi
+            JS->>JS: Panggil bindQuickView() untuk re-bind event handler
+        end
+    end
+
+    alt User menghapus semua keyword
+        JS->>JS: doSearch('') - tampilkan semua data
+        JS->>JS: Tampilkan kembali pagination
+    end
+```
+
 ---
 
 ## 4. Class Diagram
@@ -288,16 +401,49 @@ classDiagram
         +logout()
     }
 
+    class Dashboard {
+        -transaksiModel: MTransaksi
+        -inventarisModel: MInventaris
+        +index()
+        +getChart7Hari()
+        +getCucianJatuhTempo()
+    }
+
     class Transaksi {
         -transaksiModel: MTransaksi
         -pelangganModel: MPelanggan
         -layananModel: MLayanan
+        -detailModel: MDetailTransaksi
+        -tempModel: MTempPeminjaman
+        -inventarisModel: MInventaris
+        -penggunaanModel: MPenggunaanInventaris
+        -layananInventarisModel: MLayananInventaris
+        +index()
+        +addToCart()
+        +removeFromCart()
+        +simpanTransaksi()
+        +nota()
+        +daftar()
+        +detail()
+        +ajaxDetail()
+        +ajaxSearch()
+        +ubahStatus()
+        +prosesUbahStatus()
+        +pembayaran()
+        +simpanPembayaran()
+        +kirimWaApi()
+    }
+
+    class Pelanggan {
+        -pelangganModel: MPelanggan
         +index()
         +create()
         +store()
-        +updateStatus()
-        +bayar()
-        +printNota()
+        +edit()
+        +update()
+        +toggleStatus()
+        +ajaxSearch()
+        +ajaxSearchTable()
     }
 
     class Karyawan {
@@ -308,6 +454,35 @@ classDiagram
         +edit()
         +update()
         +delete()
+        +toggleStatus()
+        +ajaxSearch()
+    }
+
+    class Layanan {
+        -layananModel: MLayanan
+        -inventarisModel: MInventaris
+        -layananInventarisModel: MLayananInventaris
+        +index()
+        +create()
+        +store()
+        +edit()
+        +update()
+        +toggleStatus()
+        +resep()
+        +resepStore()
+        +ajaxSearch()
+    }
+
+    class Inventaris {
+        -inventarisModel: MInventaris
+        +index()
+        +create()
+        +store()
+        +edit()
+        +update()
+        +toggleStatus()
+        +warning()
+        +ajaxSearch()
     }
 
     class Laporan {
@@ -315,8 +490,38 @@ classDiagram
         +index()
         +harian()
         +bulanan()
-        +exportPdf()
-        +exportExcel()
+        +export_harian_pdf()
+        +export_bulanan_pdf()
+        +export_harian_excel()
+        +export_bulanan_excel()
+    }
+
+    class Profile {
+        -karyawanModel: MKaryawan
+        +index()
+        +update()
+    }
+
+    class LogAktivitas {
+        -logModel: MLogAktivitas
+        +index()
+    }
+
+    class LogWhatsapp {
+        -logModel: MLogWhatsapp
+        +index()
+    }
+
+    class Lacak {
+        -transaksiModel: MTransaksi
+        -detailModel: MDetailTransaksi
+        +index()
+    }
+
+    class Backup {
+        -level: string
+        +index()
+        +download()
     }
 
     class AuthFilter {
@@ -333,6 +538,8 @@ classDiagram
 
     class activity_log_helper {
         +log_aktivitas()
+        +detail_perubahan()
+        +badge_level_karyawan()
     }
 
     class WhatsAppNotifier {
@@ -341,13 +548,9 @@ classDiagram
         +notifyOrderBaru(array transaksi, array pelanggan)
         +notifyOrderSelesai(array transaksi, array pelanggan)
         +notifyOrderDiambil(array transaksi, array pelanggan)
+        +normalizePhone()
+        +buildWaMeLink()
         -sendRequest()
-    }
-
-    class Backup {
-        -level: string
-        +index()
-        +download()
     }
 
     class MTransaksi {
@@ -358,11 +561,31 @@ classDiagram
         +getLaporanBulanan()
     }
 
+    class MPelanggan {
+        +table: string = tb_pelanggan
+        +primaryKey: string = id_pelanggan
+        +allowedFields: array
+        +generateKode()
+    }
+
     class MKaryawan {
         +table: string = tb_karyawan
         +primaryKey: string = id_karyawan
         +allowedFields: array
         +verifyLogin()
+    }
+
+    class MLayanan {
+        +table: string = tb_layanan
+        +primaryKey: string = id_layanan
+        +allowedFields: array
+    }
+
+    class MInventaris {
+        +table: string = tb_inventaris
+        +primaryKey: string = id_inventaris
+        +allowedFields: array
+        +getStokKritis()
     }
 
     class MLayananInventaris {
@@ -377,22 +600,52 @@ classDiagram
         +logAksi()
     }
 
+    class MLogWhatsapp {
+        +table: string = tb_log_whatsapp
+        +primaryKey: string = id_log
+        +allowedFields: array
+        +getDaftarLog()
+    }
+
     BaseController <|-- Auth
+    BaseController <|-- Dashboard
     BaseController <|-- Transaksi
+    BaseController <|-- Pelanggan
     BaseController <|-- Karyawan
+    BaseController <|-- Layanan
+    BaseController <|-- Inventaris
     BaseController <|-- Laporan
+    BaseController <|-- Profile
+    BaseController <|-- LogAktivitas
+    BaseController <|-- LogWhatsapp
+    BaseController <|-- Lacak
     BaseController <|-- Backup
 
     Auth ..> LoginThrottle : Menggunakan
     AuthFilter ..> BaseController : Mengamankan Akses Rute
+    Dashboard ..> MTransaksi : Memakai
+    Dashboard ..> MInventaris : Memakai
     Transaksi ..> MTransaksi : Memakai
+    Transaksi ..> MPelanggan : Memakai
+    Transaksi ..> MLayanan : Memakai
+    Transaksi ..> MInventaris : Memakai
     Transaksi ..> MLayananInventaris : Memakai
     Transaksi ..> WhatsAppNotifier : Menggunakan
+    Pelanggan ..> MPelanggan : Memakai
     Karyawan ..> MKaryawan : Memakai
     Karyawan ..> activity_log_helper : Mencatat Aksi
-    activity_log_helper ..> MLogAktivitas : Menyimpan ke
+    Layanan ..> MLayanan : Memakai
+    Layanan ..> MInventaris : Memakai
+    Layanan ..> MLayananInventaris : Memakai
+    Inventaris ..> MInventaris : Memakai
+    Inventaris ..> activity_log_helper : Mencatat Aksi
     Laporan ..> MTransaksi : Memakai
+    Profile ..> MKaryawan : Memakai
+    LogAktivitas ..> MLogAktivitas : Memakai
+    LogWhatsapp ..> MLogWhatsapp : Memakai
+    Lacak ..> MTransaksi : Memakai
     Backup ..> MLogAktivitas : Mencatat Log Keamanan
+    activity_log_helper ..> MLogAktivitas : Menyimpan ke
 ```
 
 ---
@@ -415,13 +668,20 @@ erDiagram
     KARYAWAN ||--o{ LOG_AKTIVITAS : "melakukan aksi"
     LAYANAN ||--o{ LAYANAN_INVENTARIS : "memiliki resep"
     INVENTARIS ||--o{ LAYANAN_INVENTARIS : "dipakai dalam resep"
+    TRANSAKSI ||--o{ LOG_WHATSAPP : "tercatat di (via no_nota)"
+    MASTER_LEVEL_KARYAWAN ||--o{ KARYAWAN : "menentukan"
+    MASTER_STATUS_TRANSAKSI ||--o{ TRANSAKSI : "menentukan"
+    MASTER_STATUS_PEMBAYARAN ||--o{ TRANSAKSI : "menentukan"
+    MASTER_METODE_PEMBAYARAN ||--o{ TRANSAKSI : "menggunakan"
+    MASTER_METODE_PEMBAYARAN ||--o{ PEMBAYARAN : "menggunakan"
+    MASTER_STATUS_WHATSAPP ||--o{ LOG_WHATSAPP : "berstatus"
 
     KARYAWAN {
         int id_karyawan PK
         varchar nama_karyawan
         varchar username
         varchar password
-        enum level "admin, kasir, pemilik"
+        int id_level_karyawan FK
         varchar no_telp
         varchar email
         decimal gaji_pokok
@@ -467,9 +727,10 @@ erDiagram
         decimal grand_total
         int poin_ditebus
         int poin_diperoleh
-        enum status "menunggu, proses, setrika, selesai, diambil"
-        enum status_pembayaran "lunas, cicil, belum"
-        enum metode_pembayaran "cash, qris, transfer"
+        int id_status_transaksi FK
+        int id_status_pembayaran FK
+        int id_metode_pembayaran FK
+        varchar pin_pengambilan
         datetime created_at
         datetime updated_at
     }
@@ -489,7 +750,7 @@ erDiagram
         datetime tgl_bayar
         decimal nominal_bayar
         decimal sisa_tagihan
-        enum metode_bayar "cash, qris, transfer"
+        int id_metode_pembayaran FK
         varchar bukti_foto
     }
 
@@ -543,6 +804,18 @@ erDiagram
         varchar nama_referensi
         text detail
         varchar ip_address
+        datetime created_at
+    }
+
+    LOG_WHATSAPP {
+        int id_log PK
+        varchar no_nota FK
+        varchar no_tujuan
+        text isi_pesan
+        varchar tipe_notifikasi
+        varchar provider
+        varchar status
+        text respon_api
         datetime created_at
     }
 ```
@@ -687,6 +960,18 @@ erDiagram
         datetime created_at
     }
 
+    tb_log_whatsapp {
+        int id_log PK
+        varchar no_nota FK
+        varchar no_tujuan
+        text isi_pesan
+        varchar tipe_notifikasi
+        varchar provider
+        varchar status
+        text respon_api
+        datetime created_at
+    }
+
     tb_karyawan ||--o{ tb_transaksi : "dilayani oleh (id_kasir)"
     tb_karyawan ||--o{ tb_log_aktivitas : "melakukan aksi (id_karyawan)"
     tb_karyawan ||--o{ tb_status_log : "diubah oleh (id_karyawan)"
@@ -699,6 +984,7 @@ erDiagram
     tb_inventaris ||--o{ tb_penggunaan_inventaris : "digunakan di (id_inventaris)"
     tb_layanan ||--o{ tb_layanan_inventaris : "memiliki resep (id_layanan)"
     tb_inventaris ||--o{ tb_layanan_inventaris : "dipakai dalam resep (id_inventaris)"
+    tb_transaksi ||--o{ tb_log_whatsapp : "berelasi via no_nota"
 ```
 
 Berikut adalah representasi LRS secara tekstual terstruktur:
@@ -798,6 +1084,18 @@ tb_pelanggan (                                        |
                               |                                  harga_satuan: DECIMAL(10,2)
                               |                                  subtotal: DECIMAL(10,2) |
                               |                               )                        |
+                              |
+                              |-- tercatat WA (1:N) --------> tb_log_whatsapp (
+                                                                 id_log: INT (PK)
+                                                                 no_nota: VARCHAR(20) (FK)
+                                                                 no_tujuan: VARCHAR(20)
+                                                                 isi_pesan: TEXT
+                                                                 tipe_notifikasi: VARCHAR(50)
+                                                                 provider: VARCHAR(50)
+                                                                 status: VARCHAR(20)
+                                                                 respon_api: TEXT
+                                                                 created_at: DATETIME
+                                                              )
                               |                                                        |
                               |                               tb_layanan (             |
                               |                                  id_layanan: INT (PK) <+
@@ -845,6 +1143,11 @@ Deployment diagram menggambarkan bagaimana komponen perangkat lunak didistribusi
 flowchart TB
     subgraph ClientDevice ["Client Device (PC/Laptop/Smartphone)"]
         Browser["Web Browser (Chrome/Edge/Safari)"]
+        subgraph StaticAssets ["Static Assets (Diunduh dari Server)"]
+            AdminLTE["AdminLTE 4 + Bootstrap 5.3"]
+            LiveSearchJS["live-search.js (AJAX Live Search)"]
+            PasswordToggleJS["password-toggle.js"]
+        end
     end
 
     subgraph LocalNetwork ["Local Network (LAN / WiFi)"]
@@ -855,6 +1158,15 @@ flowchart TB
         subgraph WebServer ["Web Server (Apache v2.4 / Nginx)"]
             PHP["PHP Runtime 8.2+"]
             CI4["CodeIgniter 4 App (Sparkleen)"]
+            subgraph Controllers ["Controllers"]
+                CtrlAuth["Auth + AuthFilter"]
+                CtrlTransaksi["Transaksi (ajaxDetail, ajaxSearch)"]
+                CtrlPelanggan["Pelanggan (ajaxSearch, ajaxSearchTable)"]
+                CtrlKaryawan["Karyawan (ajaxSearch)"]
+                CtrlLayanan["Layanan (ajaxSearch)"]
+                CtrlInventaris["Inventaris (ajaxSearch)"]
+                CtrlLacak["Lacak (Publik, bypass Auth)"]
+            end
         end
         subgraph DBServer ["Database Server"]
             MySQL[(MySQL/MariaDB Database)]
@@ -874,6 +1186,11 @@ flowchart TB
     CI4 <-->|PHP Database Driver Port 3306| MySQL
     ServerMachine <-->|WAN Connection| CloudNetwork
     CloudNetwork <-->|HTTPS POST REST API JSON| FonnteGateway
+    Browser -.->|AJAX XHR Request| CtrlTransaksi
+    Browser -.->|AJAX XHR Request| CtrlPelanggan
+    Browser -.->|AJAX XHR Request| CtrlKaryawan
+    Browser -.->|AJAX XHR Request| CtrlLayanan
+    Browser -.->|AJAX XHR Request| CtrlInventaris
 ```
 
 ---
@@ -917,9 +1234,18 @@ flowchart TD
 ```mermaid
 flowchart TD
     Start([Mulai]) --> AksesPelanggan[Buka Menu Data Pelanggan]
-    AksesPelanggan --> PilihAksi{Pilih Aksi CRUD}
-    
-    PilihAksi -- Tambah --> FormTambah[Klik 'Tambah Pelanggan']
+    AksesPelanggan --> TabelMuncul[Tabel Pelanggan Ditampilkan]
+    TabelMuncul --> PilihAksi{Pilih Aksi}
+
+    PilihAksi -- Cari Data --> InputKeyword[/"Ketik Keyword di Kolom Search"/]
+    InputKeyword --> Debounce[JS Debounce 400ms]
+    Debounce --> AjaxRequest[AJAX GET /pelanggan/ajaxSearchTable?q=keyword]
+    AjaxRequest --> QueryDB[Query LIKE nama/HP/kode di Database]
+    QueryDB --> RenderTabel[Render Ulang Baris Tabel Tanpa Reload]
+    RenderTabel --> TampilHasil[Tampilkan Hasil & Jumlah Data]
+    TampilHasil --> PilihAksi
+
+    PilihAksi -- Tambah --> FormTambah[Klik Tambah Pelanggan]
     FormTambah --> InputData[Input Nama, No HP, Alamat]
     InputData --> ValidasiTambah{Validasi Sukses & No HP Unik?}
     ValidasiTambah -- Tidak --> TampilkanErrorTambah[Tampilkan Pesan Error]
@@ -927,7 +1253,7 @@ flowchart TD
     ValidasiTambah -- Ya --> SimpanTambah[INSERT INTO tb_pelanggan]
     SimpanTambah --> CatatLogTambah[Catat Log Aktivitas]
     CatatLogTambah --> SelesaiAksi
-    
+
     PilihAksi -- Edit --> PilihPelanggan[Pilih Data & Klik Edit]
     PilihPelanggan --> EditForm[Form Edit Data Pelanggan]
     EditForm --> UpdateInput[Ubah Nama, No HP, Alamat]
@@ -937,7 +1263,7 @@ flowchart TD
     ValidasiEdit -- Ya --> SimpanEdit[UPDATE tb_pelanggan]
     SimpanEdit --> CatatLogEdit[Catat Log Aktivitas]
     CatatLogEdit --> SelesaiAksi
-    
+
     PilihAksi -- Toggle Status --> CekRole{Apakah Pengguna Admin/Pemilik?}
     CekRole -- Tidak --> BlokAksi[Aksi Ditolak - Kasir Tidak Punya Hak Akses]
     BlokAksi --> SelesaiAksi
@@ -946,7 +1272,7 @@ flowchart TD
     SimpanToggle --> CatatLogToggle[Catat Log Aktivitas]
     CatatLogToggle --> SelesaiAksi
 
-    SelesaiAksi --> ReloadTabel[Reload Tabel Pelanggan & Tampilkan Toast Sukses]
+    SelesaiAksi --> ReloadTabel[Reload Halaman & Tampilkan Toast Sukses]
     ReloadTabel --> End([Selesai])
 ```
 

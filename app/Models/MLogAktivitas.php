@@ -24,7 +24,7 @@ class MLogAktivitas extends Model
         'ip_address',
     ];
 
-    public function getDaftarLog(?string $modul = null, ?string $aksi = null, ?string $dari = null, ?string $sampai = null): array
+    public function getDaftarLog(?string $modul = null, ?string $aksi = null, ?string $dari = null, ?string $sampai = null, ?string $search = null, int $limit = 50, int $offset = 0): array
     {
         $builder = $this->orderBy('created_at', 'DESC');
 
@@ -40,7 +40,13 @@ class MLogAktivitas extends Model
         if ($sampai !== null && $sampai !== '') {
             $builder->where('DATE(created_at) <=', $sampai);
         }
+        if ($search !== null && $search !== '') {
+            $builder->groupStart()
+                ->like('nama_karyawan', $search)
+                ->orLike('detail', $search)
+            ->groupEnd();
+        }
 
-        return $builder->findAll(500);
+        return $builder->findAll($limit, $offset);
     }
 }

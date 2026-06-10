@@ -33,16 +33,20 @@
                         <label class="form-label small mb-0">Sampai tanggal</label>
                         <input type="date" name="sampai" class="form-control form-control-sm" value="<?= esc($filter['sampai'] ?? '') ?>">
                     </div>
-                    <div class="col-md-4 d-flex gap-1">
-                        <button type="submit" class="btn btn-info btn-sm text-white">
-                             <i class="fas fa-filter"></i> Filter
+                    <div class="col-md-3">
+                        <label class="form-label small mb-0">Cari Karyawan / Detail</label>
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Ketik kata kunci..." value="<?= esc($filter['search'] ?? '') ?>">
+                    </div>
+                    <div class="col-md-1 d-flex gap-1">
+                        <button type="submit" class="btn btn-info btn-sm text-white w-100" title="Filter">
+                             <i class="fas fa-search"></i>
                         </button>
-                        <a href="/log-aktivitas" class="btn btn-secondary btn-sm">Reset</a>
+                        <a href="/log-aktivitas" class="btn btn-secondary btn-sm w-100" title="Reset"><i class="fas fa-undo"></i></a>
                     </div>
                 </form>
 
                 <p class="text-muted small mb-0">
-                    Mencatat aktivitas perubahan data (Karyawan, Inventaris) serta log keamanan sistem (maks. 500 entri terbaru).
+                    Mencatat aktivitas perubahan data (Karyawan, Inventaris) serta log keamanan sistem (maks. 30 entri per halaman).
                 </p>
             </div>
             <div class="card-body p-0 border-top">
@@ -69,7 +73,7 @@
                                 </td>
                             </tr>
                             <?php else: ?>
-                            <?php $no = 1; foreach ($logs as $log): ?>
+                            <?php $no = ($page - 1) * $limit + 1; foreach ($logs as $log): ?>
                             <?php $detail = $log['detail'] ? json_decode($log['detail'], true) : null; ?>
                             <tr>
                                 <td class="text-center"><?= $no++ ?></td>
@@ -115,6 +119,25 @@
                     </table>
                 </div>
             </div>
+            <?php if ($hasPrev || $hasNext): ?>
+            <div class="card-footer d-flex justify-content-between align-items-center bg-transparent border-top">
+                <div>
+                    <span class="text-muted small">Halaman <strong><?= $page ?></strong></span>
+                </div>
+                <div class="btn-group">
+                    <?php if ($hasPrev): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-chevron-left me-1"></i> Sebelumnya
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($hasNext): ?>
+                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="btn btn-outline-secondary btn-sm ms-2">
+                            Selanjutnya <i class="fas fa-chevron-right ms-1"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

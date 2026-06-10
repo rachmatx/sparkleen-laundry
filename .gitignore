@@ -138,5 +138,11 @@ analisis_keselarasan_laporan*.md
 generate_diagrams.py
 scratch_extracted_laporan*.txt
 /visualisasi_diagram/
+/diagrams
 
-
+# Additional Security & Environment Ignores
+*.log
+node_modules/
+.gemini/
+*.env.*
+!.env.example

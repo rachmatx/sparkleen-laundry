@@ -89,6 +89,7 @@ class Auth extends BaseController
                     'nama_karyawan' => $user->nama_karyawan,
                     'username'      => $user->username,
                     'email'         => $user->email ?? '',
+                    'id_level'      => $user->id_level,
                     'level'         => $user->level,
                     'isLoggedIn'    => true,
                 ]);
@@ -135,8 +136,8 @@ class Auth extends BaseController
 
     public function logout()
     {
-        session()->destroy();
         session()->setFlashdata('success', 'Anda telah berhasil logout.');
+        session()->destroy();
 
         return redirect()->to('/login');
     }

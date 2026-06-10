@@ -1,3 +1,6 @@
+<?= $this->extend('backend/template/layout') ?>
+<?= $this->section('content') ?>
+
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card card-warning card-outline">
@@ -7,6 +10,12 @@
             <form action="/transaksi/prosesUbahStatus" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
+                    <?php if (session()->getFlashdata('error')): ?>
+                        <div class="alert alert-danger">
+                            <?= esc(session()->getFlashdata('error')) ?>
+                        </div>
+                    <?php endif; ?>
+                    
                     <input type="hidden" name="id_transaksi" value="<?= $transaksi['id_transaksi'] ?>">
 
                     <div class="alert alert-light border py-2 mb-4">
@@ -19,31 +28,29 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Status Baru <span class="text-danger">*</span></label>
-                        <select class="form-select" name="status" id="status_baru" required>
-                            <?php
-                            $statuses = ['menunggu', 'proses', 'setrika', 'selesai', 'diambil'];
-                            $current = $transaksi['status'];
-                            $found = false;
-                            foreach($statuses as $s):
-                                if($s == $current):
-                                    $found = true;
-                                    continue;
-                                endif;
-                            ?>
-                                <option value="<?= $s ?>"><?= ucfirst($s) ?></option>
+                        <select class="form-select" name="id_status_transaksi" id="status_baru" required>
+                            <?php foreach($status_list as $s): ?>
+                                <?php if($s['id'] == $transaksi['id_status_transaksi']) continue; ?>
+                                <option value="<?= $s['id'] ?>" data-nama="<?= $s['nama_status'] ?>">
+                                    <?= ucfirst($s['nama_status']) ?>
+                                </option>
                             <?php endforeach; ?>
-                            <?php if(!$found): ?>
-                                <option value="proses">Proses</option>
-                                <option value="setrika">Setrika</option>
-                                <option value="selesai">Selesai</option>
-                                <option value="diambil">Diambil</option>
-                            <?php endif; ?>
                         </select>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Catatan (Opsional)</label>
                         <textarea class="form-control" name="catatan" rows="3" placeholder="Contoh: Ada kerusakan, perlu perhatian khusus..."></textarea>
+                    </div>
+
+                    <?php 
+                        $has_pin_db = !empty($transaksi['pin_pengambilan']);
+                        $show_pin = $has_pin_db && $is_pin_required;
+                    ?>
+                    <div class="mb-3" id="wrap-pin" style="display:none;" data-show-pin="<?= $show_pin ? '1' : '0' ?>">
+                        <label class="form-label fw-semibold text-danger">PIN Pengambilan (Dari WA Pelanggan) <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="pin_pengambilan" id="pin_pengambilan" placeholder="Masukkan 4 digit PIN" maxlength="4" pattern="\d{4}">
+                        <small class="text-muted">Wajib diisi untuk keamanan saat menyerahkan cucian. (Bisa diabaikan oleh Pemilik jika darurat).</small>
                     </div>
 
                      <div class="mb-0" id="wrap-kirim-wa" style="display:none;">
@@ -76,23 +83,44 @@
 <script>
 (function () {
     const select = document.getElementById('status_baru');
-    const wrap   = document.getElementById('wrap-kirim-wa');
-    const label  = document.getElementById('label_kirim_wa');
-    if (!select || !wrap) return;
+    const wrapWa   = document.getElementById('wrap-kirim-wa');
+    const labelWa  = document.getElementById('label_kirim_wa');
+    const wrapPin  = document.getElementById('wrap-pin');
+    const inputPin = document.getElementById('pin_pengambilan');
+    
+    if (!select) return;
 
-    function toggleWa() {
-        const val = select.value;
-        if (val === 'selesai' || val === 'diambil') {
-            wrap.style.display = 'block';
-            if (label) {
-                label.innerHTML = '<i class="fab fa-whatsapp text-success me-1"></i> Kirim notifikasi WhatsApp ke pelanggan (order ' + val + ')';
+    function toggleFields() {
+        const option = select.options[select.selectedIndex];
+        if (!option) return;
+        const val = option.getAttribute('data-nama');
+        
+        if (wrapWa) {
+            if (val === 'selesai' || val === 'diambil') {
+                wrapWa.style.display = 'block';
+                if (labelWa) {
+                    labelWa.innerHTML = '<i class="fab fa-whatsapp text-success me-1"></i> Kirim notifikasi WhatsApp ke pelanggan (order ' + val + ')';
+                }
+            } else {
+                wrapWa.style.display = 'none';
             }
-        } else {
-            wrap.style.display = 'none';
+        }
+
+        if (wrapPin) {
+            const showPin = wrapPin.getAttribute('data-show-pin') === '1';
+            if (val === 'diambil' && showPin) {
+                wrapPin.style.display = 'block';
+                inputPin.setAttribute('required', 'required');
+            } else {
+                wrapPin.style.display = 'none';
+                inputPin.removeAttribute('required');
+            }
         }
     }
 
-    select.addEventListener('change', toggleWa);
-    toggleWa();
+    select.addEventListener('change', toggleFields);
+    toggleFields();
 })();
 </script>
+
+<?= $this->endSection() ?>

@@ -23,10 +23,35 @@ class Layanan extends BaseController
 
     public function index()
     {
+        $page = (int)($this->request->getGet('page') ?? 1);
+        if ($page < 1) $page = 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $sort = $this->request->getGet('sort') ?? 'nama_layanan';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_layanan', 'harga_per_kg', 'estimasi_hari', 'is_aktif'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'nama_layanan';
+        }
+
+        $items = $this->layananModel->orderBy($sort, $dir)->findAll($limit + 1, $offset);
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
+
         $data = [
             'title'      => 'Data Layanan',
             'activeMenu' => 'layanan',
-            'layanan'    => $this->layananModel->findAll(),
+            'layanan'    => $items,
+            'page'       => $page,
+            'hasPrev'    => $hasPrev,
+            'hasNext'    => $hasNext,
+            'limit'      => $limit,
+            'sort'       => $sort,
+            'dir'        => $dir,
         ];
 
         return view('backend/template/header', $data)
@@ -37,10 +62,7 @@ class Layanan extends BaseController
 
     public function create()
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            return redirect()->to('/layanan');
-        }
+
 
         $data = [
             'title'      => 'Tambah Layanan',
@@ -55,9 +77,7 @@ class Layanan extends BaseController
 
     public function store()
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            return redirect()->to('/layanan');
-        }
+
 
         $this->layananModel->save([
             'nama_layanan'  => $this->request->getPost('nama_layanan'),
@@ -71,10 +91,7 @@ class Layanan extends BaseController
 
     public function edit($id)
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            return redirect()->to('/layanan');
-        }
+
 
         $data = [
             'title'      => 'Edit Layanan',
@@ -90,9 +107,7 @@ class Layanan extends BaseController
 
     public function update($id)
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            return redirect()->to('/layanan');
-        }
+
 
         $this->layananModel->update($id, [
             'nama_layanan'  => $this->request->getPost('nama_layanan'),
@@ -106,9 +121,7 @@ class Layanan extends BaseController
 
     public function toggleStatus($id)
     {
-        if (!in_array($this->level, ['admin', 'pemilik'])) {
-            return redirect()->to('/layanan');
-        }
+
 
         $layanan = $this->layananModel->find($id);
         if ($layanan) {
@@ -122,10 +135,7 @@ class Layanan extends BaseController
 
     public function resep($id)
     {
-        if ($this->level !== 'admin') {
-            session()->setFlashdata('error', 'Hanya Admin yang dapat mengonfigurasi resep bahan baku.');
-            return redirect()->to('/layanan');
-        }
+
 
         $layanan = $this->layananModel->find($id);
         if (!$layanan) {
@@ -159,9 +169,7 @@ class Layanan extends BaseController
 
     public function resepStore($id)
     {
-        if ($this->level !== 'admin') {
-            return redirect()->to('/layanan');
-        }
+
 
         $layanan = $this->layananModel->find($id);
         if (!$layanan) {
@@ -187,5 +195,38 @@ class Layanan extends BaseController
 
         session()->setFlashdata('success', 'Resep bahan baku layanan berhasil disimpan.');
         return redirect()->to('/layanan');
+    }
+
+    // Endpoint live search tabel layanan
+    public function ajaxSearch()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Akses ditolak']);
+        }
+
+        $keyword = $this->request->getGet('q');
+        
+        $sort = $this->request->getGet('sort') ?? 'nama_layanan';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_layanan', 'harga_per_kg', 'estimasi_hari', 'is_aktif'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'nama_layanan';
+        }
+
+        $query   = $this->layananModel->orderBy($sort, $dir);
+
+        if (!empty($keyword)) {
+            $query->like('nama_layanan', $keyword);
+        }
+
+        $items     = $query->findAll(100);
+        $canManage = in_array($this->level, ['admin', 'pemilik']);
+
+        return $this->response->setJSON([
+            'data'      => $items,
+            'total'     => count($items),
+            'canManage' => $canManage,
+            'isAdmin'   => $this->level === 'admin',
+        ]);
     }
 }

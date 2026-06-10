@@ -65,12 +65,17 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-semibold">Level Akses <span class="text-danger">*</span></label>
-                            <select class="form-select" name="level" required>
-                                <option value="kasir"   <?= $karyawan['level'] == 'kasir'   ? 'selected' : '' ?>>Kasir</option>
-                                <?php if(session()->get('level') === 'pemilik'): ?>
-                                <option value="admin"   <?= $karyawan['level'] == 'admin'   ? 'selected' : '' ?>>Admin</option>
-                                <option value="pemilik" <?= $karyawan['level'] == 'pemilik' ? 'selected' : '' ?>>Pemilik</option>
-                                <?php endif; ?>
+                            <select class="form-select" name="id_level" required>
+                                <?php foreach($level_list as $lvl): ?>
+                                    <?php 
+                                        if (session()->get('level') === 'admin' && $lvl['nama_level'] !== 'kasir') {
+                                            continue;
+                                        }
+                                    ?>
+                                    <option value="<?= $lvl['id'] ?>" <?= $karyawan['id_level'] == $lvl['id'] ? 'selected' : '' ?>>
+                                        <?= ucfirst($lvl['nama_level']) ?>
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">

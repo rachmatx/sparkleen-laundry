@@ -108,6 +108,42 @@ $growthPositive = $growthNominal >= 0;
     </div>
 </div>
 
+<!-- ═══ Grafik Pendapatan 7 Hari ══════════════════════════════════════════════ -->
+<div class="row mb-3">
+    <div class="col-md-8">
+        <div class="card card-outline card-success h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-line me-2 text-success"></i>
+                    Tren Pendapatan (7 Hari Terakhir)
+                </h3>
+                <div class="card-tools">
+                    <span class="badge text-bg-success">Bar Chart</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="chartPendapatanOwner" style="height:240px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-outline card-info h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-bar me-2 text-info"></i>
+                    Jumlah Transaksi (7 Hari)
+                </h3>
+                <div class="card-tools">
+                    <span class="badge text-bg-info">Line Chart</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="chartTransaksiOwner" style="height:240px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ Baris Grafik + Rincian Biaya ═════════════════════════════════════════ -->
 <div class="row mb-3">
     <!-- Pie Chart Metode Pembayaran -->
@@ -469,4 +505,73 @@ $growthPositive = $growthNominal >= 0;
         }
     });
 <?php endif; ?>
+
+    // ═══ Line Chart 7 Hari ══════════════════════════════════════════════════════
+    const labelsOwner       = <?= json_encode(array_column($chart7Hari, 'tanggal')) ?>;
+    const dataPendOwner     = <?= json_encode(array_column($chart7Hari, 'pendapatan')) ?>;
+    const dataTrxOwner      = <?= json_encode(array_column($chart7Hari, 'transaksi')) ?>;
+
+    // Bar chart pendapatan
+    const ctxPOwner = document.getElementById('chartPendapatanOwner').getContext('2d');
+    const gradOwner = ctxPOwner.createLinearGradient(0, 0, 0, 240);
+    gradOwner.addColorStop(0, 'rgba(25,135,84,0.8)');
+    gradOwner.addColorStop(1, 'rgba(25,135,84,0.2)');
+
+    new Chart(ctxPOwner, {
+        type: 'bar',
+        data: {
+            labels: labelsOwner,
+            datasets: [{
+                label: 'Pendapatan',
+                data: dataPendOwner,
+                backgroundColor: gradOwner,
+                borderColor: 'rgb(25,135,84)',
+                borderWidth: 1.5,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => 'Rp ' + ctx.raw.toLocaleString('id-ID') } }
+            },
+            scales: {
+                y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } }
+            }
+        }
+    });
+
+    // Line chart transaksi
+    const ctxTOwner = document.getElementById('chartTransaksiOwner').getContext('2d');
+    const gradTOwner = ctxTOwner.createLinearGradient(0, 0, 0, 240);
+    gradTOwner.addColorStop(0, 'rgba(13,202,240,0.3)');
+    gradTOwner.addColorStop(1, 'rgba(13,202,240,0)');
+
+    new Chart(ctxTOwner, {
+        type: 'line',
+        data: {
+            labels: labelsOwner,
+            datasets: [{
+                label: 'Transaksi',
+                data: dataTrxOwner,
+                borderColor: 'rgb(13,202,240)',
+                backgroundColor: gradTOwner,
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: 'rgb(13,202,240)',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+
 </script>

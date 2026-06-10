@@ -20,6 +20,9 @@
     
     <!-- AdminLTE CSS -->
     <link rel="stylesheet" href="/adminlte4/dist/css/adminlte.min.css">
+    
+    <!-- jQuery (Required for plugins like Select2) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 <div class="app-wrapper">
@@ -44,6 +47,14 @@
                         <span id="topBarClock">--:--:--</span>
                     </span>
                 </li>                
+                <li class="nav-item me-3" id="notif-stok-container" style="display: none;">
+                    <a class="nav-link position-relative text-danger" href="#" id="btn-stok-notif">
+                        <i class="fas fa-bell fs-5"></i>
+                        <span id="notif-stok-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mt-1" style="font-size: 0.65rem;">
+                            0
+                        </span>
+                    </a>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link" data-bs-toggle="dropdown" href="#">
                         <i class="fas fa-user-circle fs-5 me-1"></i> <span class="fw-medium"><?= session()->get('nama_karyawan') ?></span>

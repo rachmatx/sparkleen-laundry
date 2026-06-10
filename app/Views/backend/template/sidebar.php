@@ -23,24 +23,20 @@
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu">
 
-                <!-- Dashboard: semua level -->
+                <!-- ===================================================== -->
+                <!-- MAIN NAVIGATION                                       -->
+                <!-- ===================================================== -->
+                <li class="nav-header pt-3">MAIN NAVIGATION</li>
                 <li class="nav-item">
                     <a href="/dashboard" class="nav-link <?= ($activeMenu ?? '') == 'dashboard' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
-
-                <!-- ===================================================== -->
-                <!-- MENU KASIR: Transaksi & Data Pelanggan & Layanan       -->
-                <!-- ===================================================== -->
-
-                <!-- Transaksi: semua level -->
-                <li class="nav-header">TRANSAKSI</li>
                 <?php if (in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                 <li class="nav-item">
                     <a href="/transaksi" class="nav-link <?= ($activeMenu ?? '') == 'transaksi' ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-plus-circle"></i>
+                        <i class="nav-icon fas fa-plus-circle text-primary"></i>
                         <p>Transaksi Baru</p>
                     </a>
                 </li>
@@ -52,8 +48,10 @@
                     </a>
                 </li>
 
-                <!-- Master Data: semua level bisa lihat pelanggan & layanan -->
-                <li class="nav-header">MASTER DATA</li>
+                <!-- ===================================================== -->
+                <!-- MASTER DATA                                           -->
+                <!-- ===================================================== -->
+                <li class="nav-header pt-3">MASTER DATA</li>
                 <li class="nav-item">
                     <a href="/pelanggan" class="nav-link <?= ($activeMenu ?? '') == 'pelanggan' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-users"></i>
@@ -66,11 +64,14 @@
                         <p>Layanan</p>
                     </a>
                 </li>
-
-                <!-- ===================================================== -->
-                <!-- MENU ADMIN & PEMILIK: Karyawan, Inventaris, Laporan    -->
-                <!-- ===================================================== -->
-                <!-- Karyawan: admin, pemilik -->
+                <?php if (in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])): ?>
+                <li class="nav-item">
+                    <a href="/inventaris" class="nav-link <?= ($activeMenu ?? '') == 'inventaris' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-boxes"></i>
+                        <p>Inventaris</p>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                 <li class="nav-item">
                     <a href="/karyawan" class="nav-link <?= ($activeMenu ?? '') == 'karyawan' ? 'active' : '' ?>">
@@ -80,40 +81,40 @@
                 </li>
                 <?php endif; ?>
 
-                <!-- Inventaris: admin, pemilik, kasir -->
-                <?php if (in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])): ?>
-                <li class="nav-item">
-                    <a href="/inventaris" class="nav-link <?= ($activeMenu ?? '') == 'inventaris' ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-boxes"></i>
-                        <p>Inventaris</p>
-                    </a>
-                </li>
-                <?php endif; ?>
-
-                <!-- Log Aktivitas: pemilik saja -->
-                <?php if (session()->get('level') === 'pemilik'): ?>
-                <li class="nav-item">
-                    <a href="/log-aktivitas" class="nav-link <?= ($activeMenu ?? '') == 'log_aktivitas' ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-history"></i>
-                        <p>Log Aktivitas</p>
-                    </a>
-                </li>
-                <?php endif; ?>
-
-                <!-- Laporan: admin, pemilik -->
+                <!-- ===================================================== -->
+                <!-- REPORTING & LOGS                                      -->
+                <!-- ===================================================== -->
+                <li class="nav-header pt-3">REPORTING & LOGS</li>
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                <li class="nav-header">LAPORAN</li>
                 <li class="nav-item">
                     <a href="/laporan" class="nav-link <?= in_array($activeMenu ?? '', ['laporan', 'laporan_bulanan', 'laporan_harian']) ? 'active' : '' ?>">
-                        <i class="nav-icon fas fa-chart-line"></i>
+                        <i class="nav-icon fas fa-chart-line text-success"></i>
                         <p>Laporan Keuangan</p>
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (session()->get('level') === 'pemilik'): ?>
+                <li class="nav-item">
+                    <a href="/log-aktivitas" class="nav-link <?= ($activeMenu ?? '') == 'log_aktivitas' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-history text-warning"></i>
+                        <p>Log Aktivitas</p>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])): ?>
+                <li class="nav-item">
+                    <a href="/log-whatsapp" class="nav-link <?= ($activeMenu ?? '') == 'log_whatsapp' ? 'active' : '' ?>">
+                        <i class="nav-icon fab fa-whatsapp text-success"></i>
+                        <p>Log WhatsApp</p>
+                    </a>
+                </li>
+                <?php endif; ?>
 
-                <!-- Sistem: admin, pemilik -->
-                <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                <li class="nav-header">SISTEM</li>
+                <!-- ===================================================== -->
+                <!-- SETTINGS / SYSTEM                                     -->
+                <!-- ===================================================== -->
+                <?php if (session()->get('level') === 'pemilik'): ?>
+                <li class="nav-header pt-3">SISTEM</li>
                 <li class="nav-item">
                     <a href="/backup" class="nav-link <?= ($activeMenu ?? '') == 'backup' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-database text-info"></i>

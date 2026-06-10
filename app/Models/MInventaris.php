@@ -51,13 +51,11 @@ class MInventaris extends Model
      */
     public function kurangiStok(int $id, float $jumlah): bool
     {
-        $item = $this->find($id);
-        if (!$item) {
-            return false;
-        }
-
-        $stokBaru = max(0, $item['stok'] - $jumlah);
-        return (bool) $this->update($id, ['stok' => $stokBaru]);
+        return (bool) $this->db->table($this->table)
+            ->where('id_inventaris', $id)
+            ->where('stok >=', $jumlah)
+            ->set('stok', "stok - {$this->db->escape($jumlah)}", false)
+            ->update();
     }
 
     /**

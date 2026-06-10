@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\MKaryawan;
+use App\Models\MasterLevelKaryawanModel;
 
 class Karyawan extends BaseController
 {
@@ -10,44 +11,47 @@ class Karyawan extends BaseController
 
     public function __construct()
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            header('Location: ' . base_url('/dashboard'));
-            exit();
-        }
+
 
         $this->karyawanModel = new MKaryawan();
+        $this->levelModel    = new MasterLevelKaryawanModel();
     }
 
-    /**
-     * Memeriksa apakah domain email merupakan typo dari domain populer.
-     * Mengembalikan false jika terdeteksi typo, true jika aman.
-     */
-    private function cekTypoEmail($email)
-    {
-        if (empty($email)) return true;
-        
-        $domain = strtolower(substr(strrchr($email, "@"), 1));
-        
-        $typoDomains = [
-            'gmaill.com', 'gmail.con', 'gamil.com', 'gmai.com', 'gmail.co', 'gmail.cpm', 'gmail.com.com',
-            'yaho.com', 'yahoo.con', 'yahoo.cpm', 'yahool.com',
-            'outlok.com', 'outlook.con', 
-            'hotmai.com', 'hotmail.con'
-        ];
-        
-        if (in_array($domain, $typoDomains)) {
-            return false;
-        }
-        return true;
-    }
+    // Fungsi cekTypoEmail telah dipindahkan ke validation_helper.php
 
     public function index()
     {
+        $page = (int)($this->request->getGet('page') ?? 1);
+        if ($page < 1) $page = 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        $sort = $this->request->getGet('sort') ?? 'id_karyawan';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_karyawan', 'username', 'level', 'no_telp', 'gaji_pokok', 'is_aktif', 'id_karyawan'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'id_karyawan';
+        }
+
+        $this->karyawanModel->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level');
+        $this->karyawanModel->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level');
+        $items = $this->karyawanModel->orderBy($sort, $dir)->findAll($limit + 1, $offset);
+        $hasNext = count($items) > $limit;
+        if ($hasNext) {
+            array_pop($items);
+        }
+        $hasPrev = $page > 1;
+
         $data = [
             'title'      => 'Data Karyawan',
             'activeMenu' => 'karyawan',
-            'karyawan'   => $this->karyawanModel->findAll(),
+            'karyawan'   => $items,
+            'page'       => $page,
+            'hasPrev'    => $hasPrev,
+            'hasNext'    => $hasNext,
+            'limit'      => $limit,
+            'sort'       => $sort,
+            'dir'        => $dir,
         ];
 
         return view('backend/template/header', $data)
@@ -61,6 +65,7 @@ class Karyawan extends BaseController
         $data = [
             'title'      => 'Tambah Karyawan',
             'activeMenu' => 'karyawan',
+            'level_list' => $this->levelModel->findAll(),
         ];
 
         return view('backend/template/header', $data)
@@ -85,19 +90,19 @@ class Karyawan extends BaseController
             'nama_karyawan' => $this->request->getPost('nama_karyawan'),
             'username'      => $this->request->getPost('username'),
             'password'      => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'level'         => $this->request->getPost('level'),
+            'id_level'      => $this->request->getPost('id_level'),
             'no_telp'       => $this->request->getPost('no_telp'),
             'email'         => $this->request->getPost('email') ?: null,
             'gaji_pokok'    => $this->request->getPost('gaji_pokok') ?? 0,
         ];
 
-        if ($data['email'] && !$this->cekTypoEmail($data['email'])) {
+        if ($data['email'] && !cekTypoEmail($data['email'])) {
             session()->setFlashdata('errors', ['email' => 'Domain email sepertinya salah ketik (typo). Pastikan menggunakan domain yang benar.']);
             return redirect()->to('/karyawan/create')->withInput();
         }
 
-        if (session()->get('level') === 'admin' && in_array($data['level'], ['admin', 'pemilik'])) {
-            session()->setFlashdata('errors', ['level' => 'Admin hanya dapat membuat akun dengan level Kasir.']);
+        if (session()->get('level') === 'admin' && in_array($data['id_level'], [1, 3])) { // admin=1, pemilik=3
+            session()->setFlashdata('errors', ['id_level' => 'Admin hanya dapat membuat akun dengan level Kasir.']);
             return redirect()->to('/karyawan/create')->withInput();
         }
 
@@ -108,7 +113,7 @@ class Karyawan extends BaseController
 
         log_aktivitas('karyawan', 'tambah', (int) $this->karyawanModel->getInsertID(), $data['nama_karyawan'], [
             'username' => $data['username'],
-            'level'    => $data['level'],
+            'id_level' => $data['id_level'],
             'no_telp'  => $data['no_telp'],
         ]);
 
@@ -118,6 +123,8 @@ class Karyawan extends BaseController
 
     public function edit($id)
     {
+        $this->karyawanModel->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level');
+        $this->karyawanModel->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level');
         $karyawan = $this->karyawanModel->find($id);
 
         if (session()->get('level') === 'admin' && in_array($karyawan['level'], ['admin', 'pemilik'])) {
@@ -129,6 +136,7 @@ class Karyawan extends BaseController
             'title'      => 'Edit Karyawan',
             'activeMenu' => 'karyawan',
             'karyawan'   => $karyawan,
+            'level_list' => $this->levelModel->findAll(),
         ];
 
         return view('backend/template/header', $data)
@@ -142,26 +150,28 @@ class Karyawan extends BaseController
         $data = [
             'nama_karyawan' => $this->request->getPost('nama_karyawan'),
             'username'      => $this->request->getPost('username'),
-            'level'         => $this->request->getPost('level'),
+            'id_level'      => $this->request->getPost('id_level'),
             'no_telp'       => $this->request->getPost('no_telp'),
             'email'         => $this->request->getPost('email') ?: null,
             'gaji_pokok'    => $this->request->getPost('gaji_pokok') ?? 0,
             'id_karyawan'   => $id,  // Diperlukan untuk is_unique exception
         ];
 
-        if ($data['email'] && !$this->cekTypoEmail($data['email'])) {
+        if ($data['email'] && !cekTypoEmail($data['email'])) {
             session()->setFlashdata('errors', ['email' => 'Domain email sepertinya salah ketik (typo). Pastikan menggunakan domain yang benar.']);
             return redirect()->to('/karyawan/edit/' . $id)->withInput();
         }
 
+        $this->karyawanModel->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level');
+        $this->karyawanModel->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level');
         $target = $this->karyawanModel->find($id);
         if (session()->get('level') === 'admin' && in_array($target['level'], ['admin', 'pemilik'])) {
             session()->setFlashdata('error', 'Admin tidak dapat mengedit akun Admin atau Pemilik.');
             return redirect()->to('/karyawan');
         }
 
-        if (session()->get('level') === 'admin' && in_array($data['level'], ['admin', 'pemilik'])) {
-            session()->setFlashdata('errors', ['level' => 'Admin tidak dapat mengubah level menjadi Admin atau Pemilik.']);
+        if (session()->get('level') === 'admin' && in_array($data['id_level'], [1, 3])) { // admin=1, pemilik=3
+            session()->setFlashdata('errors', ['id_level' => 'Admin tidak dapat mengubah level menjadi Admin atau Pemilik.']);
             return redirect()->to('/karyawan/edit/' . $id)->withInput();
         }
 
@@ -186,7 +196,7 @@ class Karyawan extends BaseController
         }
 
         $perubahan = detail_perubahan($target, $data, [
-            'nama_karyawan', 'username', 'level', 'no_telp', 'email', 'gaji_pokok',
+            'nama_karyawan', 'username', 'id_level', 'no_telp', 'email', 'gaji_pokok',
         ]);
         if ($passwordDiubah) {
             $perubahan['password'] = 'diubah';
@@ -197,26 +207,11 @@ class Karyawan extends BaseController
         return redirect()->to('/karyawan');
     }
 
-    public function delete($id)
-    {
-        $target = $this->karyawanModel->find($id);
-        if (session()->get('level') === 'admin' && in_array($target['level'], ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Admin tidak dapat menghapus akun Admin atau Pemilik.');
-            return redirect()->to('/karyawan');
-        }
-
-        log_aktivitas('karyawan', 'hapus', (int) $id, $target['nama_karyawan'], [
-            'username' => $target['username'],
-            'level'    => $target['level'],
-        ]);
-
-        $this->karyawanModel->delete($id);
-        session()->setFlashdata('success', 'Data karyawan berhasil dihapus.');
-        return redirect()->to('/karyawan');
-    }
 
     public function toggleStatus($id)
     {
+        $this->karyawanModel->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level');
+        $this->karyawanModel->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level');
         $karyawan = $this->karyawanModel->find($id);
         
         if (session()->get('level') === 'admin' && in_array($karyawan['level'], ['admin', 'pemilik'])) {
@@ -235,5 +230,54 @@ class Karyawan extends BaseController
             session()->setFlashdata('success', "Karyawan berhasil $pesan.");
         }
         return redirect()->to('/karyawan');
+    }
+
+    // Endpoint live search tabel karyawan
+    public function ajaxSearch()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Akses ditolak']);
+        }
+
+        $keyword    = $this->request->getGet('q');
+        $sessionLevel = session()->get('level');
+        
+        $sort = $this->request->getGet('sort') ?? 'id_karyawan';
+        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+        $allowedSort = ['nama_karyawan', 'username', 'level', 'no_telp', 'gaji_pokok', 'is_aktif', 'id_karyawan'];
+        if (!in_array($sort, $allowedSort)) {
+            $sort = 'id_karyawan';
+        }
+
+        $query      = $this->karyawanModel->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level')
+                                          ->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level')
+                                          ->orderBy($sort, $dir);
+
+        if (!empty($keyword)) {
+            $query->groupStart()
+                  ->like('nama_karyawan', $keyword)
+                  ->orLike('username', $keyword)
+                  ->orLike('no_telp', $keyword)
+                  ->orLike('level', $keyword)
+                  ->groupEnd();
+        }
+
+        $items = $query->findAll(100);
+
+        // Tentukan id karyawan mana yang boleh dikelola oleh session user
+        $canManageIds = [];
+        foreach ($items as $k) {
+            if ($sessionLevel === 'pemilik') {
+                $canManageIds[] = (string) $k['id_karyawan'];
+            } elseif ($sessionLevel === 'admin' && $k['level'] === 'kasir') {
+                $canManageIds[] = (string) $k['id_karyawan'];
+            }
+        }
+
+        return $this->response->setJSON([
+            'data'      => $items,
+            'total'     => count($items),
+            'canManage' => $canManageIds,
+        ]);
     }
 }

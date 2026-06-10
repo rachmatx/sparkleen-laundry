@@ -1,3 +1,6 @@
+<?= $this->extend('backend/template/layout') ?>
+<?= $this->section('content') ?>
+
 <div class="row">
     <!-- Form Pembayaran -->
     <div class="col-md-5">
@@ -9,13 +12,13 @@
                 <?php if(session()->getFlashdata('success')): ?>
                     <div class="alert alert-success alert-dismissible">
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        <i class="fas fa-check-circle me-1"></i> <?= session()->getFlashdata('success') ?>
+                        <i class="fas fa-check-circle me-1"></i> <?= esc(session()->getFlashdata('success')) ?>
                     </div>
                 <?php endif; ?>
                 <?php if(session()->getFlashdata('error')): ?>
                     <div class="alert alert-danger alert-dismissible">
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        <i class="fas fa-exclamation-circle me-1"></i> <?= session()->getFlashdata('error') ?>
+                        <i class="fas fa-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?>
                     </div>
                 <?php endif; ?>
 
@@ -57,17 +60,20 @@
                         <label class="form-label fw-semibold">Nominal Bayar <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
-                            <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="form-control" name="nominal_bayar"
-                                   required placeholder="Masukkan nominal">
+                            <input type="text" inputmode="numeric" id="input_nominal_display" class="form-control"
+                                   required placeholder="Masukkan nominal" autocomplete="off">
+                            <input type="hidden" name="nominal_bayar" id="input_nominal_raw">
                         </div>
-                        <div class="form-text">Jika bayar lebih, sistem otomatis menghitung kembalian.</div>
+                        <div id="info-kembalian" class="form-text mt-2 fw-bold" style="font-size: 1rem;"></div>
                     </div>
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Metode Pembayaran <span class="text-danger">*</span></label>
-                        <select class="form-select" name="metode_bayar" required>
-                            <option value="cash">Cash</option>
-                            <option value="qris">QRIS</option>
-                            <option value="transfer">Transfer Bank</option>
+                        <select class="form-select" name="id_metode_pembayaran" id="metode_bayar" required>
+                            <?php foreach($metode_list as $m): ?>
+                                <option value="<?= $m['id'] ?>" data-nama="<?= strtolower($m['nama_metode']) ?>">
+                                    <?= ucfirst($m['nama_metode']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -78,15 +84,11 @@
                                 <i class="fas fa-qrcode me-1"></i> Scan QRIS Pembayaran
                             </div>
                             <div class="d-inline-block p-3 bg-white border rounded shadow-sm mb-2">
-                                <svg width="180" height="180" viewBox="0 0 29 29" shape-rendering="crispEdges">
-                                    <path fill="#ffffff" d="M0 0h29v29H0z"/>
-                                    <path fill="#1a1a1a" d="M0 0h7v7H0zm1 1v5h5V1zm1 1h3v3H2z"/>
-                                    <path fill="#1a1a1a" d="M22 0h7v7h-7zm1 1v5h5V1zm1 1h3v3H4z"/>
-                                    <path fill="#1a1a1a" d="M0 22h7v7H0zm1 1v5h5v-5zm1 1h3v3H2z"/>
-                                    <path fill="#1a1a1a" d="M8 2h1v1H8zm3 0h1v2h-1zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm-9 2h2v1H9zm4 0h1v1h-1zm3 0h2v1h-2zm-6 2h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm-9 2h1v1H8zm3 0h1v1h-1zm3 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zm-9 2h1v1H8zm2 0h1v1h-1zm3 0h1v1H13zm2 0h2v1h-2zm3 0h1v1h-1zm-9 2h2v1H9zm4 0h1v1h-1zm3 0h2v1h-2zm-6 2h1v1H8zm2 0h2v1h-2zm4 0h1v1h-1zm2 0h1v1h-1zM6 8h2v1H6zm4 0h1v1h-1zm3 0h2v1h-2zm3 0h2v1h-2zm4 0h1v1h-1zM2 10h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm4 0h1v1h-1zm4 0h2v1h-2zm3 0h1v1h-1zM0 12h2v1H0zm4 0h1v1H4zm3 0h1v1H7zm3 0h2v1h-10zm4 0h1v1h-1zm2 0h2v1h-2zm3 0h2v1h-2zM2 14h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2zM0 16h2v1H0zm4 0h1v1H4zm3 0h1v1H7zm3 0h2v1h-10zm4 0h1v1h-1zm2 0h2v1h-2zm3 0h2v1h-2zM2 18h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2zM0 20h2v1H0zm4 0h1v1H4zm3 0h1v1H7zm3 0h2v1h-10zm4 0h1v1h-1zm2 0h2v1h-2zm3 0h2v1h-2zM2 18h1v1H2zm4 0h1v1H6zm2 0h2v1H8zm3 0h2v1h-2zm4 0h1v1h-1zm3 0h2v1h-2z"/>
-                                    <rect x="11" y="11" width="7" height="7" rx="1.5" fill="#1e3a8a"/>
-                                    <text x="14.5" y="15.5" font-family="Arial" font-size="4.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QRIS</text>
-                                </svg>
+                                <?php if(isset($qrCodeDataUri) && $qrCodeDataUri): ?>
+                                    <img src="<?= $qrCodeDataUri ?>" alt="QR Code Pembayaran">
+                                <?php else: ?>
+                                    <div class="text-danger small">Gagal memuat QR Code</div>
+                                <?php endif; ?>
                             </div>
                             <div class="small text-muted">Scan QR di atas menggunakan e-wallet atau aplikasi m-banking Anda</div>
                             <div class="fw-bold mt-1 text-dark">Sparkleen Laundry & Dry Clean</div>
@@ -173,14 +175,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const selectMetode = document.querySelector('select[name="metode_bayar"]');
+    const selectMetode = document.getElementById('metode_bayar');
     const container = document.getElementById('payment-details-container');
     const detailsQris = document.getElementById('details-qris');
     const detailsTransfer = document.getElementById('details-transfer');
 
     if (selectMetode && container && detailsQris && detailsTransfer) {
         selectMetode.addEventListener('change', function() {
-            const val = this.value;
+            const option = this.options[this.selectedIndex];
+            if (!option) return;
+            const val = option.getAttribute('data-nama');
             // Hide all details first
             container.classList.add('d-none');
             detailsQris.classList.add('d-none');
@@ -197,6 +201,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Trigger change initially in case of validation/reload state
         selectMetode.dispatchEvent(new Event('change'));
+    }
+
+    // Auto Kembalian Calculator
+    const inputDisplay = document.getElementById('input_nominal_display');
+    const inputRaw = document.getElementById('input_nominal_raw');
+    const infoKembalian = document.getElementById('info-kembalian');
+    const sisaTagihan = <?= $sisa ?>;
+
+    if (inputDisplay && inputRaw && infoKembalian) {
+        inputDisplay.addEventListener('input', function(e) {
+            // Remove non-digits
+            let val = this.value.replace(/[^0-9]/g, '');
+            if (!val) {
+                this.value = '';
+                inputRaw.value = '';
+                infoKembalian.innerHTML = '';
+                return;
+            }
+            
+            // Set raw value for backend
+            inputRaw.value = val;
+            
+            // Format display with dots
+            this.value = parseInt(val, 10).toLocaleString('id-ID');
+            
+            // Calculate kembalian
+            let nominalBayar = parseInt(val, 10);
+            let selisih = nominalBayar - sisaTagihan;
+            
+            if (selisih >= 0) {
+                infoKembalian.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i> Kembalian: Rp ' + selisih.toLocaleString('id-ID') + '</span>';
+            } else {
+                let kurang = Math.abs(selisih);
+                infoKembalian.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Kurang: Rp ' + kurang.toLocaleString('id-ID') + '</span>';
+            }
+        });
     }
 });
 
@@ -240,3 +280,5 @@ function copyBankAccount() {
     });
 }
 </script>
+
+<?= $this->endSection() ?>
