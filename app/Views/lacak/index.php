@@ -360,23 +360,87 @@
             </div>
             
             <div class="lacak-body">
-                <!-- Search Form -->
-                <form action="/lacak" method="get" class="mb-4 search-container">
-                    <div class="input-group search-group-modern">
-                        <span class="input-group-text">
-                            <i class="fas fa-search"></i>
-                        </span>
-                        <input type="text" 
-                               class="form-control" 
-                               name="nota" 
-                               value="<?= esc($notaInput ?? '') ?>" 
-                               placeholder="Cari... Contoh Nota: LAU/20260522/0001" 
-                               required>
-                        <button type="submit" class="btn btn-lacak">
-                            Lacak Order
-                        </button>
+                <!-- Search Tabs -->
+                <div class="search-container mb-4">
+                    <?php $activeTab = ($telp !== '' && $notaInput === null) ? 'telp' : 'nota'; ?>
+                    <ul class="nav nav-pills mb-3 justify-content-center gap-2" id="searchTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link <?= $activeTab === 'nota' ? 'active' : '' ?>"
+                               id="tab-nota"
+                               href="#"
+                               onclick="switchTab('nota'); return false;"
+                               style="border-radius: 8px; font-weight: 600; font-size: 14px; padding: 8px 20px;">
+                                <i class="fas fa-receipt me-2"></i>Nomor Nota
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link <?= $activeTab === 'telp' ? 'active' : '' ?>"
+                               id="tab-telp"
+                               href="#"
+                               onclick="switchTab('telp'); return false;"
+                               style="border-radius: 8px; font-weight: 600; font-size: 14px; padding: 8px 20px;">
+                                <i class="fas fa-mobile-alt me-2"></i>Nomor HP
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Form: Cari by Nota -->
+                    <div id="form-nota" style="display: <?= $activeTab === 'nota' ? 'block' : 'none' ?>;">
+                        <form action="/lacak" method="get">
+                            <div class="input-group search-group-modern">
+                                <span class="input-group-text">
+                                    <i class="fas fa-receipt"></i>
+                                </span>
+                                <input type="text"
+                                       class="form-control"
+                                       name="nota"
+                                       value="<?= esc($notaInput ?? '') ?>"
+                                       placeholder="Contoh: LAU/20260522/0001"
+                                       autocomplete="off">
+                                <button type="submit" class="btn btn-lacak">
+                                    Lacak Order
+                                </button>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">Masukkan nomor nota yang tertera di struk pembayaran Anda</small>
+                            </div>
+                        </form>
                     </div>
-                </form>
+
+                    <!-- Form: Cari by Nomor HP -->
+                    <div id="form-telp" style="display: <?= $activeTab === 'telp' ? 'block' : 'none' ?>;">
+                        <form action="/lacak" method="get">
+                            <div class="input-group search-group-modern">
+                                <span class="input-group-text">
+                                    <i class="fas fa-mobile-alt"></i>
+                                </span>
+                                <input type="text"
+                                       class="form-control"
+                                       name="telp"
+                                       value="<?= esc($telp ?? '') ?>"
+                                       placeholder="Contoh: 081234567890 atau 6281234567890"
+                                       autocomplete="off"
+                                       inputmode="numeric">
+                                <button type="submit" class="btn btn-lacak">
+                                    Cari Order
+                                </button>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">Masukkan nomor HP yang terdaftar saat transaksi — akan menampilkan order terbaru Anda</small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <script>
+                function switchTab(tab) {
+                    document.getElementById('form-nota').style.display = tab === 'nota' ? 'block' : 'none';
+                    document.getElementById('form-telp').style.display = tab === 'telp' ? 'block' : 'none';
+                    document.getElementById('tab-nota').classList.toggle('active', tab === 'nota');
+                    document.getElementById('tab-telp').classList.toggle('active', tab === 'telp');
+                }
+                </script>
+
 
                 <!-- Error Messages -->
                 <?php if ($errorMsg): ?>

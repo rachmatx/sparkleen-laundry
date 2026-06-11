@@ -3,11 +3,11 @@
 ?>
 
 <!-- ═══ Ringkasan Pesanan Hari Ini ══════════════════════════════════════════ -->
-<div class="row mb-3">
+    <div class="row mb-3">
     <div class="col-lg-4 col-md-6 mb-3">
         <div class="small-box text-bg-primary">
             <div class="inner">
-                <h3 class="fs-4"><?= $pesananMasukHariIni ?></h3>
+                <h3 class="fs-4" id="stat-pesanan-hari-ini"><?= $pesananMasukHariIni ?></h3>
                 <p>Pesanan Masuk Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-shopping-bag"></i></div>
@@ -19,7 +19,7 @@
     <div class="col-lg-4 col-md-6 mb-3">
         <div class="small-box text-bg-warning">
             <div class="inner">
-                <h3 class="fs-4"><?= $totalDiproses ?></h3>
+                <h3 class="fs-4" id="stat-total-diproses"><?= $totalDiproses ?></h3>
                 <p>Cucian Perlu Diproses</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-tshirt"></i></div>
@@ -64,7 +64,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="fw-bold fs-4 text-warning"><?= $statusMenunggu ?></div>
+                                <div class="fw-bold fs-4 text-warning" id="stat-menunggu"><?= $statusMenunggu ?></div>
                                 <div class="text-muted small">Menunggu Proses</div>
                             </div>
                         </div>
@@ -79,7 +79,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="fw-bold fs-4 text-info"><?= $statusProses ?></div>
+                                <div class="fw-bold fs-4 text-info" id="stat-proses"><?= $statusProses ?></div>
                                 <div class="text-muted small">Sedang Dicuci</div>
                             </div>
                         </div>
@@ -94,7 +94,7 @@
                                 </div>
                             </div>
                             <div>
-                                <div class="fw-bold fs-4" style="color:#8b5cf6;"><?= $statusSetrika ?></div>
+                                <div class="fw-bold fs-4" style="color:#8b5cf6;" id="stat-setrika"><?= $statusSetrika ?></div>
                                 <div class="text-muted small">Sedang Disetrika</div>
                             </div>
                         </div>
@@ -104,6 +104,63 @@
         </div>
     </div>
 </div>
+
+<!-- Indikator polling live ================================================== -->
+<div class="d-flex align-items-center gap-2 mb-2" style="font-size:12px; color:#6c757d;">
+    <span class="badge rounded-pill" style="background:#e8f5e9; color:#388e3c; font-size:11px;">
+        <i class="fas fa-circle" style="font-size:8px;" id="poll-dot"></i> LIVE
+    </span>
+    <span>Diperbarui otomatis setiap 30 detik &mdash; Terakhir: <span id="poll-last-update">baru saja</span></span>
+</div>
+
+<script>
+(function () {
+    const POLL_INTERVAL = 30000; // 30 detik
+    const API_URL       = '/dashboard/api/status-kasir';
+
+    function flashEl(el) {
+        if (!el) return;
+        el.style.transition = 'color 0.2s';
+        el.style.color = '#0d6efd';
+        setTimeout(() => { el.style.color = ''; }, 600);
+    }
+
+    function pollStatus() {
+        fetch(API_URL, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+            const map = [
+                ['stat-pesanan-hari-ini', data.pesananMasukHariIni],
+                ['stat-total-diproses',   data.totalDiproses],
+                ['stat-menunggu',         data.statusMenunggu],
+                ['stat-proses',           data.statusProses],
+                ['stat-setrika',          data.statusSetrika],
+            ];
+            map.forEach(([id, val]) => {
+                const el = document.getElementById(id);
+                if (el && el.textContent !== String(val)) {
+                    el.textContent = val;
+                    flashEl(el);
+                }
+            });
+
+            const dot = document.getElementById('poll-dot');
+            if (dot) dot.style.color = '#388e3c';
+            const ts = document.getElementById('poll-last-update');
+            if (ts) ts.textContent = data.timestamp;
+        })
+        .catch(() => {
+            const dot = document.getElementById('poll-dot');
+            if (dot) dot.style.color = '#dc3545'; // merah jika gagal
+        });
+    }
+
+    // Mulai polling
+    setInterval(pollStatus, POLL_INTERVAL);
+})();
+</script>
 
 <!-- ═══ Quick Actions ════════════════════════════════════════════════════════ -->
 <div class="row mb-3">

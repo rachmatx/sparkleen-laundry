@@ -47,6 +47,35 @@ class Dashboard extends BaseController
              . view('backend/template/footer');
     }
 
+    /**
+     * API endpoint untuk polling live-counter dashboard kasir.
+     * Dipanggil via AJAX setiap 30 detik oleh kasir.php.
+     * Route: GET /dashboard/api/status-kasir  (dilindungi AuthFilter)
+     */
+    public function apiStatusKasir()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+        }
+
+        $transaksiModel = new \App\Models\MTransaksi();
+        $today = date('Y-m-d');
+
+        $pesananMasukHariIni = $transaksiModel->where('DATE(tgl_masuk)', $today)->countAllResults();
+        $statusMenunggu      = $transaksiModel->where('id_status_transaksi', 1)->countAllResults();
+        $statusProses        = $transaksiModel->where('id_status_transaksi', 2)->countAllResults();
+        $statusSetrika       = $transaksiModel->where('id_status_transaksi', 3)->countAllResults();
+
+        return $this->response->setJSON([
+            'pesananMasukHariIni' => $pesananMasukHariIni,
+            'statusMenunggu'      => $statusMenunggu,
+            'statusProses'        => $statusProses,
+            'statusSetrika'       => $statusSetrika,
+            'totalDiproses'       => $statusMenunggu + $statusProses + $statusSetrika,
+            'timestamp'           => date('H:i:s'),
+        ]);
+    }
+
     // =========================================================================
     // DASHBOARD ADMIN
     // =========================================================================

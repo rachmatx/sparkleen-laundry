@@ -15,6 +15,8 @@ $routes->get('/lacak', 'Lacak::index');
 
 // Dashboard
 $routes->get('/dashboard', 'Dashboard::index');
+$routes->get('/dashboard/api/status-kasir', 'Dashboard::apiStatusKasir', ['filter' => 'auth']);
+
 
 // CRUD Pelanggan
 $routes->group('pelanggan', ['filter' => 'role:admin,kasir,pemilik'], static function ($routes) {
