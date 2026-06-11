@@ -202,6 +202,9 @@
                                                onchange="toggleInvInput(this)">
                                         <label class="form-check-label fw-semibold" for="inv_<?= $inv['id_inventaris'] ?>">
                                             <?= esc($inv['nama_barang']) ?>
+                                            <?php if($inv['stok'] <= $inv['stok_minimal']): ?>
+                                                <span class="badge bg-danger ms-1" style="font-size: 0.65em;">Stok Tipis!</span>
+                                            <?php endif; ?>
                                             <span class="text-muted small d-block">(Stok: <?= number_format($inv['stok'], 2) ?> <?= $inv['satuan'] ?>)</span>
                                         </label>
                                     </div>

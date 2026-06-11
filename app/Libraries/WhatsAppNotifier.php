@@ -14,9 +14,14 @@ class WhatsAppNotifier
     public function __construct(?WhatsAppConfig $config = null)
     {
         $this->config = $config ?? config('WhatsApp');
+        
+        // Disable SSL verification on non-production environments
+        $verifySsl = env('CI_ENVIRONMENT') === 'production';
+        
         $this->client = \Config\Services::curlrequest([
             'timeout'         => 15,
             'connect_timeout' => 10,
+            'verify'          => $verifySsl,
         ]);
     }
 

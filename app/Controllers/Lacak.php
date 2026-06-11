@@ -82,13 +82,13 @@ class Lacak extends BaseController
                         ->findAll();
 
                     // Ambil log status perubahan
-                    $statusLog = $this->transaksiModel->db->table('tb_status_log')
+                    $statusLogModel = new \App\Models\MStatusLog();
+                    $statusLog = $statusLogModel
                         ->select('tb_status_log.*, tb_karyawan.nama_karyawan')
                         ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_status_log.id_karyawan')
                         ->where('id_transaksi', $transaksi['id_transaksi'])
                         ->orderBy('tgl_ubah', 'DESC')
-                        ->get()
-                        ->getResultArray();
+                        ->findAll();
 
                     // Masking data sensitif pelanggan
                     $transaksi['nama_pelanggan_masked'] = $this->maskName($transaksi['nama_pelanggan']);
@@ -160,12 +160,13 @@ class Lacak extends BaseController
                             ->where('id_transaksi', $transaksi['id_transaksi'])
                             ->findAll();
 
-                        $statusLog = $this->transaksiModel->db->table('tb_status_log')
+                        $statusLogModel = new \App\Models\MStatusLog();
+                        $statusLog = $statusLogModel
                             ->select('tb_status_log.*, tb_karyawan.nama_karyawan')
                             ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_status_log.id_karyawan')
                             ->where('id_transaksi', $transaksi['id_transaksi'])
                             ->orderBy('tgl_ubah', 'DESC')
-                            ->get()->getResultArray();
+                            ->findAll();
 
                         $transaksi['nama_pelanggan_masked'] = $this->maskName($transaksi['nama_pelanggan']);
                         $transaksi['no_telp_masked']        = $this->maskPhone($transaksi['no_telp']);

@@ -8,6 +8,8 @@ class MTransaksi extends Model
 {
     protected $table = 'tb_transaksi';
     protected $primaryKey = 'id_transaksi';
+    protected $useSoftDeletes = true;
+    protected $deletedField = 'deleted_at';
     protected $allowedFields = [
         'no_nota', 'id_pelanggan', 'id_kasir', 'tgl_masuk',
         'tgl_selesai_estimasi', 'tgl_selesai_aktual', 'total_berat',

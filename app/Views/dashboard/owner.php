@@ -24,9 +24,11 @@ $growthPositive = $growthNominal >= 0;
             <ul class="dropdown-menu dropdown-menu-end shadow">
                 <li><a class="dropdown-item py-2" href="/laporan/export_harian_pdf"><i class="fas fa-file-pdf text-danger me-2"></i>Export Harian PDF</a></li>
                 <li><a class="dropdown-item py-2" href="/laporan/export_bulanan_pdf"><i class="fas fa-file-pdf text-danger me-2"></i>Export Bulanan PDF</a></li>
+                <li><a class="dropdown-item py-2" href="/laporan/rentang"><i class="fas fa-file-pdf text-danger me-2"></i>Export Rentang PDF</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item py-2" href="/laporan/export_harian_excel"><i class="fas fa-file-excel text-success me-2"></i>Export Harian Excel</a></li>
                 <li><a class="dropdown-item py-2" href="/laporan/export_bulanan_excel"><i class="fas fa-file-excel text-success me-2"></i>Export Bulanan Excel</a></li>
+                <li><a class="dropdown-item py-2" href="/laporan/rentang"><i class="fas fa-file-excel text-success me-2"></i>Export Rentang Excel</a></li>
             </ul>
         </div>
     </div>
