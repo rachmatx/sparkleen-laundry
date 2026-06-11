@@ -34,65 +34,6 @@ class Laporan extends BaseController
              . view('backend/template/footer');
     }
 
-    // Laporan Harian (Web)
-    public function harian()
-    {
-        $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
-
-        $page = (int)($this->request->getGet('page') ?? 1);
-        if ($page < 1) $page = 1;
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
-
-        $items = $this->transaksiModel
-            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, st.nama_status as status, sp.nama_status as status_pembayaran')
-            ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
-            ->join('tb_master_status_transaksi st', 'st.id = tb_transaksi.id_status_transaksi', 'left')
-            ->join('tb_master_status_pembayaran sp', 'sp.id = tb_transaksi.id_status_pembayaran', 'left')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->orderBy('id_transaksi', 'DESC')
-            ->findAll($limit + 1, $offset);
-
-        $hasNext = count($items) > $limit;
-        if ($hasNext) {
-            array_pop($items);
-        }
-        $hasPrev = $page > 1;
-
-        $totalPendapatan = $this->transaksiModel
-            ->select('SUM(grand_total) as total')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->first();
-
-        $totalBerat = $this->transaksiModel
-            ->select('SUM(total_berat) as berat')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->first();
-
-        $jumlahTransaksi = $this->transaksiModel
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->countAllResults();
-
-        $data = [
-            'title'            => 'Laporan Harian',
-            'activeMenu'       => 'laporan',
-            'transaksi'        => $items,
-            'page'             => $page,
-            'hasPrev'          => $hasPrev,
-            'hasNext'          => $hasNext,
-            'limit'            => $limit,
-            'tanggal'          => $tanggal,
-            'totalPendapatan'  => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi'  => $jumlahTransaksi,
-            'totalBerat'       => $totalBerat['berat'] ?? 0,
-        ];
-
-        return view('backend/template/header', $data)
-             . view('backend/template/sidebar', $data)
-             . view('laporan/harian', $data)
-             . view('backend/template/footer');
-    }
-
     // Laporan Bulanan (Web)
     public function bulanan()
     {
@@ -160,42 +101,6 @@ class Laporan extends BaseController
              . view('backend/template/footer');
     }
 
-    // ==================== EXPORT PDF ====================
-
-    public function export_harian_pdf()
-    {
-        $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
-
-        $transaksi = $this->transaksiModel
-            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, st.nama_status as status, sp.nama_status as status_pembayaran')
-            ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
-            ->join('tb_master_status_transaksi st', 'st.id = tb_transaksi.id_status_transaksi', 'left')
-            ->join('tb_master_status_pembayaran sp', 'sp.id = tb_transaksi.id_status_pembayaran', 'left')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->findAll();
-
-        $totalPendapatan = $this->transaksiModel
-            ->select('SUM(grand_total) as total')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->first();
-
-        $data = [
-            'transaksi'       => $transaksi,
-            'tanggal'         => $tanggal,
-            'totalPendapatan' => $totalPendapatan['total'] ?? 0,
-            'jumlahTransaksi' => count($transaksi),
-        ];
-
-        $html = view('laporan/export_harian_pdf', $data);
-
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
-        $dompdf->stream('Laporan_Harian_' . $tanggal . '.pdf', ['Attachment' => false]);
-        exit();
-    }
-
     public function export_bulanan_pdf()
     {
         $bulan = $this->request->getGet('bulan') ?? date('m');
@@ -239,77 +144,6 @@ class Laporan extends BaseController
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->render();
         $dompdf->stream('Laporan_Bulanan_' . $namaBulan[$bulan] . '_' . $tahun . '.pdf', ['Attachment' => false]);
-        exit();
-    }
-
-    // ==================== EXPORT EXCEL ====================
-
-    public function export_harian_excel()
-    {
-        $tanggal = $this->request->getGet('tanggal') ?? date('Y-m-d');
-
-        $transaksi = $this->transaksiModel
-            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, st.nama_status as status, sp.nama_status as status_pembayaran')
-            ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
-            ->join('tb_master_status_transaksi st', 'st.id = tb_transaksi.id_status_transaksi', 'left')
-            ->join('tb_master_status_pembayaran sp', 'sp.id = tb_transaksi.id_status_pembayaran', 'left')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->findAll();
-
-        $totalPendapatan = $this->transaksiModel
-            ->select('SUM(grand_total) as total')
-            ->where('DATE(tgl_masuk)', $tanggal)
-            ->first();
-
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
-
-        $sheet->setCellValue('A1', 'LAPORAN HARIAN SPARKLEEN LAUNDRY');
-        $sheet->setCellValue('A2', 'Tanggal: ' . date('d/m/Y', strtotime($tanggal)));
-        $sheet->setCellValue('A3', 'Total Pendapatan: Rp ' . number_format($totalPendapatan['total'] ?? 0, 0, ',', '.'));
-        $sheet->setCellValue('A4', 'Jumlah Transaksi: ' . count($transaksi));
-
-        $sheet->mergeCells('A1:H1');
-        $sheet->mergeCells('A2:H2');
-        $sheet->mergeCells('A3:H3');
-        $sheet->mergeCells('A4:H4');
-        $sheet->getStyle('A1:A4')->getFont()->setBold(true);
-
-        $headers = ['No', 'No Nota', 'Pelanggan', 'Tgl Masuk', 'Total Berat', 'Grand Total', 'Status', 'Status Bayar'];
-        $col = 'A';
-        foreach ($headers as $header) {
-            $sheet->setCellValue($col . '6', $header);
-            $sheet->getStyle($col . '6')->getFont()->setBold(true);
-            $sheet->getStyle($col . '6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFE0E0E0');
-            $col++;
-        }
-
-        $row = 7;
-        $no  = 1;
-        foreach ($transaksi as $t) {
-            $sheet->setCellValue('A' . $row, $no++);
-            $sheet->setCellValue('B' . $row, $t['no_nota']);
-            $sheet->setCellValue('C' . $row, $t['nama_pelanggan']);
-            $sheet->setCellValue('D' . $row, date('d/m/Y', strtotime($t['tgl_masuk'])));
-            $sheet->setCellValue('E' . $row, $t['total_berat'] . ' kg');
-            $sheet->setCellValue('F' . $row, $t['grand_total']);
-            $sheet->setCellValue('G' . $row, ucfirst($t['status']));
-            $sheet->setCellValue('H' . $row, ucfirst($t['status_pembayaran']));
-            $row++;
-        }
-
-        foreach (range('A', 'H') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $sheet->getStyle('A6:H' . ($row - 1))->applyFromArray([
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
-        ]);
-
-        $writer = new Xlsx($spreadsheet);
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="Laporan_Harian_' . $tanggal . '.xlsx"');
-        $writer->save('php://output');
         exit();
     }
 

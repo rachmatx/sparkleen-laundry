@@ -51,9 +51,9 @@ class LogWhatsapp extends BaseController
                 'search' => $search ?? '',
             ],
             'summary'    => [
-                'sukses'  => $this->logModel->where('id_status_whatsapp', 2)->where('DATE(created_at)', date('Y-m-d'))->countAllResults(),
-                'gagal'   => $this->logModel->where('id_status_whatsapp', 3)->where('DATE(created_at)', date('Y-m-d'))->countAllResults(),
-                'pending' => $this->logModel->where('id_status_whatsapp', 1)->where('DATE(created_at)', date('Y-m-d'))->countAllResults(),
+                'sukses'  => $this->logModel->where('id_status_whatsapp', 1)->where('DATE(created_at)', date('Y-m-d'))->countAllResults(),
+                'gagal'   => $this->logModel->where('id_status_whatsapp', 2)->where('DATE(created_at)', date('Y-m-d'))->countAllResults(),
+                'pending' => $this->logModel->where('id_status_whatsapp', 3)->where('DATE(created_at)', date('Y-m-d'))->countAllResults(),
             ]
         ];
 

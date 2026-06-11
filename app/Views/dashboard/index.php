@@ -7,7 +7,7 @@
                 <p>Pendapatan Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-money-bill-wave"></i></div>
-            <a href="/laporan/harian" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="/laporan/rentang" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Laporan <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -250,7 +250,7 @@
                         <i class="fas fa-list me-1"></i> Daftar Transaksi
                     </a>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="/laporan/harian" class="btn btn-success btn-sm">
+                    <a href="/laporan/rentang" class="btn btn-success btn-sm">
                         <i class="fas fa-chart-bar me-1"></i> Laporan Hari Ini
                     </a>
                     <a href="/inventaris" class="btn btn-warning btn-sm text-dark">

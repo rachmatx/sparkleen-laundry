@@ -23,7 +23,7 @@
                 <p>Pendapatan Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-money-bill-wave"></i></div>
-            <a href="/laporan/harian" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="/laporan/rentang" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Laporan <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -199,7 +199,7 @@
                     <a href="/inventaris" class="btn btn-warning btn-sm text-dark" id="btn-admin-inventaris">
                         <i class="fas fa-boxes me-1"></i> Kelola Inventaris
                     </a>
-                    <a href="/laporan/harian" class="btn btn-success btn-sm" id="btn-admin-laporan">
+                    <a href="/laporan/rentang" class="btn btn-success btn-sm" id="btn-admin-laporan">
                         <i class="fas fa-chart-bar me-1"></i> Laporan Harian
                     </a>
                     <a href="/pelanggan" class="btn btn-outline-info btn-sm" id="btn-admin-pelanggan">

@@ -380,9 +380,9 @@ class WhatsAppNotifier
     {
         try {
             $statusMap = [
-                'pending' => 1,
-                'sukses'  => 2,
-                'gagal'   => 3,
+                'sukses'  => 1,
+                'gagal'   => 2,
+                'pending' => 3,
             ];
             $idStatus = $statusMap[$status] ?? 1;
 

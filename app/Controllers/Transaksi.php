@@ -63,7 +63,7 @@ class Transaksi extends BaseController
         $id_kasir = session()->get('id_karyawan');
         $temp = $this->tempModel
             ->where('id_kasir', $id_kasir)
-            ->where('id_pelanggan', 0)
+            ->where('id_pelanggan', null)
             ->findAll();
 
         $resepRekomendasi = [];
@@ -127,7 +127,7 @@ class Transaksi extends BaseController
         }
 
         $this->tempModel->save([
-            'id_pelanggan' => 0,
+            'id_pelanggan' => null,
             'id_kasir'     => session()->get('id_karyawan'),
             'id_layanan'   => $id_layanan,
             'berat'        => $berat,
@@ -161,7 +161,7 @@ class Transaksi extends BaseController
 
         $items = $this->tempModel
             ->where('id_kasir', $id_kasir)
-            ->where('id_pelanggan', 0)
+            ->where('id_pelanggan', null)
             ->findAll();
 
         if (empty($items)) {
@@ -205,7 +205,7 @@ class Transaksi extends BaseController
 
         // Bersihkan keranjang
         $this->tempModel->where('id_kasir', $id_kasir)
-            ->where('id_pelanggan', 0)
+            ->where('id_pelanggan', null)
             ->delete();
 
         // Bersihkan state session
