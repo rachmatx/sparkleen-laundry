@@ -619,11 +619,15 @@ class Transaksi extends BaseController
         
         $sisaSetelah  = $sisa - $nominal_bayar; // will be 0 if paid in full or more
 
+        // --- DB Transaction: pastikan INSERT pembayaran & UPDATE transaksi berjalan atomik ---
+        $db = db_connect();
+        $db->transStart();
+
         $this->pembayaranModel->insert([
-            'id_transaksi'  => $id_transaksi,
-            'tgl_bayar'     => date('Y-m-d H:i:s'),
-            'nominal_bayar' => $nominal_bayar,
-            'sisa_tagihan'  => $sisaSetelah,
+            'id_transaksi'         => $id_transaksi,
+            'tgl_bayar'            => date('Y-m-d H:i:s'),
+            'nominal_bayar'        => $nominal_bayar,
+            'sisa_tagihan'         => $sisaSetelah,
             'id_metode_pembayaran' => $id_metode_pembayaran,
         ]);
 
@@ -633,6 +637,15 @@ class Transaksi extends BaseController
             'id_status_pembayaran' => $statusPembayaran,
             'id_metode_pembayaran' => $id_metode_pembayaran,
         ]);
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            log_message('error', 'simpanPembayaran: DB transaction gagal untuk id_transaksi=' . $id_transaksi);
+            session()->setFlashdata('error', 'Gagal menyimpan pembayaran ke database. Silakan coba lagi.');
+            return redirect()->to('/transaksi/pembayaran/' . $id_transaksi);
+        }
+        // --- Akhir DB Transaction ---
 
         if ($kembalian > 0) {
             session()->setFlashdata('kembalian', $kembalian);
