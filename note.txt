@@ -221,3 +221,19 @@ Berikut adalah rekapitulasi perbaikan bug, pembaruan UI/UX, dan penambahan fitur
 40. REFACTORING DATABASE (PENGHAPUSAN ENUM)
     - [Database] Mengganti tipe data `ENUM` di semua tabel menjadi relasi *Lookup Tables* (Tabel Master). Tabel yang ditambahkan antara lain: `tb_master_level_karyawan`, `tb_master_status_transaksi`, `tb_master_status_pembayaran`, `tb_master_metode_pembayaran`, dan `tb_master_status_whatsapp`.
     - [Maintenance] Struktur ini membuat database lebih *scalable* dan mengikuti prinsip perancangan database relasional yang baik. Dokumentasi UML dan Arsitektur telah diperbarui untuk mencerminkan skema tabel master baru.
+
+41. PENGGABUNGAN FITUR LAPORAN TRANSAKSI
+    - [UI/UX] Menggabungkan fungsi "Laporan Harian" dan "Laporan Rentang Tanggal" menjadi satu menu tunggal bernama "Laporan Transaksi". Ini membuat navigasi lebih ringkas.
+    - [Maintenance] Menghapus view, route, dan fungsi controller yang berlebihan (redundant) untuk membersihkan basis kode aplikasi.
+
+42. IMPLEMENTASI SOFT DELETE PADA TRANSAKSI
+    - [Database] Menambahkan kolom `deleted_at` pada tabel `tb_transaksi` dan mengaktifkan `$useSoftDeletes` pada `MTransaksi.php`. Transaksi yang dibatalkan atau dihapus kini tetap tersimpan di database sebagai jejak audit.
+
+43. PERBAIKAN FOREIGN KEY CONSTRAINT KERANJANG SEMENTARA
+    - [BugFix] Mengubah kolom `id_pelanggan` pada tabel `tb_temp_keranjang` menjadi membolehkan nilai `NULL`. Hal ini memperbaiki error constraint yang terjadi saat kasir memasukkan layanan ke keranjang sebelum memilih data pelanggan.
+
+44. SINKRONISASI LOG WHATSAPP DAN DATABASE MASTER
+    - [BugFix] Menyesuaikan pemetaan ID Status WhatsApp (1 = Sukses, 2 = Gagal, 3 = Pending) pada *Summary Widget* di `LogWhatsapp.php` dan library `WhatsAppNotifier.php` agar 100% cocok dengan isi tabel `tb_master_status_whatsapp`.
+
+45. INDIKATOR STOK INVENTARIS KRITIS DI TRANSAKSI
+    - [UX/UI] Menambahkan badge peringatan berwarna merah secara otomatis di halaman pembuatan transaksi (Step 2) pada form input pemakaian inventaris jika stok bahan baku tersebut menyentuh batas kritis (minimum).

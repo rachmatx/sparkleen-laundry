@@ -16,11 +16,15 @@ class Profile extends BaseController
     public function index()
     {
         $id = session()->get('id_karyawan');
-        
+        $user = $this->karyawanModel
+            ->select('tb_karyawan.*, tb_master_level_karyawan.nama_level as level')
+            ->join('tb_master_level_karyawan', 'tb_master_level_karyawan.id = tb_karyawan.id_level')
+            ->find($id);
+
         $data = [
             'title'      => 'Profil Saya',
             'activeMenu' => 'profile',
-            'user'       => $this->karyawanModel->find($id),
+            'user'       => $user,
         ];
 
         return view('backend/template/header', $data)
@@ -43,7 +47,7 @@ class Profile extends BaseController
         ];
 
         // Mencegah perubahan level, gaji, atau status (tetap dari DB)
-        $data['level'] = $user['level'];
+        $data['id_level'] = $user['id_level'];
         $data['gaji_pokok'] = $user['gaji_pokok'];
         $data['is_aktif'] = $user['is_aktif'];
 
