@@ -199,4 +199,14 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Auto-detect Railway Public Domain
+        if (getenv('RAILWAY_PUBLIC_DOMAIN')) {
+            $this->baseURL = 'https://' . getenv('RAILWAY_PUBLIC_DOMAIN') . '/';
+        }
+    }
 }
