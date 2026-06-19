@@ -45,6 +45,10 @@ $routes->get('/seed', function() {
     }
 });
 
+$routes->get('/debug', function() {
+    return "Base URL is: " . base_url() . "<br>HTTP_HOST is: " . ($_SERVER['HTTP_HOST'] ?? 'null') . "<br>X-Forwarded-Host is: " . ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? 'null');
+});
+
 // Profil / Ganti Password
 $routes->get('/profile', 'Profile::index');
 $routes->post('/profile/update', 'Profile::update');
