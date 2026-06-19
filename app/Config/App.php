@@ -204,9 +204,18 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        // Auto-detect Railway Public Domain
-        if (getenv('RAILWAY_PUBLIC_DOMAIN')) {
-            $this->baseURL = 'https://' . getenv('RAILWAY_PUBLIC_DOMAIN') . '/';
+        // Auto-detect Railway Public Domain or any dynamic host
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        
+        // If behind a proxy (like Railway)
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+            $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+        }
+        
+        // Only override if we are actually accessed via a web request
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $this->baseURL = $scheme . '://' . $host . '/';
         }
     }
 }
