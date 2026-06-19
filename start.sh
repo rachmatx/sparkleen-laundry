@@ -46,27 +46,9 @@ echo "[INFO] Server will listen on port: $PORT"
     echo "[INFO] Running database migrations..."
     php spark migrate --all 2>&1 || echo "[WARNING] Migration failed or already up-to-date"
 
-    # Seed master tables (only if empty — idempotent check)
-    echo "[INFO] Checking master tables..."
-    php -r "
-        require 'vendor/autoload.php';
-        \$app = \CodeIgniter\Config\Services::codeigniter();
-        \$app->initialize();
-        \$db = \Config\Database::connect();
-        try {
-            \$count = \$db->table('tb_master_status_transaksi')->countAllResults();
-            if (\$count == 0) {
-                echo 'Master tables empty — running MasterSeeder...' . PHP_EOL;
-                \$seeder = \Config\Database::seeder();
-                \$seeder->call('MasterSeeder');
-                echo 'MasterSeeder completed.' . PHP_EOL;
-            } else {
-                echo 'Master tables already populated (' . \$count . ' rows). Skipping seed.' . PHP_EOL;
-            }
-        } catch (Exception \$e) {
-            echo 'Seed check failed: ' . \$e->getMessage() . PHP_EOL;
-        }
-    " 2>&1 || echo "[WARNING] Seeder check failed"
+    # Seed master tables (idempotent check is inside the seeder)
+    echo "[INFO] Running MasterSeeder..."
+    php spark db:seed MasterSeeder 2>&1 || echo "[WARNING] MasterSeeder failed"
 
     # Seed Admin user (idempotent)
     echo "[INFO] Ensuring default Admin user exists..."
