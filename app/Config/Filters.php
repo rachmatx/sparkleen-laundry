@@ -82,6 +82,7 @@ class Filters extends BaseFilters
                     'doLogin',
                     'lacak',
                     'lacak/*',
+                    'debug',
                 ],
             ],
         ],
