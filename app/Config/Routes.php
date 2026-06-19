@@ -41,7 +41,7 @@ $routes->get('/debug-db', function() {
         $seeder->call('AdminSeeder');
         $seedMsg = "Seeders executed.";
     } catch (\Exception $e) {
-        $seedMsg = "Seeder error: " . $e->getMessage();
+        $seedMsg = "Seeder error: " . $e->getMessage() . "\n" . $e->getTraceAsString();
     }
     
     $db = \Config\Database::connect();
