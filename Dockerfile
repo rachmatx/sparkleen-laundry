@@ -13,10 +13,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     intl \
+    mysqli \
     pdo_mysql \
     zip \
     gd \
     && rm -rf /var/lib/apt/lists/*
+
+# Fix Apache MPM conflict (prevent "More than one MPM loaded" error)
+# php:8.2-apache ships with mpm_prefork, but mpm_event may also be enabled
+RUN a2dismod mpm_event 2>/dev/null; a2enmod mpm_prefork
 
 # Enable Apache mod_rewrite for CodeIgniter clean URLs
 RUN a2enmod rewrite
