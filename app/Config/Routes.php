@@ -35,23 +35,9 @@ $routes->group('pelanggan', ['filter' => 'role:admin,pemilik'], static function 
 });
 
 $routes->get('/debug-db', function() {
-    $seeder = \Config\Database::seeder();
-    try {
-        $seeder->call('MasterSeeder');
-        $seeder->call('AdminSeeder');
-        $seedMsg = "Seeders executed.";
-    } catch (\Exception $e) {
-        $seedMsg = "Seeder error: " . $e->getMessage() . "\n" . $e->getTraceAsString();
-    }
-    
     $db = \Config\Database::connect();
-    $tables = $db->listTables();
-    $migrations = [];
-    if ($db->tableExists('migrations')) {
-        $migrations = $db->table('migrations')->get()->getResultArray();
-    }
-    
-    return "<pre>Seed Status: $seedMsg\n\nTables:\n" . print_r($tables, true) . "\n\nMigrations:\n" . print_r($migrations, true) . "</pre>";
+    $karyawan = $db->table('tb_karyawan')->get()->getResultArray();
+    return "<pre>" . print_r($karyawan, true) . "</pre>";
 });
 
 $routes->get('/seed', function() {
