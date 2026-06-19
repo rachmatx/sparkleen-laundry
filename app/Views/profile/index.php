@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Profil Saya</h3>
             </div>
-            <form action="/profile/update" method="post">
+            <form action="<?= base_url('profile/update') ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
 

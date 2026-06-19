@@ -41,6 +41,6 @@ class CreateTempPeminjamanTable extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('tb_temp_peminjaman');
+        $this->forge->dropTable('tb_temp_peminjaman', true);
     }
 }

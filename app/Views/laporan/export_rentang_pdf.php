@@ -35,7 +35,7 @@
     </table>
     <div class="footer">Dicetak: <?= date('d/m/Y H:i:s') ?></div>
 
-    <button onclick="window.location.href='/laporan/export_harian_pdf?tanggal=<?= $tanggal ?>'" class="btn btn-warning">📄 Export PDF</button>
-    <button onclick="window.location.href='/laporan/export_harian_excel?tanggal=<?= $tanggal ?>'" class="btn btn-info">📊 Export Excel</button>
+    <button onclick="window.location.href='<?= base_url('/laporan/export_harian_pdf?tanggal=' . $tgl_awal) ?>'" class="btn btn-warning">📄 Export PDF</button>
+    <button onclick="window.location.href='<?= base_url('/laporan/export_harian_excel?tanggal=' . $tgl_awal) ?>'" class="btn btn-info">📊 Export Excel</button>
 </body>
 </html>

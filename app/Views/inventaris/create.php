@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Tambah Barang Inventaris</h3>
             </div>
-            <form action="/inventaris/store" method="post">
+            <form action="<?= base_url('inventaris/store') ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="mb-3">
@@ -40,7 +40,7 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center">
-                    <a href="/inventaris" class="btn btn-secondary">
+                    <a href="<?= base_url('/inventaris') ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                     <button type="submit" class="btn btn-warning text-dark ms-auto">

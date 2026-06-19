@@ -355,7 +355,7 @@
         <div class="lacak-card">
             <!-- Header Logo -->
             <div class="lacak-header">
-                <a href="/lacak" class="lacak-logo"><span>Sparkleen</span> Laundry</a>
+                <a href="<?= base_url('/lacak') ?>" class="lacak-logo"><span>Sparkleen</span> Laundry</a>
                 <div class="lacak-subtitle">Lacak status proses cucian Anda secara langsung</div>
             </div>
             
@@ -386,7 +386,7 @@
 
                     <!-- Form: Cari by Nota -->
                     <div id="form-nota" style="display: <?= $activeTab === 'nota' ? 'block' : 'none' ?>;">
-                        <form action="/lacak" method="get">
+                        <form action="<?= base_url('lacak') ?>" method="get">
                             <div class="input-group search-group-modern">
                                 <span class="input-group-text">
                                     <i class="fas fa-receipt"></i>
@@ -409,7 +409,7 @@
 
                     <!-- Form: Cari by Nomor HP -->
                     <div id="form-telp" style="display: <?= $activeTab === 'telp' ? 'block' : 'none' ?>;">
-                        <form action="/lacak" method="get">
+                        <form action="<?= base_url('lacak') ?>" method="get">
                             <div class="input-group search-group-modern">
                                 <span class="input-group-text">
                                     <i class="fas fa-mobile-alt"></i>
@@ -447,6 +447,39 @@
                     <div class="alert alert-danger mb-4" role="alert">
                         <i class="fas fa-exclamation-circle"></i>
                         <div><?= esc($errorMsg) ?></div>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Info Banner: Multiple Nota Aktif -->
+                <?php if (!empty($transaksi['has_other_nota'])): ?>
+                    <div class="alert alert-info border-0 shadow-sm rounded-3 mb-4" role="alert" style="background: linear-gradient(135deg, #cff4fc 0%, #e6f7fb 100%);">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1 fs-5 text-info"></i>
+                            <div class="flex-grow-1">
+                                <strong>Terdapat <?= (int)$transaksi['total_nota_aktif'] ?> cucian aktif</strong>
+                                untuk nomor HP ini.
+                                <div class="small text-muted mt-1 mb-2">
+                                    Menampilkan nota terbaru. Untuk cek nota lainnya,
+                                    buka <strong>pesan WhatsApp</strong> dari kami (nomor nota tercantum di dalam pesan)
+                                    atau pilih dari daftar di bawah:
+                                </div>
+                                <div class="list-group list-group-flush bg-transparent">
+                                    <?php foreach (($daftarNotaAktif ?? []) as $n): ?>
+                                        <a href="<?= base_url('lacak?nota=' . $n['no_nota']) ?>"
+                                           class="list-group-item list-group-item-action bg-transparent border-0 ps-0 py-1 small <?= ($n['no_nota'] === $transaksi['no_nota']) ? 'fw-bold text-primary' : 'text-info' ?>">
+                                            <?php if ($n['no_nota'] === $transaksi['no_nota']): ?>
+                                                <i class="fas fa-arrow-right me-2"></i>
+                                            <?php else: ?>
+                                                <i class="fas fa-chevron-right me-2"></i>
+                                            <?php endif; ?>
+                                            <?= esc($n['no_nota']) ?>
+                                            <span class="badge bg-secondary ms-2"><?= esc($n['status']) ?></span>
+                                            <span class="text-muted ms-2">· <?= date('d/m/Y', strtotime($n['tgl_masuk'])) ?></span>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <?php endif; ?>
 

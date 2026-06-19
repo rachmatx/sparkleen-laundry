@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title fw-bold text-info"><i class="fas fa-flask me-2"></i>Formula / Resep Bahan Baku</h3>
             </div>
-            <form action="/layanan/resep/store/<?= $layanan['id_layanan'] ?>" method="post">
+            <form action="<?= base_url('layanan/resep/store/' . ($layanan['id_layanan'])) ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="alert alert-light border py-2 mb-4">
@@ -74,7 +74,7 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center">
-                    <a href="/layanan" class="btn btn-secondary">
+                    <a href="<?= base_url('/layanan') ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Batal
                     </a>
                     <button type="submit" class="btn btn-info text-white ms-auto">

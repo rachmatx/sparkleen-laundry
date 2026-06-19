@@ -8,6 +8,8 @@ use App\Models\MLayananInventaris;
 
 class Layanan extends BaseController
 {
+    use \App\Controllers\Traits\PaginationTrait;
+
     protected $layananModel;
     protected $inventarisModel;
     protected $layananInventarisModel;
@@ -23,35 +25,27 @@ class Layanan extends BaseController
 
     public function index()
     {
-        $page = (int)($this->request->getGet('page') ?? 1);
-        if ($page < 1) $page = 1;
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
+        $pg = $this->parsePagination(
+            ['nama_layanan', 'harga_per_kg', 'estimasi_hari', 'is_aktif'],
+            'nama_layanan',
+            'ASC'
+        );
 
-        $sort = $this->request->getGet('sort') ?? 'nama_layanan';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        $allowedSort = ['nama_layanan', 'harga_per_kg', 'estimasi_hari', 'is_aktif'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'nama_layanan';
-        }
-
-        $items = $this->layananModel->orderBy($sort, $dir)->findAll($limit + 1, $offset);
-        $hasNext = count($items) > $limit;
-        if ($hasNext) {
-            array_pop($items);
-        }
-        $hasPrev = $page > 1;
+        $result = $this->paginateResults(
+            $this->layananModel->orderBy($pg['sort'], $pg['dir'])->findAll($pg['limit'] + 1, $pg['offset']),
+            $pg['limit']
+        );
 
         $data = [
             'title'      => 'Data Layanan',
             'activeMenu' => 'layanan',
-            'layanan'    => $items,
-            'page'       => $page,
-            'hasPrev'    => $hasPrev,
-            'hasNext'    => $hasNext,
-            'limit'      => $limit,
-            'sort'       => $sort,
-            'dir'        => $dir,
+            'layanan'    => $result['items'],
+            'page'       => $pg['page'],
+            'hasPrev'    => $pg['page'] > 1,
+            'hasNext'    => $result['has_next'],
+            'limit'      => $pg['limit'],
+            'sort'       => $pg['sort'],
+            'dir'        => $pg['dir'],
         ];
 
         return view('backend/template/header', $data)
@@ -93,10 +87,16 @@ class Layanan extends BaseController
     {
 
 
+        $layanan = $this->layananModel->find($id);
+        if (!$layanan) {
+            session()->setFlashdata('error', 'Data layanan tidak ditemukan.');
+            return redirect()->to('/layanan');
+        }
+
         $data = [
             'title'      => 'Edit Layanan',
             'activeMenu' => 'layanan',
-            'layanan'    => $this->layananModel->find($id),
+            'layanan'    => $layanan,
         ];
 
         return view('backend/template/header', $data)
@@ -205,15 +205,14 @@ class Layanan extends BaseController
         }
 
         $keyword = $this->request->getGet('q');
-        
-        $sort = $this->request->getGet('sort') ?? 'nama_layanan';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        $allowedSort = ['nama_layanan', 'harga_per_kg', 'estimasi_hari', 'is_aktif'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'nama_layanan';
-        }
 
-        $query   = $this->layananModel->orderBy($sort, $dir);
+        $pg = $this->parsePagination(
+            ['nama_layanan', 'harga_per_kg', 'estimasi_hari', 'is_aktif'],
+            'nama_layanan',
+            'ASC'
+        );
+
+        $query = $this->layananModel->orderBy($pg['sort'], $pg['dir']);
 
         if (!empty($keyword)) {
             $query->like('nama_layanan', $keyword);

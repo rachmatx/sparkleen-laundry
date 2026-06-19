@@ -166,7 +166,7 @@
     <div class="login-wrapper">
         <div class="login-card">
             <div class="login-header">
-                <a href="/" class="login-logo"><span>Sparkleen</span> Laundry</a>
+                <a href="<?= base_url('/') ?>" class="login-logo"><span>Sparkleen</span> Laundry</a>
                 <div class="login-subtitle">Masuk untuk mengelola bisnis Anda</div>
             </div>
             
@@ -192,7 +192,7 @@
                     </div>
                 <?php endif; ?>
 
-                <form action="/doLogin" method="post"<?= ! empty($loginBlocked) ? ' class="pe-none opacity-75"' : '' ?>>
+                <form action="<?= base_url('doLogin') ?>" method="post"<?= ! empty($loginBlocked) ? ' class="pe-none opacity-75"' : '' ?>>
                     <?= csrf_field() ?>
                     <!-- Username / Email Field -->
                     <div class="form-floating mb-3 position-relative">
@@ -227,6 +227,6 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="/js/password-toggle.js"></script>
+    <script src="<?= base_url('/js/password-toggle.js') ?>"></script>
 </body>
 </html>

@@ -9,12 +9,13 @@
 </div>
 
 <!-- Scripts -->
+<script>window.SITE_URL = '<?= base_url() ?>';</script>
 <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-<script src="/adminlte4/dist/js/adminlte.js"></script>
-<script src="/js/password-toggle.js"></script>
-<script src="/js/live-search.js"></script>
+<script src="<?= base_url('/adminlte4/dist/js/adminlte.js') ?>"></script>
+<script src="<?= base_url('/js/password-toggle.js') ?>"></script>
+<script src="<?= base_url('/js/live-search.js') ?>"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -90,39 +91,44 @@
         });
 
         // Anti Double-Click / Loading State
+        // Fix: jangan disable button langsung — itu nge-block form submit di browser
+        // (race: submit handler fire → button disabled → form submit di-cancel)
+        // Solusi: defer disable pakai setTimeout(0) supaya form submit jalan duluan,
+        // ATAU cukup change visual aja (text + spinner icon)
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
             form.addEventListener('submit', function() {
                 const submitBtn = this.querySelector('button[type="submit"]');
                 if (submitBtn && !submitBtn.disabled) {
-                    // Simpan teks/HTML asli ke data-attribute
                     submitBtn.dataset.originalHtml = submitBtn.innerHTML;
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+                    // Defer disable ke next tick — biar form submit udah jalan duluan
+                    setTimeout(() => {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+                    }, 0);
                 }
             });
         });
 
-        // Mengatasi masalah Back-Forward Cache (BFCache)
-        // Saat user menekan tombol 'Back' di browser, halaman bisa jadi diload dari cache
-        window.addEventListener('pageshow', function(event) {
-            // event.persisted bernilai true jika halaman dimuat dari cache (seperti saat klik tombol back browser)
-            if (event.persisted) {
-                const submitButtons = document.querySelectorAll('button[type="submit"]');
-                submitButtons.forEach(btn => {
-                    if (btn.disabled && btn.dataset.originalHtml) {
-                        btn.disabled = false;
-                        btn.innerHTML = btn.dataset.originalHtml;
-                    }
-                });
-            }
+        // Mengatasi masalah Back-Forward Cache (BFCache) + form submit stuck state
+        // Saat user menekan tombol 'Back' di browser, halaman bisa jadi diload dari cache.
+        // pageshow juga fire setelah form submit → redirect, di mana button bisa stuck disabled.
+        // Reset button unconditionally: aman karena fresh load button emang udah enabled.
+        window.addEventListener('pageshow', function() {
+            const submitButtons = document.querySelectorAll('button[type="submit"]');
+            submitButtons.forEach(btn => {
+                if (btn.disabled && btn.dataset.originalHtml) {
+                    btn.disabled = false;
+                    btn.innerHTML = btn.dataset.originalHtml;
+                }
+            });
         });
         
         // Cek Stok Kritis secara AJAX (jika elemen lonceng ada)
         const notifContainer = document.getElementById('notif-stok-container');
         const btnStokNotif = document.getElementById('btn-stok-notif');
         if (notifContainer) {
-            fetch('/inventaris/ajaxCekStokKritis', {
+            fetch(window.SITE_URL + '/inventaris/ajaxCekStokKritis', {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
@@ -171,7 +177,7 @@
     </div>
     <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
     <div class="p-2 border-top border-dark border-opacity-10 text-end">
-        <a href="/inventaris/warning" class="btn btn-sm btn-dark">Lihat Detail & Restok</a>
+        <a href="<?= base_url('/inventaris/warning') ?>" class="btn btn-sm btn-dark">Lihat Detail & Restok</a>
     </div>
     <?php else: ?>
     <div class="p-2 border-top border-dark border-opacity-10 text-end">

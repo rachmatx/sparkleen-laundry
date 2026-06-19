@@ -6,6 +6,8 @@ use App\Models\MTransaksi;
 use App\Models\MPelanggan;
 use App\Models\MKaryawan;
 use App\Models\MInventaris;
+use Config\StatusTransaksi;
+use Config\StatusPembayaran;
 
 class DashboardService
 {
@@ -26,23 +28,29 @@ class DashboardService
 
     public function getChart7Hari()
     {
+        $startDate = date('Y-m-d', strtotime('-6 days'));
+        $endDate   = date('Y-m-d', strtotime('+1 day'));
+
+        $rows = $this->db->table('tb_transaksi')
+            ->select("DATE(tgl_masuk) as tanggal, SUM(grand_total) as total_pendapatan, COUNT(*) as jumlah_transaksi")
+            ->where('tgl_masuk >=', $startDate)
+            ->where('tgl_masuk <', $endDate)
+            ->where('deleted_at IS NULL')
+            ->groupBy('DATE(tgl_masuk)')
+            ->get()->getResultArray();
+
+        $map = [];
+        foreach ($rows as $r) {
+            $map[$r['tanggal']] = $r;
+        }
+
         $chart7Hari = [];
         for ($i = 6; $i >= 0; $i--) {
             $tgl = date('Y-m-d', strtotime("-$i days"));
-
-            $pendapatan = $this->transaksiModel
-                ->select('SUM(grand_total) as total')
-                ->where('DATE(tgl_masuk)', $tgl)
-                ->first();
-
-            $jumlahTrx = $this->transaksiModel
-                ->where('DATE(tgl_masuk)', $tgl)
-                ->countAllResults();
-
             $chart7Hari[] = [
                 'tanggal'    => date('d/m', strtotime($tgl)),
-                'pendapatan' => (int)($pendapatan['total'] ?? 0),
-                'transaksi'  => $jumlahTrx,
+                'pendapatan' => (int)($map[$tgl]['total_pendapatan'] ?? 0),
+                'transaksi'  => (int)($map[$tgl]['jumlah_transaksi'] ?? 0),
             ];
         }
         return $chart7Hari;
@@ -54,7 +62,7 @@ class DashboardService
             ->select('tb_transaksi.id_transaksi, tb_transaksi.no_nota, st.nama_status as status, tb_transaksi.tgl_selesai_estimasi, tb_pelanggan.nama_pelanggan')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->join('tb_master_status_transaksi st', 'st.id = tb_transaksi.id_status_transaksi', 'left')
-            ->whereNotIn('tb_transaksi.id_status_transaksi', [4, 5]) // 4: selesai, 5: diambil
+            ->whereNotIn('tb_transaksi.id_status_transaksi', [StatusTransaksi::SELESAI, StatusTransaksi::DIAMBIL])
             ->where('DATE(tb_transaksi.tgl_selesai_estimasi) <=', date('Y-m-d'))
             ->orderBy('tb_transaksi.tgl_selesai_estimasi', 'ASC')
             ->limit(10)
@@ -65,10 +73,23 @@ class DashboardService
     {
         $today = date('Y-m-d');
 
+        // Single grouped query for all status counts
+        $statusCounts = $this->db->table('tb_transaksi')
+            ->select('id_status_transaksi, COUNT(*) as cnt')
+            ->whereIn('id_status_transaksi', StatusTransaksi::DIPROSES)
+            ->where('deleted_at IS NULL')
+            ->groupBy('id_status_transaksi')
+            ->get()->getResultArray();
+
+        $statusMap = [];
+        foreach ($statusCounts as $sc) {
+            $statusMap[(int) $sc['id_status_transaksi']] = (int) $sc['cnt'];
+        }
+
         $pesananMasukHariIni = $this->transaksiModel->where('DATE(tgl_masuk)', $today)->countAllResults();
-        $statusMenunggu = $this->transaksiModel->where('id_status_transaksi', 1)->countAllResults();
-        $statusProses = $this->transaksiModel->where('id_status_transaksi', 2)->countAllResults();
-        $statusSetrika = $this->transaksiModel->where('id_status_transaksi', 3)->countAllResults();
+        $statusMenunggu = $statusMap[StatusTransaksi::MENUNGGU] ?? 0;
+        $statusProses   = $statusMap[StatusTransaksi::PROSES] ?? 0;
+        $statusSetrika  = $statusMap[StatusTransaksi::SETRIKA] ?? 0;
         $totalDiproses = $statusMenunggu + $statusProses + $statusSetrika;
 
         $transaksiTerbaru = $this->transaksiModel
@@ -95,24 +116,35 @@ class DashboardService
     {
         $today = date('Y-m-d');
 
-        $transaksiHariIni = $this->transaksiModel->where('DATE(tgl_masuk)', $today)->countAllResults();
-        $pendapatanHariIni = $this->transaksiModel->select('SUM(grand_total) as total')->where('DATE(tgl_masuk)', $today)->first();
+        // Single query for today's count + sum
+        $todayStats = $this->db->table('tb_transaksi')
+            ->select('COUNT(*) as jumlah, SUM(grand_total) as total')
+            ->where('DATE(tgl_masuk)', $today)
+            ->where('deleted_at IS NULL')
+            ->get()->getRowArray();
+
+        $transaksiHariIni  = (int)($todayStats['jumlah'] ?? 0);
+        $pendapatanHariIni = (int)($todayStats['total'] ?? 0);
 
         $stokMenipis = [];
         try {
             $stokMenipis = $this->inventarisModel->getStokKritis();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getAdminData - Failed to fetch critical stock data: ' . $e->getMessage());
+        }
 
         $logAktivitas = [];
         try {
-            $logAktivitas = $this->db->table('tb_status_log sl')
-                ->select('sl.id_log, sl.status_lama, sl.status_baru, sl.tgl_ubah, k.nama_karyawan')
-                ->join('tb_karyawan k', 'k.id_karyawan = sl.id_karyawan', 'left')
-                ->orderBy('sl.tgl_ubah', 'DESC')
+            $logAktivitas = $this->db->table('tb_log_aktivitas la')
+                ->select('la.id_log, la.modul, la.aksi, la.nama_referensi, la.created_at, la.id_karyawan, k.nama_karyawan')
+                ->join('tb_karyawan k', 'k.id_karyawan = la.id_karyawan', 'left')
+                ->orderBy('la.created_at', 'DESC')
                 ->limit(10)
                 ->get()
                 ->getResultArray();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getAdminData - Failed to fetch activity log: ' . $e->getMessage());
+        }
 
         $transaksiTerbaru = $this->transaksiModel
             ->select('tb_transaksi.id_transaksi, tb_transaksi.no_nota, tb_transaksi.grand_total, st.nama_status as status, sp.nama_status as status_pembayaran, tb_transaksi.tgl_masuk, tb_pelanggan.nama_pelanggan')
@@ -125,7 +157,7 @@ class DashboardService
 
         return [
             'transaksiHariIni'   => $transaksiHariIni,
-            'pendapatanHariIni'  => $pendapatanHariIni['total'] ?? 0,
+            'pendapatanHariIni'  => $pendapatanHariIni,
             'chart7Hari'         => $this->getChart7Hari(),
             'stokMenipis'        => $stokMenipis,
             'logAktivitas'       => $logAktivitas,
@@ -152,7 +184,9 @@ class DashboardService
         try {
             $gajiRow = $this->db->table('tb_karyawan')->selectSum('gaji_pokok', 'total')->get()->getRowArray();
             $totalGajiKaryawan = (int)($gajiRow['total'] ?? 0);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to calculate total salaries: ' . $e->getMessage());
+        }
 
         $totalBeliInventarisBulanIni = 0;
         try {
@@ -181,18 +215,22 @@ class DashboardService
                     }
                 }
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to calculate inventory purchases: ' . $e->getMessage());
+        }
 
         $keuntunganBersih = $omzetBulanIni - ($totalGajiKaryawan + $totalBeliInventarisBulanIni);
 
         $piutangStats = ['lunas' => 0, 'piutang' => 0];
         try {
             $piutangRow = $this->db->table('tb_transaksi')
-                ->select("SUM(CASE WHEN id_status_pembayaran = 1 THEN grand_total ELSE 0 END) as total_lunas, SUM(CASE WHEN id_status_pembayaran != 1 THEN grand_total ELSE 0 END) as total_piutang")
+                ->select("SUM(CASE WHEN id_status_pembayaran = " . StatusPembayaran::LUNAS . " THEN grand_total ELSE 0 END) as total_lunas, SUM(CASE WHEN id_status_pembayaran != " . StatusPembayaran::LUNAS . " THEN grand_total ELSE 0 END) as total_piutang")
                 ->where("DATE_FORMAT(tgl_masuk, '%Y-%m')", $bulanIni)->get()->getRowArray();
             $piutangStats['lunas']   = (int)($piutangRow['total_lunas'] ?? 0);
             $piutangStats['piutang'] = (int)($piutangRow['total_piutang'] ?? 0);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to calculate receivables: ' . $e->getMessage());
+        }
 
         $metodePembayaran = [];
         try {
@@ -202,23 +240,31 @@ class DashboardService
                 ->join('tb_master_metode_pembayaran mp', 'mp.id = p.id_metode_pembayaran', 'left')
                 ->where("DATE_FORMAT(t.tgl_masuk, '%Y-%m')", $bulanIni)
                 ->groupBy('p.id_metode_pembayaran')->get()->getResultArray();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to fetch payment methods: ' . $e->getMessage());
+        }
 
         $totalPelanggan = $this->pelangganModel->countAll();
         $pelangganBaruBulanIni = 0;
         try {
             $pelangganBaruBulanIni = $this->db->table('tb_pelanggan')->where("DATE_FORMAT(created_at, '%Y-%m')", $bulanIni)->countAllResults();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to count new customers: ' . $e->getMessage());
+        }
 
         $topLayanan = [];
         try {
             $topLayanan = $this->db->table('tb_detail_transaksi dt')->select('l.nama_layanan, SUM(dt.subtotal) as total_pendapatan, SUM(dt.berat) as total_berat, COUNT(dt.id_detail) as jumlah_order')->join('tb_layanan l', 'l.id_layanan = dt.id_layanan')->join('tb_transaksi t', 't.id_transaksi = dt.id_transaksi')->where("DATE_FORMAT(t.tgl_masuk, '%Y-%m')", $bulanIni)->groupBy('dt.id_layanan')->orderBy('total_pendapatan', 'DESC')->limit(5)->get()->getResultArray();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to fetch top services: ' . $e->getMessage());
+        }
 
         $topKasir = [];
         try {
             $topKasir = $this->db->table('tb_transaksi t')->select('k.nama_karyawan, COUNT(t.id_transaksi) as jumlah_transaksi, SUM(t.grand_total) as total_omzet')->join('tb_karyawan k', 'k.id_karyawan = t.id_kasir')->where("DATE_FORMAT(t.tgl_masuk, '%Y-%m')", $bulanIni)->groupBy('t.id_kasir')->orderBy('jumlah_transaksi', 'DESC')->limit(5)->get()->getResultArray();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            log_message('error', 'DashboardService::getOwnerData - Failed to fetch top cashiers: ' . $e->getMessage());
+        }
 
         return [
             'omzetBulanIni'               => $omzetBulanIni,

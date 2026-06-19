@@ -12,9 +12,14 @@ use App\Models\MPenggunaanInventaris;
 use App\Models\MLayananInventaris;
 use App\Models\MPembayaran;
 use App\Models\MStatusLog;
+use App\Models\MasterStatusTransaksiModel;
+use App\Models\MasterMetodePembayaranModel;
+use App\Services\TransaksiService;
 
 class Transaksi extends BaseController
 {
+    use \App\Controllers\Traits\PaginationTrait;
+
     protected $pelangganModel;
     protected $layananModel;
     protected $transaksiModel;
@@ -26,6 +31,7 @@ class Transaksi extends BaseController
     protected $pembayaranModel;
     protected $statusLogModel;
     protected $level;
+    protected $transaksiService;
 
     public function __construct()
     {
@@ -40,6 +46,7 @@ class Transaksi extends BaseController
         $this->pembayaranModel        = new MPembayaran();
         $this->statusLogModel         = new MStatusLog();
         $this->level                  = session()->get('level');
+        $this->transaksiService       = new TransaksiService();
     }
 
     /**
@@ -66,19 +73,7 @@ class Transaksi extends BaseController
             ->where('id_pelanggan', null)
             ->findAll();
 
-        $resepRekomendasi = [];
-        foreach ($temp as $t) {
-            $recipes = $this->layananInventarisModel->where('id_layanan', $t['id_layanan'])->findAll();
-            foreach ($recipes as $r) {
-                $id_inv = (int)$r['id_inventaris'];
-                $jumlah_pakai = (float)$r['jumlah_default'] * (float)$t['berat'];
-                if (isset($resepRekomendasi[$id_inv])) {
-                    $resepRekomendasi[$id_inv] += $jumlah_pakai;
-                } else {
-                    $resepRekomendasi[$id_inv] = $jumlah_pakai;
-                }
-            }
-        }
+        $resepRekomendasi = $this->transaksiService->calculateCartRekomendasi($temp);
 
         $pos_id_pelanggan = session()->get('pos_id_pelanggan');
         $selectedPelanggan = [];
@@ -171,24 +166,17 @@ class Transaksi extends BaseController
 
         // Validasi ketersediaan stok inventaris sebelum memproses transaksi
         if ($this->inventarisModel) {
-            $inventarisIds = $this->request->getPost('inv_id') ?? [];
-            foreach ($inventarisIds as $id_inv) {
-                $id_inv = (int)$id_inv;
-                $jumlah = (float)($this->request->getPost('inv_jumlah_' . $id_inv) ?? 0);
-                if ($id_inv > 0 && $jumlah > 0) {
-                    $invItem = $this->inventarisModel->find($id_inv);
-                    if ($invItem && $jumlah > (float)$invItem['stok']) {
-                        session()->setFlashdata('error', 'Stok tidak mencukupi untuk bahan baku: ' . $invItem['nama_barang'] . ' (Stok saat ini: ' . number_format($invItem['stok'], 2, ',', '.') . ' ' . $invItem['satuan'] . ', dibutuhkan: ' . number_format($jumlah, 2, ',', '.') . ' ' . $invItem['satuan'] . ')');
-                        return redirect()->to('/transaksi')->withInput();
-                    }
-                }
+            $stokValid = $this->transaksiService->validateStokInventaris($this->request->getPost());
+            if (!$stokValid['valid']) {
+                session()->setFlashdata('error', $stokValid['error_message']);
+                return redirect()->to('/transaksi')->withInput();
             }
         }
 
         $pelanggan = $this->pelangganModel->find($id_pelanggan);
         
-        // Panggil Fat Model untuk memproses transaksi
-        $result = $this->transaksiModel->prosesTransaksiBaru(
+        // Panggil Service untuk memproses transaksi
+        $result = $this->transaksiService->prosesTransaksiBaru(
             $this->request->getPost(), 
             $id_kasir, 
             $items, 
@@ -237,7 +225,12 @@ class Transaksi extends BaseController
             ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_transaksi.id_kasir')
             ->where('id_transaksi', $id_transaksi)
             ->first();
-            
+
+        if (!$transaksi) {
+            session()->setFlashdata('error', 'Transaksi tidak ditemukan.');
+            return redirect()->to('/transaksi/daftar');
+        }
+
         $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
         $detail    = $this->detailModel->where('id_transaksi', $id_transaksi)->findAll();
 
@@ -252,43 +245,34 @@ class Transaksi extends BaseController
     // Daftar transaksi
     public function daftar()
     {
-        $page = (int)($this->request->getGet('page') ?? 1);
         $status = $this->request->getGet('status') ?? 'semua';
         $keyword = $this->request->getGet('q');
-        
-        $sort = $this->request->getGet('sort') ?? 'id_transaksi';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $allowedSort = ['no_nota', 'nama_pelanggan', 'tgl_masuk', 'total_berat', 'grand_total', 'status', 'status_pembayaran', 'id_transaksi'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'id_transaksi';
-        }
-        
-        if ($page < 1) $page = 1;
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
 
-        $query = $this->transaksiModel->buildPencarianQuery($status, $keyword, $sort, $dir);
+        $pg = $this->parsePagination(
+            ['no_nota', 'nama_pelanggan', 'tgl_masuk', 'total_berat', 'grand_total', 'status', 'status_pembayaran', 'id_transaksi'],
+            'id_transaksi',
+            'DESC'
+        );
 
-        $items = $query->findAll($limit + 1, $offset);
+        $query = $this->transaksiModel->buildPencarianQuery($status, $keyword, $pg['sort'], $pg['dir']);
 
-        $hasNext = count($items) > $limit;
-        if ($hasNext) {
-            array_pop($items);
-        }
-        $hasPrev = $page > 1;
+        $result = $this->paginateResults(
+            $query->findAll($pg['limit'] + 1, $pg['offset']),
+            $pg['limit']
+        );
 
         $data = [
             'title'      => 'Daftar Transaksi',
             'activeMenu' => 'daftar_transaksi',
-            'transaksi'  => $items,
-            'page'       => $page,
-            'hasPrev'    => $hasPrev,
-            'hasNext'    => $hasNext,
-            'limit'      => $limit,
+            'transaksi'  => $result['items'],
+            'page'       => $pg['page'],
+            'hasPrev'    => $pg['page'] > 1,
+            'hasNext'    => $result['has_next'],
+            'limit'      => $pg['limit'],
             'statusFilter'=> $status,
             'keyword'    => $keyword,
-            'sort'       => $sort,
-            'dir'        => $dir,
+            'sort'       => $pg['sort'],
+            'dir'        => $pg['dir'],
         ];
 
         return view('transaksi/daftar', $data);
@@ -298,7 +282,7 @@ class Transaksi extends BaseController
     public function detail($id_transaksi)
     {
         $transaksi = $this->transaksiModel
-            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, tb_pelanggan.no_telp, tb_karyawan.nama_karyawan, 
+            ->select('tb_transaksi.*, tb_pelanggan.nama_pelanggan, tb_pelanggan.no_telp, tb_karyawan.nama_karyawan,
                       st.nama_status as status, sp.nama_status as status_pembayaran, mp.nama_metode as metode_pembayaran')
             ->join('tb_pelanggan', 'tb_pelanggan.id_pelanggan = tb_transaksi.id_pelanggan')
             ->join('tb_karyawan', 'tb_karyawan.id_karyawan = tb_transaksi.id_kasir')
@@ -307,6 +291,11 @@ class Transaksi extends BaseController
             ->join('tb_master_metode_pembayaran mp', 'mp.id = tb_transaksi.id_metode_pembayaran', 'left')
             ->where('tb_transaksi.id_transaksi', $id_transaksi)
             ->first();
+
+        if (!$transaksi) {
+            session()->setFlashdata('error', 'Transaksi tidak ditemukan.');
+            return redirect()->to('/transaksi/daftar');
+        }
 
         $detail = $this->detailModel
             ->select('tb_detail_transaksi.*, tb_layanan.nama_layanan')
@@ -391,15 +380,14 @@ class Transaksi extends BaseController
 
         $keyword = $this->request->getGet('q');
         $status  = $this->request->getGet('status') ?? 'semua';
-        
-        $sort = $this->request->getGet('sort') ?? 'id_transaksi';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $allowedSort = ['no_nota', 'nama_pelanggan', 'tgl_masuk', 'total_berat', 'grand_total', 'status', 'status_pembayaran', 'id_transaksi'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'id_transaksi';
-        }
 
-        $query = $this->transaksiModel->buildPencarianQuery($status, $keyword, $sort, $dir);
+        $pg = $this->parsePagination(
+            ['no_nota', 'nama_pelanggan', 'tgl_masuk', 'total_berat', 'grand_total', 'status', 'status_pembayaran', 'id_transaksi'],
+            'id_transaksi',
+            'DESC'
+        );
+
+        $query = $this->transaksiModel->buildPencarianQuery($status, $keyword, $pg['sort'], $pg['dir']);
         $items = $query->findAll(100);
 
         // Format tanggal agar konsisten dengan tampilan tabel
@@ -418,9 +406,13 @@ class Transaksi extends BaseController
     public function ubahStatus($id_transaksi)
     {
         $transaksi = $this->transaksiModel->getTransaksiWithJoins($id_transaksi);
-        $is_pin_required = $this->_checkPinRequired($id_transaksi, $transaksi['grand_total']);
+        if (!$transaksi) {
+            session()->setFlashdata('error', 'Transaksi tidak ditemukan.');
+            return redirect()->to('/transaksi/daftar');
+        }
+        $is_pin_required = $this->transaksiService->checkPinRequired($id_transaksi, (float) $transaksi['grand_total']);
 
-        $statusModel = new \App\Models\MasterStatusTransaksiModel();
+        $statusModel = new MasterStatusTransaksiModel();
 
         $data = [
             'title'           => 'Update Status Transaksi',
@@ -433,95 +425,38 @@ class Transaksi extends BaseController
         return view('transaksi/ubah_status', $data);
     }
 
-    private function _checkPinRequired($id_transaksi, $grand_total)
-    {
-        if ($grand_total >= 100000) {
-            return true;
-        }
-
-        $details = $this->detailModel
-            ->select('tb_layanan.nama_layanan')
-            ->join('tb_layanan', 'tb_layanan.id_layanan = tb_detail_transaksi.id_layanan')
-            ->where('id_transaksi', $id_transaksi)
-            ->findAll();
-
-        foreach ($details as $d) {
-            if (stripos($d['nama_layanan'], 'vip') !== false) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     // Proses update status
     public function prosesUbahStatus()
     {
-        $id_transaksi = $this->request->getPost('id_transaksi');
-        $id_status_baru  = $this->request->getPost('id_status_transaksi'); // Change to receive ID
-        $catatan      = $this->request->getPost('catatan');
+        $id_transaksi = (int) $this->request->getPost('id_transaksi');
 
-        $transaksi   = $this->transaksiModel->getTransaksiWithJoins($id_transaksi);
-        $status_lama = $transaksi['status']; // this is the string name thanks to getTransaksiWithJoins
-        
-        // Fetch new status name for logic
-        $statusModel = new \App\Models\MasterStatusTransaksiModel();
-        $status_baru_row = $statusModel->find($id_status_baru);
-        $status_baru = $status_baru_row['nama_status'];
+        $postData = [
+            'id_status_transaksi' => $this->request->getPost('id_status_transaksi'),
+            'catatan'             => $this->request->getPost('catatan'),
+            'kirim_wa'            => $this->request->getPost('kirim_wa'),
+            'pin_pengambilan'     => $this->request->getPost('pin_pengambilan'),
+            'id_karyawan'         => session()->get('id_karyawan'),
+        ];
 
-        // Validasi PIN jika status baru adalah diambil
-        if ($status_baru === 'diambil') {
-            $is_pin_required = $this->_checkPinRequired($id_transaksi, $transaksi['grand_total']);
-            
-            if ($is_pin_required) {
-                $input_pin = $this->request->getPost('pin_pengambilan');
-                $db_pin    = $transaksi['pin_pengambilan'];
-                
-                // Bypass untuk pemilik jika darurat (input dikosongkan), tapi kalau diisi harus benar
-                $isPemilik = session()->get('level') === 'pemilik';
-                if (!$isPemilik || !empty($input_pin)) {
-                    if ($db_pin && $input_pin !== $db_pin) {
-                        session()->setFlashdata('error', 'PIN Pengambilan tidak cocok! Harap cek WhatsApp pelanggan.');
-                        return redirect()->to('/transaksi/ubah-status/' . $id_transaksi);
-                    }
-                }
-            }
+        try {
+            $result = $this->transaksiService->prosesUbahStatus($id_transaksi, $postData, $this->level);
+        } catch (\Throwable $e) {
+            log_message('error', 'prosesUbahStatus error: ' . $e->getMessage());
+            session()->setFlashdata('error', 'Terjadi kesalahan saat mengubah status.');
+            return redirect()->to('/transaksi/ubah-status/' . $id_transaksi);
         }
 
-        $this->transaksiModel->update($id_transaksi, ['id_status_transaksi' => $id_status_baru]);
-
-        $this->statusLogModel->insert([
-            'id_transaksi' => $id_transaksi,
-            'status_lama'  => $status_lama,
-            'status_baru'  => $status_baru,
-            'tgl_ubah'     => date('Y-m-d H:i:s'),
-            'id_karyawan'  => session()->get('id_karyawan'),
-            'catatan'      => $catatan,
-        ]);
-
-        if ($status_baru == 'selesai') {
-            $this->transaksiModel->update($id_transaksi, ['tgl_selesai_aktual' => date('Y-m-d H:i:s')]);
-
-            if ($status_lama !== 'selesai' && $this->request->getPost('kirim_wa') === '1') {
-                $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
-                if ($pelanggan) {
-                    $transaksiFresh = $this->transaksiModel->find($id_transaksi);
-                    $hasil          = service('whatsapp')->notifyOrderSelesai($transaksiFresh, $pelanggan);
-                    $this->_handleWaFlashdata($hasil, $hasil['message'] ?? 'Pesan WA Selesai Terkirim');
-                }
-            }
-        } elseif ($status_baru == 'diambil') {
-            if ($status_lama !== 'diambil' && $this->request->getPost('kirim_wa') === '1') {
-                $pelanggan = $this->pelangganModel->find($transaksi['id_pelanggan']);
-                if ($pelanggan) {
-                    $transaksiFresh = $this->transaksiModel->find($id_transaksi);
-                    $hasil          = service('whatsapp')->notifyOrderDiambil($transaksiFresh, $pelanggan);
-                    $this->_handleWaFlashdata($hasil, $hasil['message'] ?? 'Pesan WA Diambil Terkirim');
-                }
-            }
+        if (!$result['success']) {
+            session()->setFlashdata('error', $result['message']);
+            return redirect()->to('/transaksi/ubah-status/' . $id_transaksi);
         }
 
-        session()->setFlashdata('success', 'Status berhasil diubah menjadi ' . ucfirst($status_baru));
+        // Handle WA flashdata jika ada
+        if (!empty($result['wa_result'])) {
+            $this->_handleWaFlashdata($result['wa_result'], $result['wa_result']['message'] ?? 'Pesan WA Terkirim');
+        }
+
+        session()->setFlashdata('success', $result['message']);
         return redirect()->to('/transaksi/detail/' . $id_transaksi);
     }
 
@@ -534,15 +469,9 @@ class Transaksi extends BaseController
 
         $pembayaran = $this->pembayaranModel->getPembayaranByTransaksi($id_transaksi);
 
-        $totalDibayar = $this->pembayaranModel
-            ->selectSum('nominal_bayar', 'total')
-            ->where('id_transaksi', $id_transaksi)
-            ->first();
+        $sisa = $this->transaksiService->hitungSisaTagihan($id_transaksi);
 
-        $sudahDibayar = $totalDibayar['total'] ?? 0;
-        $sisa         = $transaksi['grand_total'] - $sudahDibayar;
-
-        $metodeModel = new \App\Models\MasterMetodePembayaranModel();
+        $metodeModel = new MasterMetodePembayaranModel();
 
         $data = [
             'title'         => 'Pembayaran',
@@ -552,30 +481,8 @@ class Transaksi extends BaseController
             'pembayaran'    => $pembayaran,
             'sisa'          => $sisa,
             'metode_list'   => $metodeModel->findAll(),
+            'qrCodeDataUri' => $this->transaksiService->generateQrCode($sisa, $transaksi['no_nota'] ?? '-'),
         ];
-
-        // Generate QR Code Dinamis jika masih ada sisa tagihan
-        if ($sisa > 0) {
-            $qrData = "Pembayaran Nota: " . $transaksi['no_nota'] . "\nNominal: Rp " . number_format($sisa, 0, ',', '.');
-            try {
-                $qrCode = new \Endroid\QrCode\QrCode(
-                    data: $qrData,
-                    encoding: new \Endroid\QrCode\Encoding\Encoding('UTF-8'),
-                    errorCorrectionLevel: \Endroid\QrCode\ErrorCorrectionLevel::High,
-                    size: 180,
-                    margin: 0,
-                    roundBlockSizeMode: \Endroid\QrCode\RoundBlockSizeMode::Margin
-                );
-                $writer = new \Endroid\QrCode\Writer\SvgWriter();
-                $result = $writer->write($qrCode);
-                $data['qrCodeDataUri'] = $result->getDataUri();
-            } catch (\Exception $e) {
-                log_message('error', 'Gagal generate QR Code: ' . $e->getMessage());
-                $data['qrCodeDataUri'] = null;
-            }
-        } else {
-            $data['qrCodeDataUri'] = null;
-        }
 
         return view('transaksi/pembayaran', $data);
     }
@@ -592,66 +499,21 @@ class Transaksi extends BaseController
             return redirect()->to('/transaksi/pembayaran/' . $this->request->getPost('id_transaksi'));
         }
 
-        $id_transaksi  = $this->request->getPost('id_transaksi');
-        $nominal_bayar = $this->request->getPost('nominal_bayar');
-        $id_metode_pembayaran = $this->request->getPost('id_metode_pembayaran');
+        $id_transaksi = (int) $this->request->getPost('id_transaksi');
 
-        $transaksi    = $this->transaksiModel->find($id_transaksi);
-        $totalDibayar = $this->pembayaranModel
-            ->selectSum('nominal_bayar', 'total')
-            ->where('id_transaksi', $id_transaksi)
-            ->first();
+        $result = $this->transaksiService->prosesPembayaran($id_transaksi, [
+            'nominal_bayar'        => $this->request->getPost('nominal_bayar'),
+            'id_metode_pembayaran' => $this->request->getPost('id_metode_pembayaran'),
+        ]);
 
-        $sudahDibayar = $totalDibayar['total'] ?? 0;
-        $sisa         = $transaksi['grand_total'] - $sudahDibayar;
-        
-        if ($sisa <= 0) {
-            session()->setFlashdata('error', 'Tagihan transaksi ini sudah lunas.');
+        if (!$result['success']) {
+            session()->setFlashdata('error', $result['message']);
             return redirect()->to('/transaksi/pembayaran/' . $id_transaksi);
         }
 
-        $kembalian    = 0;
-
-        if ($nominal_bayar > $sisa) {
-            $kembalian     = $nominal_bayar - $sisa;
-            $nominal_bayar = $sisa; // Cap the recorded payment to the remaining balance
-        }
-        
-        $sisaSetelah  = $sisa - $nominal_bayar; // will be 0 if paid in full or more
-
-        // --- DB Transaction: pastikan INSERT pembayaran & UPDATE transaksi berjalan atomik ---
-        $db = db_connect();
-        $db->transStart();
-
-        $this->pembayaranModel->insert([
-            'id_transaksi'         => $id_transaksi,
-            'tgl_bayar'            => date('Y-m-d H:i:s'),
-            'nominal_bayar'        => $nominal_bayar,
-            'sisa_tagihan'         => $sisaSetelah,
-            'id_metode_pembayaran' => $id_metode_pembayaran,
-        ]);
-
-        $statusPembayaran = ($sisaSetelah <= 0) ? 1 : 2; // 1: lunas, 2: cicil
-
-        $this->transaksiModel->update($id_transaksi, [
-            'id_status_pembayaran' => $statusPembayaran,
-            'id_metode_pembayaran' => $id_metode_pembayaran,
-        ]);
-
-        $db->transComplete();
-
-        if (!$db->transStatus()) {
-            log_message('error', 'simpanPembayaran: DB transaction gagal untuk id_transaksi=' . $id_transaksi);
-            session()->setFlashdata('error', 'Gagal menyimpan pembayaran ke database. Silakan coba lagi.');
-            return redirect()->to('/transaksi/pembayaran/' . $id_transaksi);
-        }
-        // --- Akhir DB Transaction ---
-
-        if ($kembalian > 0) {
-            session()->setFlashdata('kembalian', $kembalian);
-            session()->setFlashdata('success', 'Pembayaran berhasil. Uang Kembalian: Rp ' . number_format($kembalian, 0, ',', '.'));
-        } else {
-            session()->setFlashdata('success', 'Pembayaran berhasil disimpan.');
+        session()->setFlashdata('success', $result['message']);
+        if (($result['kembalian'] ?? 0) > 0) {
+            session()->setFlashdata('kembalian', $result['kembalian']);
         }
 
         return redirect()->to('/transaksi/pembayaran/' . $id_transaksi);

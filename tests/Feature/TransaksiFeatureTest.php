@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\MTransaksi;
 use App\Models\MInventaris;
 use App\Models\MPelanggan;
@@ -14,15 +15,17 @@ use App\Models\MDetailTransaksi;
  *
  * @internal
  */
-final class TransaksiFeatureTest extends FeatureTestCase
+final class TransaksiFeatureTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
     protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     protected function setUp(): void
     {
@@ -36,7 +39,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
 
     private function loginAsKasir(): void
     {
-        $this->session([
+        $this->withSession([
             'isLoggedIn'    => true,
             'id_karyawan'   => 1,
             'nama_karyawan' => 'Kasir Test',
@@ -101,7 +104,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
             ->get()->getRowArray();
 
         // Remove from cart
-        $result = $this->call('get', 'transaksi/removeFromCart/' . $temp['id_temp']);
+        $result = $this->call('post', 'transaksi/removeFromCart/' . $temp['id_temp']);
         $result->assertRedirectTo(site_url('transaksi'));
 
         // Verify removed
@@ -117,7 +120,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
         // Ensure cart is empty
         $this->db->table('tb_temp_keranjang')
             ->where('id_kasir', 1)
-            ->where('id_pelanggan', 0)
+            ->where('id_pelanggan', null)
             ->delete();
 
         $result = $this->call('post', 'transaksi/simpanTransaksi', [
@@ -134,7 +137,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
 
         // Add something to cart first
         $this->db->table('tb_temp_keranjang')->insert([
-            'id_pelanggan' => 0,
+            'id_pelanggan' => null,
             'id_kasir'     => 1,
             'id_layanan'   => 1,
             'berat'        => 3,
@@ -154,7 +157,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
 
         // Add item to cart
         $this->db->table('tb_temp_keranjang')->insert([
-            'id_pelanggan' => 0,
+            'id_pelanggan' => null,
             'id_kasir'     => 1,
             'id_layanan'   => 1,
             'berat'        => 5,
@@ -197,7 +200,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
         // Verify cart cleared
         $tempCount = $this->db->table('tb_temp_keranjang')
             ->where('id_kasir', 1)
-            ->where('id_pelanggan', 0)
+            ->where('id_pelanggan', null)
             ->countAllResults();
         $this->assertEquals(0, $tempCount);
     }
@@ -208,7 +211,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
 
         // Customer 1 has 25 poin, let's redeem 10
         $this->db->table('tb_temp_keranjang')->insert([
-            'id_pelanggan' => 0,
+            'id_pelanggan' => null,
             'id_kasir'     => 1,
             'id_layanan'   => 2, // Cuci Ekspres: 12000/kg
             'berat'        => 5,
@@ -262,7 +265,7 @@ final class TransaksiFeatureTest extends FeatureTestCase
 
         // Verify status updated to lunas
         $transaksi = (new MTransaksi())->find(1);
-        $this->assertEquals(2, $transaksi['id_status_pembayaran']);
+        $this->assertEquals(1, $transaksi['id_status_pembayaran']); // 1 is LUNAS
     }
 
     public function testSimpanPembayaranCalculatesChange(): void
@@ -277,6 +280,6 @@ final class TransaksiFeatureTest extends FeatureTestCase
         ]);
 
         $result->assertRedirect();
-        $result->assertSessionHas('kembalian', 15000);
+        $result->assertSessionHas('kembalian', 15000.0);
     }
 }

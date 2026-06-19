@@ -11,7 +11,7 @@
                 <p>Transaksi Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-receipt"></i></div>
-            <a href="/transaksi/daftar" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -23,7 +23,7 @@
                 <p>Pendapatan Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-money-bill-wave"></i></div>
-            <a href="/laporan/rentang" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/laporan/rentang') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Laporan <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -35,7 +35,7 @@
                 <p>Stok Inventaris Menipis</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-exclamation-triangle"></i></div>
-            <a href="/inventaris" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/inventaris') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Kelola Inventaris <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -97,7 +97,7 @@
                     Stok Inventaris Menipis
                 </h3>
                 <div class="card-tools">
-                    <a href="/inventaris" class="btn btn-sm btn-outline-danger">
+                    <a href="<?= base_url('/inventaris') ?>" class="btn btn-sm btn-outline-danger">
                         Kelola <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -161,18 +161,19 @@
                     <li class="list-group-item d-flex justify-content-between align-items-start py-2 px-3">
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <span class="badge text-bg-secondary"><?= ucfirst($log['status_lama'] ?? '-') ?></span>
+                                <span class="badge text-bg-secondary"><?= ucfirst($log['modul'] ?? '-') ?></span>
                                 <i class="fas fa-arrow-right text-muted small"></i>
-                                <span class="badge text-bg-success"><?= ucfirst($log['status_baru'] ?? '-') ?></span>
+                                <span class="badge text-bg-success"><?= ucfirst($log['aksi'] ?? '-') ?></span>
                             </div>
 <?php helper('shift'); ?>
                             <div class="text-muted" style="font-size:0.8rem;">
                                 <i class="fas fa-user me-1"></i><?= esc($log['nama_karyawan'] ?? 'Sistem') ?>
-                                <span class="ms-2"><i class="fas fa-clock me-1"></i><?= deteksi_shift($log['tgl_ubah']) ?></span>
+                                <span class="ms-2"><i class="fas fa-tag me-1"></i><?= esc($log['nama_referensi'] ?? '-') ?></span>
+                                <span class="ms-2"><i class="fas fa-clock me-1"></i><?= deteksi_shift($log['created_at']) ?></span>
                             </div>
                         </div>
                         <div class="text-end text-muted" style="font-size:0.75rem; min-width:90px;">
-                            <?= date('d/m H:i', strtotime($log['tgl_ubah'])) ?>
+                            <?= date('d/m H:i', strtotime($log['created_at'])) ?>
                         </div>
                     </li>
                     <?php endforeach; ?>
@@ -190,19 +191,19 @@
             <div class="card-body py-2">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <span class="text-muted small me-2 fw-semibold">Aksi Cepat:</span>
-                    <a href="/transaksi" class="btn btn-primary btn-sm" id="btn-admin-trx-baru">
+                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm" id="btn-admin-trx-baru">
                         <i class="fas fa-plus me-1"></i> Transaksi Baru
                     </a>
-                    <a href="/karyawan" class="btn btn-secondary btn-sm" id="btn-admin-karyawan">
+                    <a href="<?= base_url('/karyawan') ?>" class="btn btn-secondary btn-sm" id="btn-admin-karyawan">
                         <i class="fas fa-id-badge me-1"></i> Kelola Karyawan
                     </a>
-                    <a href="/inventaris" class="btn btn-warning btn-sm text-dark" id="btn-admin-inventaris">
+                    <a href="<?= base_url('/inventaris') ?>" class="btn btn-warning btn-sm text-dark" id="btn-admin-inventaris">
                         <i class="fas fa-boxes me-1"></i> Kelola Inventaris
                     </a>
-                    <a href="/laporan/rentang" class="btn btn-success btn-sm" id="btn-admin-laporan">
+                    <a href="<?= base_url('/laporan/rentang') ?>" class="btn btn-success btn-sm" id="btn-admin-laporan">
                         <i class="fas fa-chart-bar me-1"></i> Laporan Harian
                     </a>
-                    <a href="/pelanggan" class="btn btn-outline-info btn-sm" id="btn-admin-pelanggan">
+                    <a href="<?= base_url('/pelanggan') ?>" class="btn btn-outline-info btn-sm" id="btn-admin-pelanggan">
                         <i class="fas fa-users me-1"></i> Data Pelanggan
                     </a>
                 </div>
@@ -222,7 +223,7 @@
                     5 Transaksi Terbaru
                 </h3>
                 <div class="card-tools">
-                    <a href="/transaksi/daftar" class="btn btn-sm btn-outline-secondary" id="btn-lihat-semua-trx-admin">
+                    <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-sm btn-outline-secondary" id="btn-lihat-semua-trx-admin">
                         Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -287,7 +288,7 @@
                                     <span class="badge <?= $bc ?>"><?= ucfirst($t['status_pembayaran']) ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="/transaksi/detail/<?= $t['id_transaksi'] ?>"
+                                    <a href="<?= base_url('/transaksi/detail/' . ($t['id_transaksi'])) ?>"
                                        class="btn btn-sm btn-outline-primary" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -341,7 +342,7 @@
                                     <small class="text-danger"><i class="fas fa-clock"></i> <?= date('d/m/Y', strtotime($ct['tgl_selesai_estimasi'])) ?></small>
                                 </td>
                                 <td class="text-center">
-                                    <a href="/transaksi/detail/<?= $ct['id_transaksi'] ?>" class="btn btn-sm btn-outline-danger" title="Selesaikan">
+                                    <a href="<?= base_url('/transaksi/detail/' . ($ct['id_transaksi'])) ?>" class="btn btn-sm btn-outline-danger" title="Selesaikan">
                                         <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </td>

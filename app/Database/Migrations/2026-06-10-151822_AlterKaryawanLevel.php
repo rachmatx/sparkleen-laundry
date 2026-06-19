@@ -8,6 +8,8 @@ class AlterKaryawanLevel extends Migration
 {
     public function up()
     {
+        if (!$this->db->tableExists('tb_karyawan')) return;
+
         // 1. Tambah kolom id_level baru
         $this->forge->addColumn('tb_karyawan', [
             'id_level' => [
@@ -45,6 +47,8 @@ class AlterKaryawanLevel extends Migration
 
     public function down()
     {
+        if (!$this->db->tableExists('tb_karyawan')) return;
+
         // Jika di-rollback
         $this->forge->dropForeignKey('tb_karyawan', 'tb_karyawan_id_level_foreign');
 

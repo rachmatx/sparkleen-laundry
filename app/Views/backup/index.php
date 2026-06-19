@@ -30,7 +30,7 @@
                 </div>
 
                 <div class="text-center mt-4">
-                    <form action="/backup/download" method="POST" class="d-inline-block text-start" style="min-width: 300px;">
+                    <form action="<?= base_url('backup/download') ?>" method="POST" class="d-inline-block text-start" style="min-width: 300px;">
                         <?= csrf_field() ?>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Konfirmasi Password Anda <span class="text-danger">*</span></label>

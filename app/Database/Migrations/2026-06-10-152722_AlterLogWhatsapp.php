@@ -8,6 +8,8 @@ class AlterLogWhatsapp extends Migration
 {
     public function up()
     {
+        if (!$this->db->tableExists('tb_log_whatsapp')) return;
+
         // 1. Tambah kolom id_status_whatsapp
         $this->forge->addColumn('tb_log_whatsapp', [
             'id_status_whatsapp' => [
@@ -34,6 +36,8 @@ class AlterLogWhatsapp extends Migration
 
     public function down()
     {
+        if (!$this->db->tableExists('tb_log_whatsapp')) return;
+
         $this->forge->dropForeignKey('tb_log_whatsapp', 'tb_log_whatsapp_id_status_whatsapp_foreign');
 
         $this->forge->addColumn('tb_log_whatsapp', [

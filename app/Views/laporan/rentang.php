@@ -5,13 +5,13 @@
             <div class="card-header">
                 <h3 class="card-title">Filter Laporan Rentang Tanggal</h3>
                 <div class="card-tools">
-                    <a href="/laporan" class="btn btn-secondary btn-sm">
+                    <a href="<?= base_url('/laporan') ?>" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                 </div>
             </div>
             <div class="card-body">
-                <form method="get" action="/laporan/rentang" class="row g-3 align-items-end">
+                <form method="get" action="<?= base_url('laporan/rentang') ?>" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Tanggal Awal</label>
                         <input type="date" class="form-control" name="tgl_awal" value="<?= $tgl_awal ?>">
@@ -26,12 +26,12 @@
                         </button>
                     </div>
                     <div class="col-md-auto">
-                        <a href="/laporan/export_rentang_pdf?tgl_awal=<?= $tgl_awal ?>&tgl_akhir=<?= $tgl_akhir ?>" class="btn btn-warning text-dark">
+                        <a href="<?= base_url('/laporan/export_rentang_pdf?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir) ?>" class="btn btn-warning text-dark">
                             <i class="fas fa-file-pdf me-1"></i> Export PDF
                         </a>
                     </div>
                     <div class="col-md-auto">
-                        <a href="/laporan/export_rentang_excel?tgl_awal=<?= $tgl_awal ?>&tgl_akhir=<?= $tgl_akhir ?>" class="btn btn-success">
+                        <a href="<?= base_url('/laporan/export_rentang_excel?tgl_awal=' . $tgl_awal . '&tgl_akhir=' . $tgl_akhir) ?>" class="btn btn-success">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </a>
                     </div>

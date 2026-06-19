@@ -161,13 +161,13 @@
 
     <div class="btn-group no-print">
         <div class="btn-row">
-            <a href="/transaksi" class="btn btn-secondary" style="flex: 1;">
+            <a href="<?= base_url('/transaksi') ?>" class="btn btn-secondary" style="flex: 1;">
                 <i class="fas fa-arrow-left me-1"></i> Kembali
             </a>
             <button onclick="window.print()" class="btn btn-primary" style="flex: 1;">
                 <i class="fas fa-print me-1"></i> Cetak
             </button>
-            <a href="/transaksi/daftar" class="btn btn-secondary" style="flex: 1;">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-secondary" style="flex: 1;">
                 <i class="fas fa-list me-1"></i> Daftar
             </a>
         </div>

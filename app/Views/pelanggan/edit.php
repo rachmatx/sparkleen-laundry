@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Edit Data Pelanggan</h3>
             </div>
-            <form action="/pelanggan/update/<?= $pelanggan['id_pelanggan'] ?>" method="post">
+            <form action="<?= base_url('pelanggan/update/' . ($pelanggan['id_pelanggan'])) ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
                     <?php if(session()->getFlashdata('errors')): ?>
@@ -36,7 +36,7 @@
                 </div>
                 <!-- UX: Back (kiri), Submit (kanan) -->
                 <div class="card-footer d-flex align-items-center">
-                    <a href="/pelanggan" class="btn btn-secondary">
+                    <a href="<?= base_url('/pelanggan') ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                     <button type="submit" class="btn btn-warning text-dark ms-auto">

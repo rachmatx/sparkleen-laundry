@@ -10,7 +10,7 @@
                 <h3 class="card-title">Pilih Layanan</h3>
             </div>
             <!-- Form untuk tambah ke keranjang (hanya menyimpan layanan) -->
-            <form action="/transaksi/addToCart" method="post" id="formAddToCart">
+            <form action="<?= base_url('transaksi/addToCart') ?>" method="post" id="formAddToCart">
                 <?= csrf_field() ?>
                 <!-- Hidden input untuk menyimpan state pilihan pelanggan sementara -->
                 <input type="hidden" name="id_pelanggan_state" id="id_pelanggan_state" value="<?= session()->get('pos_id_pelanggan') ?>">
@@ -34,7 +34,7 @@
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="text-muted d-block mt-1">Belum terdaftar? <a href="/pelanggan/create" target="_blank">Tambah Pelanggan Baru</a></small>
+                        <small class="text-muted d-block mt-1">Belum terdaftar? <a href="<?= base_url('/pelanggan/create') ?>" target="_blank">Tambah Pelanggan Baru</a></small>
                     </div>
                     <hr>
                     <!-- Pilih Layanan -->
@@ -147,7 +147,7 @@
             <?php if(!empty($temp)): ?>
             <div class="card-footer text-end">
                 <!-- Form konfirmasi simpan (Checkout) -->
-                <form action="/transaksi/simpanTransaksi" method="post" id="formSimpan">
+                <form action="<?= base_url('transaksi/simpanTransaksi') ?>" method="post" id="formSimpan">
                     <?= csrf_field() ?>
                     <!-- Actual ID Pelanggan to be submitted -->
                     <input type="hidden" name="id_pelanggan" id="input_id_pelanggan_checkout" value="<?= session()->get('pos_id_pelanggan') ?>">
@@ -271,7 +271,7 @@ $(document).ready(function() {
         placeholder: '-- Cari atau Pilih Pelanggan --',
         allowClear: true,
         ajax: {
-            url: '/pelanggan/ajaxSearch',
+            url: window.SITE_URL + '/pelanggan/ajaxSearch',
             dataType: 'json',
             delay: 250,
             data: function (params) {
@@ -334,7 +334,7 @@ $(document).ready(function() {
             var idPelanggan = $('#id_pelanggan_state').val();
             var form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/transaksi/removeFromCart/' + idTemp;
+            form.action = '<?= base_url('transaksi/removeFromCart/') ?>' + idTemp;
             var csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
             csrfInput.name = '<?= csrf_token() ?>';

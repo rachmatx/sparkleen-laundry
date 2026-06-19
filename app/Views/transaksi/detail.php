@@ -47,18 +47,18 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
 <div class="row mb-3">
     <div class="col-12">
         <div class="d-flex flex-wrap gap-2">
-            <a href="/transaksi/daftar" class="btn btn-secondary">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Kembali
             </a>
-            <a href="/transaksi/nota/<?= $transaksi['id_transaksi'] ?>" target="_blank" class="btn btn-outline-primary">
+            <a href="<?= base_url('/transaksi/nota/' . ($transaksi['id_transaksi'])) ?>" target="_blank" class="btn btn-outline-primary">
                 <i class="fas fa-print me-1"></i> Cetak Nota
             </a>
             <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-            <a href="/transaksi/pembayaran/<?= $transaksi['id_transaksi'] ?>" class="btn btn-success">
+            <a href="<?= base_url('/transaksi/pembayaran/' . ($transaksi['id_transaksi'])) ?>" class="btn btn-success">
                 <i class="fas fa-credit-card me-1"></i> Kelola Pembayaran
             </a>
             <?php if($transaksi['status'] != 'diambil'): ?>
-            <a href="/transaksi/ubah-status/<?= $transaksi['id_transaksi'] ?>" class="btn btn-warning text-dark">
+            <a href="<?= base_url('/transaksi/ubah-status/' . ($transaksi['id_transaksi'])) ?>" class="btn btn-warning text-dark">
                 <i class="fas fa-exchange-alt me-1"></i> Update Status
             </a>
             <?php endif; ?>
@@ -68,7 +68,7 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
             </a>
             <?php endif; ?>
             <?php if (in_array($transaksi['status'], ['selesai', 'diambil'])): ?>
-            <form action="/transaksi/kirim-wa-api/<?= $transaksi['id_transaksi'] ?>/<?= $transaksi['status'] ?>" method="post" class="d-inline">
+            <form action="<?= base_url('transaksi/kirim-wa-api/' . ($transaksi['id_transaksi']) . '/' . ($transaksi['status'])) ?>" method="post" class="d-inline">
                 <button type="submit" class="btn btn-outline-success" onclick="return confirm('Kirim (ulang) notifikasi WhatsApp via API ke pelanggan?')">
                     <i class="fab fa-whatsapp me-1"></i> Kirim Ulang WA (API)
                 </button>

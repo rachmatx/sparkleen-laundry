@@ -58,13 +58,28 @@ class Dashboard extends BaseController
             return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
         }
 
-        $transaksiModel = new \App\Models\MTransaksi();
         $today = date('Y-m-d');
 
-        $pesananMasukHariIni = $transaksiModel->where('DATE(tgl_masuk)', $today)->countAllResults();
-        $statusMenunggu      = $transaksiModel->where('id_status_transaksi', 1)->countAllResults();
-        $statusProses        = $transaksiModel->where('id_status_transaksi', 2)->countAllResults();
-        $statusSetrika       = $transaksiModel->where('id_status_transaksi', 3)->countAllResults();
+        // Single query with conditional counts
+        $db = \Config\Database::connect();
+        $menunggu = \Config\StatusTransaksi::MENUNGGU;
+        $proses   = \Config\StatusTransaksi::PROSES;
+        $setrika  = \Config\StatusTransaksi::SETRIKA;
+
+        $row = $db->table('tb_transaksi')
+            ->select("
+                COUNT(CASE WHEN DATE(tgl_masuk) = '{$today}' THEN 1 END) as pesanan_hari_ini,
+                COUNT(CASE WHEN id_status_transaksi = {$menunggu} THEN 1 END) as menunggu,
+                COUNT(CASE WHEN id_status_transaksi = {$proses} THEN 1 END) as proses,
+                COUNT(CASE WHEN id_status_transaksi = {$setrika} THEN 1 END) as setrika
+            ")
+            ->where('deleted_at IS NULL')
+            ->get()->getRowArray();
+
+        $pesananMasukHariIni = (int)($row['pesanan_hari_ini'] ?? 0);
+        $statusMenunggu      = (int)($row['menunggu'] ?? 0);
+        $statusProses        = (int)($row['proses'] ?? 0);
+        $statusSetrika       = (int)($row['setrika'] ?? 0);
 
         return $this->response->setJSON([
             'pesananMasukHariIni' => $pesananMasukHariIni,

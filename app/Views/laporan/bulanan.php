@@ -5,13 +5,13 @@
             <div class="card-header">
                 <h3 class="card-title">Filter Laporan Bulanan</h3>
                 <div class="card-tools">
-                    <a href="/laporan" class="btn btn-secondary btn-sm">
+                    <a href="<?= base_url('/laporan') ?>" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                 </div>
             </div>
             <div class="card-body">
-                <form method="get" action="/laporan/bulanan" class="row g-3 align-items-end">
+                <form method="get" action="<?= base_url('laporan/bulanan') ?>" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Bulan</label>
                         <select class="form-select" name="bulan">
@@ -42,12 +42,12 @@
                         </button>
                     </div>
                     <div class="col-md-auto">
-                        <a href="/laporan/export_bulanan_pdf?bulan=<?= $bulan ?>&tahun=<?= $tahun ?>" class="btn btn-warning text-dark">
+                        <a href="<?= base_url('/laporan/export_bulanan_pdf?bulan=' . $bulan . '&tahun=' . $tahun) ?>" class="btn btn-warning text-dark">
                             <i class="fas fa-file-pdf me-1"></i> Export PDF
                         </a>
                     </div>
                     <div class="col-md-auto">
-                        <a href="/laporan/export_bulanan_excel?bulan=<?= $bulan ?>&tahun=<?= $tahun ?>" class="btn btn-success">
+                        <a href="<?= base_url('/laporan/export_bulanan_excel?bulan=' . $bulan . '&tahun=' . $tahun) ?>" class="btn btn-success">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
                         </a>
                     </div>

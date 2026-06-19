@@ -2,23 +2,26 @@
 
 namespace Tests\Feature;
 
-use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * Feature tests for Authentication (Auth controller).
  *
  * @internal
  */
-final class AuthFeatureTest extends FeatureTestCase
+final class AuthFeatureTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     protected function setUp(): void
     {
@@ -102,7 +105,7 @@ final class AuthFeatureTest extends FeatureTestCase
     public function testLogoutDestroysSession(): void
     {
         // First login
-        $this->session([
+        $this->withSession([
             'isLoggedIn'    => true,
             'id_karyawan'   => 1,
             'nama_karyawan' => 'Kasir Test',
@@ -125,7 +128,7 @@ final class AuthFeatureTest extends FeatureTestCase
 
     public function testAlreadyLoggedInUserRedirectedFromLogin(): void
     {
-        $this->session([
+        $this->withSession([
             'isLoggedIn' => true,
             'id_karyawan' => 1,
             'nama_karyawan' => 'Kasir Test',

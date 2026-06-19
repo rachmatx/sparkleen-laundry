@@ -11,7 +11,7 @@
                 <p>Pesanan Masuk Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-shopping-bag"></i></div>
-            <a href="/transaksi/daftar" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -23,7 +23,7 @@
                 <p>Cucian Perlu Diproses</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-tshirt"></i></div>
-            <a href="/transaksi/daftar" class="small-box-footer link-dark link-underline-opacity-0">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="small-box-footer link-dark link-underline-opacity-0">
                 Lihat Daftar <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -35,7 +35,7 @@
                 <p>Tanggal Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-calendar-day"></i></div>
-            <a href="/transaksi" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/transaksi') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Buat Transaksi <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -174,16 +174,16 @@
             </div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="/transaksi" class="btn btn-primary" id="btn-transaksi-baru">
+                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary" id="btn-transaksi-baru">
                         <i class="fas fa-plus-circle me-2"></i>Transaksi Baru
                     </a>
-                    <a href="/transaksi/daftar" class="btn btn-info text-white" id="btn-daftar-transaksi">
+                    <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-info text-white" id="btn-daftar-transaksi">
                         <i class="fas fa-list-alt me-2"></i>Daftar Transaksi
                     </a>
-                    <a href="/pelanggan" class="btn btn-secondary" id="btn-data-pelanggan">
+                    <a href="<?= base_url('/pelanggan') ?>" class="btn btn-secondary" id="btn-data-pelanggan">
                         <i class="fas fa-users me-2"></i>Data Pelanggan
                     </a>
-                    <a href="/layanan" class="btn btn-outline-success" id="btn-data-layanan">
+                    <a href="<?= base_url('/layanan') ?>" class="btn btn-outline-success" id="btn-data-layanan">
                         <i class="fas fa-soap me-2"></i>Data Layanan
                     </a>
                 </div>
@@ -203,7 +203,7 @@
                     5 Transaksi Terbaru
                 </h3>
                 <div class="card-tools">
-                    <a href="/transaksi/daftar" class="btn btn-sm btn-outline-secondary" id="btn-lihat-semua-trx">
+                    <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-sm btn-outline-secondary" id="btn-lihat-semua-trx">
                         Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -269,7 +269,7 @@
                                     <span class="badge <?= $bc ?>"><?= ucfirst($t['status_pembayaran']) ?></span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="/transaksi/detail/<?= $t['id_transaksi'] ?>"
+                                    <a href="<?= base_url('/transaksi/detail/' . ($t['id_transaksi'])) ?>"
                                        class="btn btn-sm btn-outline-primary" title="Detail">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -323,7 +323,7 @@
                                     <small class="text-danger"><i class="fas fa-clock"></i> <?= date('d/m/Y', strtotime($ct['tgl_selesai_estimasi'])) ?></small>
                                 </td>
                                 <td class="text-center">
-                                    <a href="/transaksi/detail/<?= $ct['id_transaksi'] ?>" class="btn btn-sm btn-outline-danger" title="Selesaikan">
+                                    <a href="<?= base_url('/transaksi/detail/' . ($ct['id_transaksi'])) ?>" class="btn btn-sm btn-outline-danger" title="Selesaikan">
                                         <i class="fas fa-arrow-right"></i>
                                     </a>
                                 </td>

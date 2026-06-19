@@ -7,7 +7,7 @@
                     Peringatan Stok Kritis
                 </h3>
                 <div class="card-tools">
-                    <a href="/inventaris" class="btn btn-secondary btn-sm">
+                    <a href="<?= base_url('/inventaris') ?>" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                 </div>
@@ -45,7 +45,7 @@
                                     <?= number_format(max(0, $inv['stok_minimal'] - $inv['stok']), 2) ?> <?= $inv['satuan'] ?>
                                 </td>
                                 <td class="text-center">
-                                    <a href="/inventaris/edit/<?= $inv['id_inventaris'] ?>" class="btn btn-warning btn-sm">
+                                    <a href="<?= base_url('/inventaris/edit/' . ($inv['id_inventaris'])) ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-plus-circle me-1"></i> Update
                                     </a>
                                 </td>

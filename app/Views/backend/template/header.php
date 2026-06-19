@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/styles/overlayscrollbars.min.css" />
     
     <!-- AdminLTE CSS -->
-    <link rel="stylesheet" href="/adminlte4/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="<?= base_url('/adminlte4/dist/css/adminlte.min.css') ?>">
     
     <!-- jQuery (Required for plugins like Select2) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
@@ -60,11 +60,11 @@
                         <i class="fas fa-user-circle fs-5 me-1"></i> <span class="fw-medium"><?= session()->get('nama_karyawan') ?></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <a href="/profile" class="dropdown-item">
+                        <a href="<?= base_url('/profile') ?>" class="dropdown-item">
                             <i class="fas fa-user-cog me-2"></i> Profil Saya
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a href="/logout" class="dropdown-item text-danger">
+                        <a href="<?= base_url('/logout') ?>" class="dropdown-item text-danger">
                             <i class="fas fa-sign-out-alt me-2"></i> Logout
                         </a>
                     </div>

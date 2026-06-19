@@ -7,7 +7,7 @@
             <div class="card-header">
                 <h3 class="card-title">Daftar Transaksi</h3>
                 <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="/transaksi/daftar" class="m-0">
+                    <form method="get" action="<?= base_url('transaksi/daftar') ?>" class="m-0">
                         <?php if(!empty($statusFilter)): ?>
                             <input type="hidden" name="status" value="<?= esc($statusFilter) ?>">
                         <?php endif; ?>
@@ -18,7 +18,7 @@
                             <input type="text" id="liveSearchInput"
                                    name="q"
                                    class="form-control border-start-0 ps-0"
-                                   placeholder="Cari no nota atau nama pelanggan..."
+                                   placeholder="Cari no nota, nama, HP, atau kode pelanggan..."
                                    value="<?= esc($keyword ?? '') ?>"
                                    data-page="transaksi"
                                    data-status="<?= esc($statusFilter ?? 'semua') ?>"
@@ -29,7 +29,7 @@
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
                     <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                    <a href="/transaksi" class="btn btn-primary btn-sm text-nowrap">
+                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm text-nowrap">
                         <i class="fas fa-plus"></i> Transaksi Baru
                     </a>
                     <?php endif; ?>
@@ -39,23 +39,23 @@
                 <ul class="nav nav-tabs px-3 pt-3 mb-0 border-bottom-0 gap-1">
                     <li class="nav-item">
                         <a class="nav-link tab-status-filter <?= $statusFilter == 'semua' ? 'active fw-bold bg-light border-bottom-0' : 'text-secondary' ?>"
-                           href="/transaksi/daftar?status=semua" data-status="semua">Semua</a>
+                           href="<?= base_url('/transaksi/daftar?status=semua') ?>" data-status="semua">Semua</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link tab-status-filter <?= $statusFilter == 'proses' ? 'active fw-bold bg-light border-bottom-0' : 'text-secondary' ?>"
-                           href="/transaksi/daftar?status=proses" data-status="proses"><i class="fas fa-spinner text-info me-1"></i> Proses</a>
+                           href="<?= base_url('/transaksi/daftar?status=proses') ?>" data-status="proses"><i class="fas fa-spinner text-info me-1"></i> Proses</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link tab-status-filter <?= $statusFilter == 'selesai' ? 'active fw-bold bg-light border-bottom-0' : 'text-secondary' ?>"
-                           href="/transaksi/daftar?status=selesai" data-status="selesai"><i class="fas fa-check text-success me-1"></i> Selesai</a>
+                           href="<?= base_url('/transaksi/daftar?status=selesai') ?>" data-status="selesai"><i class="fas fa-check text-success me-1"></i> Selesai</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link tab-status-filter <?= $statusFilter == 'belum_diambil' ? 'active fw-bold bg-light border-bottom-0' : 'text-secondary' ?>"
-                           href="/transaksi/daftar?status=belum_diambil" data-status="belum_diambil"><i class="fas fa-shopping-bag text-warning me-1"></i> Belum Diambil</a>
+                           href="<?= base_url('/transaksi/daftar?status=belum_diambil') ?>" data-status="belum_diambil"><i class="fas fa-shopping-bag text-warning me-1"></i> Belum Diambil</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link tab-status-filter <?= $statusFilter == 'belum_lunas' ? 'active fw-bold bg-light border-bottom-0' : 'text-secondary' ?>"
-                           href="/transaksi/daftar?status=belum_lunas" data-status="belum_lunas"><i class="fas fa-exclamation-triangle text-danger me-1"></i> Belum Lunas</a>
+                           href="<?= base_url('/transaksi/daftar?status=belum_lunas') ?>" data-status="belum_lunas"><i class="fas fa-exclamation-triangle text-danger me-1"></i> Belum Lunas</a>
                     </li>
                 </ul>
                 <div class="table-responsive pt-0">
@@ -115,17 +115,17 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="/transaksi/detail/<?= $t['id_transaksi'] ?>"
+                                        <a href="<?= base_url('/transaksi/detail/' . ($t['id_transaksi'])) ?>"
                                            class="btn btn-info text-white btn-quick-detail"
                                            data-id="<?= $t['id_transaksi'] ?>" title="Quick View">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="/transaksi/nota/<?= $t['id_transaksi'] ?>"
+                                        <a href="<?= base_url('/transaksi/nota/' . ($t['id_transaksi'])) ?>"
                                            target="_blank" class="btn btn-secondary" title="Cetak Nota">
                                             <i class="fas fa-print"></i>
                                         </a>
                                         <?php if($t['status'] != 'diambil' && in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                                        <a href="/transaksi/ubah-status/<?= $t['id_transaksi'] ?>"
+                                        <a href="<?= base_url('/transaksi/ubah-status/' . ($t['id_transaksi'])) ?>"
                                            class="btn btn-warning text-dark" title="Update Status">
                                             <i class="fas fa-exchange-alt"></i>
                                         </a>
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 quickViewModal.show();
                 
-                fetch('/transaksi/ajaxDetail/' + idTransaksi)
+                fetch(window.SITE_URL + '/transaksi/ajaxDetail/' + idTransaksi)
                     .then(response => response.json())
                     .then(data => {
                         if(data.status === 'success') {

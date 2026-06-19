@@ -14,10 +14,11 @@ final class LayananInventarisModelTest extends CIUnitTestCase
     use DatabaseTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     public function testGetResepByLayananReturnsJoinedData(): void
     {

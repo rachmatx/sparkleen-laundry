@@ -5,7 +5,7 @@
                 <h3 class="card-title"><i class="fas fa-history me-1"></i> Log Aktivitas</h3>
             </div>
             <div class="card-body">
-                <form method="get" action="/log-aktivitas" class="row g-2 align-items-end mb-3">
+                <form method="get" action="<?= base_url('log-aktivitas') ?>" class="row g-2 align-items-end mb-3">
                     <div class="col-md-2">
                         <label class="form-label small mb-0">Modul</label>
                         <select name="modul" class="form-select form-select-sm">
@@ -41,7 +41,7 @@
                         <button type="submit" class="btn btn-info btn-sm text-white w-100" title="Filter">
                              <i class="fas fa-search"></i>
                         </button>
-                        <a href="/log-aktivitas" class="btn btn-secondary btn-sm w-100" title="Reset"><i class="fas fa-undo"></i></a>
+                        <a href="<?= base_url('/log-aktivitas') ?>" class="btn btn-secondary btn-sm w-100" title="Reset"><i class="fas fa-undo"></i></a>
                     </div>
                 </form>
 

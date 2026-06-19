@@ -3,6 +3,7 @@
  * Mengirim request AJAX saat user mengetik (debounce 400ms)
  * Mengupdate tbody tabel dan info pagination tanpa reload halaman.
  */
+const SITE_URL = window.SITE_URL || '';
 (function () {
     'use strict';
 
@@ -181,13 +182,13 @@
 
             let aksiHtml = '';
             if (data.canEdit) {
-                aksiHtml += `<a href="/pelanggan/edit/${p.id_pelanggan}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a> `;
+                aksiHtml += `<a href="${SITE_URL}/pelanggan/edit/${p.id_pelanggan}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a> `;
             }
             if (data.canToggle) {
                 if (p.is_aktif == 1) {
-                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin menonaktifkan pelanggan ini?')) window.location.href='/pelanggan/toggle/${p.id_pelanggan}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off me-1"></i> Nonaktif</a>`;
+                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin menonaktifkan pelanggan ini?')) window.location.href=SITE_URL+'/pelanggan/toggle/${p.id_pelanggan}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off me-1"></i> Nonaktif</a>`;
                 } else {
-                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin mengaktifkan pelanggan ini?')) window.location.href='/pelanggan/toggle/${p.id_pelanggan}'" class="btn btn-success btn-sm"><i class="fas fa-power-off me-1"></i> Aktifkan</a>`;
+                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin mengaktifkan pelanggan ini?')) window.location.href=SITE_URL+'/pelanggan/toggle/${p.id_pelanggan}'" class="btn btn-success btn-sm"><i class="fas fa-power-off me-1"></i> Aktifkan</a>`;
                 }
             }
 
@@ -226,11 +227,11 @@
             let aksiHtml = '';
             if (data.canManage && data.canManage.includes(String(k.id_karyawan))) {
                 if (k.is_aktif == 1) {
-                    aksiHtml = `<a href="/karyawan/edit/${k.id_karyawan}" class="btn btn-warning btn-sm text-dark me-1"><i class="fas fa-edit"></i> Edit</a>
-                        <a href="#" onclick="if(confirm('Yakin ingin menonaktifkan karyawan ini?')) window.location.href='/karyawan/toggle/${k.id_karyawan}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off"></i> Nonaktif</a>`;
+                    aksiHtml = `<a href="${SITE_URL}/karyawan/edit/${k.id_karyawan}" class="btn btn-warning btn-sm text-dark me-1"><i class="fas fa-edit"></i> Edit</a>
+                        <a href="#" onclick="if(confirm('Yakin ingin menonaktifkan karyawan ini?')) window.location.href=SITE_URL+'/karyawan/toggle/${k.id_karyawan}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off"></i> Nonaktif</a>`;
                 } else {
-                    aksiHtml = `<a href="/karyawan/edit/${k.id_karyawan}" class="btn btn-warning btn-sm text-dark me-1"><i class="fas fa-edit"></i> Edit</a>
-                        <a href="#" onclick="if(confirm('Yakin ingin mengaktifkan karyawan ini?')) window.location.href='/karyawan/toggle/${k.id_karyawan}'" class="btn btn-success btn-sm"><i class="fas fa-power-off"></i> Aktifkan</a>`;
+                    aksiHtml = `<a href="${SITE_URL}/karyawan/edit/${k.id_karyawan}" class="btn btn-warning btn-sm text-dark me-1"><i class="fas fa-edit"></i> Edit</a>
+                        <a href="#" onclick="if(confirm('Yakin ingin mengaktifkan karyawan ini?')) window.location.href=SITE_URL+'/karyawan/toggle/${k.id_karyawan}'" class="btn btn-success btn-sm"><i class="fas fa-power-off"></i> Aktifkan</a>`;
                 }
             } else {
                 aksiHtml = '<span class="text-muted"><i class="fas fa-lock"></i></span>';
@@ -270,13 +271,13 @@
             let aksiHtml = '';
             if (data.canManage) {
                 if (data.isAdmin) {
-                    aksiHtml += `<a href="/layanan/resep/${l.id_layanan}" class="btn btn-info btn-sm text-white me-1"><i class="fas fa-flask me-1"></i> Resep</a>`;
+                    aksiHtml += `<a href="${SITE_URL}/layanan/resep/${l.id_layanan}" class="btn btn-info btn-sm text-white me-1"><i class="fas fa-flask me-1"></i> Resep</a>`;
                 }
-                aksiHtml += `<a href="/layanan/edit/${l.id_layanan}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a> `;
+                aksiHtml += `<a href="${SITE_URL}/layanan/edit/${l.id_layanan}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a> `;
                 if (l.is_aktif == 1) {
-                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin menonaktifkan layanan ini?')) window.location.href='/layanan/toggle/${l.id_layanan}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off me-1"></i> Nonaktif</a>`;
+                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin menonaktifkan layanan ini?')) window.location.href=SITE_URL+'/layanan/toggle/${l.id_layanan}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off me-1"></i> Nonaktif</a>`;
                 } else {
-                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin mengaktifkan layanan ini?')) window.location.href='/layanan/toggle/${l.id_layanan}'" class="btn btn-success btn-sm"><i class="fas fa-power-off me-1"></i> Aktifkan</a>`;
+                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin mengaktifkan layanan ini?')) window.location.href=SITE_URL+'/layanan/toggle/${l.id_layanan}'" class="btn btn-success btn-sm"><i class="fas fa-power-off me-1"></i> Aktifkan</a>`;
                 }
             }
 
@@ -323,11 +324,11 @@
 
             let aksiHtml = '';
             if (data.canManage) {
-                aksiHtml += `<a href="/inventaris/edit/${inv.id_inventaris}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a> `;
+                aksiHtml += `<a href="${SITE_URL}/inventaris/edit/${inv.id_inventaris}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a> `;
                 if (inv.is_aktif == 1) {
-                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin menonaktifkan barang ini?')) window.location.href='/inventaris/toggle/${inv.id_inventaris}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off me-1"></i> Nonaktif</a>`;
+                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin menonaktifkan barang ini?')) window.location.href=SITE_URL+'/inventaris/toggle/${inv.id_inventaris}'" class="btn btn-danger btn-sm"><i class="fas fa-power-off me-1"></i> Nonaktif</a>`;
                 } else {
-                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin mengaktifkan barang ini?')) window.location.href='/inventaris/toggle/${inv.id_inventaris}'" class="btn btn-success btn-sm"><i class="fas fa-power-off me-1"></i> Aktifkan</a>`;
+                    aksiHtml += `<a href="#" onclick="if(confirm('Yakin ingin mengaktifkan barang ini?')) window.location.href=SITE_URL+'/inventaris/toggle/${inv.id_inventaris}'" class="btn btn-success btn-sm"><i class="fas fa-power-off me-1"></i> Aktifkan</a>`;
                 }
             } else {
                 aksiHtml = '<span class="text-muted small">-</span>';
@@ -373,14 +374,14 @@
 
             let aksiHtml = `
                 <div class="btn-group btn-group-sm">
-                    <a href="/transaksi/detail/${t.id_transaksi}" class="btn btn-info text-white btn-quick-detail" data-id="${t.id_transaksi}" title="Quick View">
+                    <a href="${SITE_URL}/transaksi/detail/${t.id_transaksi}" class="btn btn-info text-white btn-quick-detail" data-id="${t.id_transaksi}" title="Quick View">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a href="/transaksi/nota/${t.id_transaksi}" target="_blank" class="btn btn-secondary" title="Cetak Nota">
+                    <a href="${SITE_URL}/transaksi/nota/${t.id_transaksi}" target="_blank" class="btn btn-secondary" title="Cetak Nota">
                         <i class="fas fa-print"></i>
                     </a>`;
             if (t.status !== 'diambil' && data.canEdit) {
-                aksiHtml += `<a href="/transaksi/ubah-status/${t.id_transaksi}" class="btn btn-warning text-dark" title="Update Status"><i class="fas fa-exchange-alt"></i></a>`;
+                aksiHtml += `<a href="${SITE_URL}/transaksi/ubah-status/${t.id_transaksi}" class="btn btn-warning text-dark" title="Update Status"><i class="fas fa-exchange-alt"></i></a>`;
             }
             aksiHtml += '</div>';
 
@@ -433,23 +434,23 @@
 
         switch (page) {
             case 'pelanggan':
-                url = '/pelanggan/ajaxSearchTable';
+                url = (SITE_URL || '') + '/pelanggan/ajaxSearchTable';
                 renderFn = renderPelanggan;
                 break;
             case 'karyawan':
-                url = '/karyawan/ajaxSearch';
+                url = (SITE_URL || '') + '/karyawan/ajaxSearch';
                 renderFn = renderKaryawan;
                 break;
             case 'layanan':
-                url = '/layanan/ajaxSearch';
+                url = (SITE_URL || '') + '/layanan/ajaxSearch';
                 renderFn = renderLayanan;
                 break;
             case 'inventaris':
-                url = '/inventaris/ajaxSearch';
+                url = (SITE_URL || '') + '/inventaris/ajaxSearch';
                 renderFn = renderInventaris;
                 break;
             case 'transaksi':
-                url = '/transaksi/ajaxSearch';
+                url = (SITE_URL || '') + '/transaksi/ajaxSearch';
                 renderFn = renderTransaksi;
                 break;
         }

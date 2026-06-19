@@ -35,7 +35,7 @@
                 <h3 class="card-title"><i class="fab fa-whatsapp me-1"></i> Log Pengiriman WhatsApp</h3>
             </div>
             <div class="card-body">
-                <form method="get" action="/log-whatsapp" class="row g-2 align-items-end mb-3">
+                <form method="get" action="<?= base_url('log-whatsapp') ?>" class="row g-2 align-items-end mb-3">
                     <div class="col-md-2">
                         <label class="form-label small mb-0">Status</label>
                         <select name="status" class="form-select form-select-sm">
@@ -70,7 +70,7 @@
                         <button type="submit" class="btn btn-success btn-sm w-100" title="Terapkan Filter">
                              <i class="fas fa-search"></i>
                         </button>
-                        <a href="/log-whatsapp" class="btn btn-secondary btn-sm w-100" title="Reset Filter"><i class="fas fa-undo"></i></a>
+                        <a href="<?= base_url('/log-whatsapp') ?>" class="btn btn-secondary btn-sm w-100" title="Reset Filter"><i class="fas fa-undo"></i></a>
                     </div>
                 </form>
             </div>

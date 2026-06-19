@@ -32,7 +32,7 @@
     </table>
     <div class="footer">Dicetak: <?= date('d/m/Y H:i:s') ?></div>
 
-<button onclick="window.location.href='/laporan/export_bulanan_pdf?bulan=<?= $bulan ?>&tahun=<?= $tahun ?>'" class="btn btn-warning">📄 Export PDF</button>
-<button onclick="window.location.href='/laporan/export_bulanan_excel?bulan=<?= $bulan ?>&tahun=<?= $tahun ?>'" class="btn btn-info">📊 Export Excel</button>
+<button onclick="window.location.href='<?= base_url('/laporan/export_bulanan_pdf?bulan=' . $bulan . '&tahun=' . $tahun) ?>'" class="btn btn-warning">📄 Export PDF</button>
+<button onclick="window.location.href='<?= base_url('/laporan/export_bulanan_excel?bulan=' . $bulan . '&tahun=' . $tahun) ?>'" class="btn btn-info">📊 Export Excel</button>
 </body>
 </html>

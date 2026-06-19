@@ -139,10 +139,129 @@ generate_diagrams.py
 scratch_extracted_laporan*.txt
 /visualisasi_diagram/
 /diagrams
+diagrams-viewer.html
+sparkleen-presentation.html
+note.txt
 
-# Additional Security & Environment Ignores
-*.log
-node_modules/
-.gemini/
-*.env.*
+
+#-------------------------
+# Docker & Container Files
+#-------------------------
+.docker/
+docker-volumes/
+/var/lib/
+.dockerignore
+docker-compose.override.yml
+
+#-------------------------
+# XAMPP / Local Development
+#-------------------------
+*.sock
+/mysql/
+/mariadb/
+
+#-------------------------
+# Security & Environment Files
+#-------------------------
+.env
+.env.*
 !.env.example
+.env.local
+.env.*.local
+*.log
+*.pem
+*.key
+*.crt
+
+#-------------------------
+# Node / Package Files
+#-------------------------
+node_modules/
+package-lock.json
+yarn.lock
+npm-debug.log*
+
+#-------------------------
+# Editor Workspace Files
+#-------------------------
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+#-------------------------
+# Build & Deployment Artifacts
+#-------------------------
+/builds/
+/build/
+dist/
+coverage/
+.phpunit.result.cache
+phpunit*.xml
+/results/
+
+#-------------------------
+# Database & Backup Files
+#-------------------------
+*.sql
+*.sql.gz
+*.backup
+laundry_db.sql
+/backups/
+
+#-------------------------
+# Temporary Analysis & Documentation
+#-------------------------
+laporan_text.txt
+*.docx
+analisis_keselarasan_laporan*.md
+generate_diagrams.py
+generate_presentasi_lrs.py
+patch_laporan_*.py
+scratch_extracted_laporan*.txt
+_test_mermaid.html
+mermaid_renderer.html
+diagrams-viewer.html
+sparkleen-presentation.html
+render mermaid diagram.png
+note.txt
+
+#-------------------------
+# Test & Development Scripts
+#-------------------------
+test_*.php
+reset_test_db.php
+_test_*.html
+
+#-------------------------
+# Temporary Directories
+#-------------------------
+/diagram v2/
+/diagrams rev/
+/prompts/
+/audit/
+/visualisasi_diagram/
+scratch.txt
+scratch.php
+
+#-------------------------
+# Temporary AI Project Files
+#-------------------------
+.gemini/
+.qoder/
+
+#-------------------------
+# Vercel Deployment Files
+#-------------------------
+.vercel/
+
+#-------------------------
+# Public Generated Reports
+#-------------------------
+/public/reports/*
+!/public/reports/index.html

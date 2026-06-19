@@ -6,50 +6,38 @@ use App\Models\MInventaris;
 
 class Inventaris extends BaseController
 {
+    use \App\Controllers\Traits\PaginationTrait;
+
     protected $inventarisModel;
 
     public function __construct()
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])) {
-            // Tidak boleh akses: redirect ke dashboard
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke halaman ini.');
-            header('Location: ' . base_url('/dashboard'));
-            exit();
-        }
-
         $this->inventarisModel = new MInventaris();
     }
 
     // Daftar inventaris
     public function index()
     {
-        $page = (int)($this->request->getGet('page') ?? 1);
         $keyword = $this->request->getGet('q');
-        if ($page < 1) $page = 1;
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
 
-        $sort = $this->request->getGet('sort') ?? 'nama_barang';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        $allowedSort = ['nama_barang', 'stok', 'satuan', 'harga_beli', 'is_aktif'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'nama_barang';
-        }
+        $pg = $this->parsePagination(
+            ['nama_barang', 'stok', 'satuan', 'harga_beli', 'is_aktif'],
+            'nama_barang',
+            'ASC'
+        );
 
-        $query = $this->inventarisModel->orderBy($sort, $dir);
+        $query = $this->inventarisModel->orderBy($pg['sort'], $pg['dir']);
         if (!empty($keyword)) {
             $query->like('nama_barang', $keyword);
         }
 
-        $items = $query->findAll($limit + 1, $offset);
-        $hasNext = count($items) > $limit;
-        if ($hasNext) {
-            array_pop($items);
-        }
-        $hasPrev = $page > 1;
+        $result = $this->paginateResults(
+            $query->findAll($pg['limit'] + 1, $pg['offset']),
+            $pg['limit']
+        );
 
         // Tambahkan flag stok_kritis
-        foreach ($items as &$row) {
+        foreach ($result['items'] as &$row) {
             $row['stok_kritis'] = ($row['stok'] <= $row['stok_minimal']) ? 1 : 0;
         }
 
@@ -58,15 +46,15 @@ class Inventaris extends BaseController
         $data = [
             'title'        => 'Data Inventaris',
             'activeMenu'   => 'inventaris',
-            'inventaris'   => $items,
-            'page'         => $page,
-            'hasPrev'      => $hasPrev,
-            'hasNext'      => $hasNext,
-            'limit'        => $limit,
+            'inventaris'   => $result['items'],
+            'page'         => $pg['page'],
+            'hasPrev'      => $pg['page'] > 1,
+            'hasNext'      => $result['has_next'],
+            'limit'        => $pg['limit'],
             'keyword'      => $keyword,
             'jumlahKritis' => count($stokKritis),
-            'sort'         => $sort,
-            'dir'          => $dir,
+            'sort'         => $pg['sort'],
+            'dir'          => $pg['dir'],
         ];
 
         return view('backend/template/header', $data)
@@ -78,11 +66,6 @@ class Inventaris extends BaseController
     // Form tambah
     public function create()
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
-            return redirect()->to('/inventaris');
-        }
-
         $data = [
             'title'      => 'Tambah Inventaris',
             'activeMenu' => 'inventaris',
@@ -97,10 +80,6 @@ class Inventaris extends BaseController
     // Simpan
     public function store()
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            return redirect()->to('/inventaris');
-        }
-
         $data = [
             'nama_barang'  => $this->request->getPost('nama_barang'),
             'stok'         => (float) $this->request->getPost('stok'),
@@ -125,15 +104,16 @@ class Inventaris extends BaseController
     // Form edit
     public function edit($id)
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            session()->setFlashdata('error', 'Anda tidak memiliki akses ke fitur ini.');
+        $inventaris = $this->inventarisModel->find($id);
+        if (!$inventaris) {
+            session()->setFlashdata('error', 'Data inventaris tidak ditemukan.');
             return redirect()->to('/inventaris');
         }
 
         $data = [
             'title'      => 'Edit Inventaris',
             'activeMenu' => 'inventaris',
-            'inventaris' => $this->inventarisModel->find($id),
+            'inventaris' => $inventaris,
         ];
 
         return view('backend/template/header', $data)
@@ -145,10 +125,6 @@ class Inventaris extends BaseController
     // Update
     public function update($id)
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            return redirect()->to('/inventaris');
-        }
-
         $lama = $this->inventarisModel->find($id);
         $baru = [
             'nama_barang'  => $this->request->getPost('nama_barang'),
@@ -171,10 +147,6 @@ class Inventaris extends BaseController
 
     public function toggleStatus($id)
     {
-        if (!in_array(session()->get('level'), ['admin', 'pemilik'])) {
-            return redirect()->to('/inventaris');
-        }
-
         $item = $this->inventarisModel->find($id);
         if ($item) {
             $statusBaru = ($item['is_aktif'] == 1) ? 0 : 1;
@@ -212,15 +184,14 @@ class Inventaris extends BaseController
         }
 
         $keyword = $this->request->getGet('q');
-        
-        $sort = $this->request->getGet('sort') ?? 'nama_barang';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
-        $allowedSort = ['nama_barang', 'stok', 'satuan', 'harga_beli', 'is_aktif'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'nama_barang';
-        }
 
-        $query   = $this->inventarisModel->orderBy($sort, $dir);
+        $pg = $this->parsePagination(
+            ['nama_barang', 'stok', 'satuan', 'harga_beli', 'is_aktif'],
+            'nama_barang',
+            'ASC'
+        );
+
+        $query = $this->inventarisModel->orderBy($pg['sort'], $pg['dir']);
 
         if (!empty($keyword)) {
             $query->like('nama_barang', $keyword);

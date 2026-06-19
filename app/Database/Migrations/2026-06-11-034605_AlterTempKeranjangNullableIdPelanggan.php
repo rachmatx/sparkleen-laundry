@@ -8,6 +8,8 @@ class AlterTempKeranjangNullableIdPelanggan extends Migration
 {
     public function up()
     {
+        if (!$this->db->tableExists('tb_temp_keranjang')) return;
+
         // First drop the foreign key since we're modifying the column
         $this->db->query("ALTER TABLE tb_temp_keranjang DROP FOREIGN KEY fk_cart_pelanggan");
 
@@ -32,6 +34,8 @@ class AlterTempKeranjangNullableIdPelanggan extends Migration
 
     public function down()
     {
+        if (!$this->db->tableExists('tb_temp_keranjang')) return;
+
         // Drop the foreign key
         $this->db->query("ALTER TABLE tb_temp_keranjang DROP FOREIGN KEY fk_cart_pelanggan");
 

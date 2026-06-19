@@ -6,6 +6,8 @@ use App\Models\MPelanggan;
 
 class Pelanggan extends BaseController
 {
+    use \App\Controllers\Traits\PaginationTrait;
+
     protected $pelangganModel;
     protected $level;
 
@@ -17,27 +19,21 @@ class Pelanggan extends BaseController
 
     public function index()
     {
-        $page = (int)($this->request->getGet('page') ?? 1);
         $keyword = $this->request->getGet('q');
         $status = $this->request->getGet('status');
-        
-        if ($page < 1) $page = 1;
-        $limit = 20;
-        $offset = ($page - 1) * $limit;
 
-        $sort = $this->request->getGet('sort') ?? 'id_pelanggan';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $allowedSort = ['kode_pelanggan', 'nama_pelanggan', 'no_telp', 'alamat', 'is_aktif', 'id_pelanggan'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'id_pelanggan';
-        }
+        $pg = $this->parsePagination(
+            ['kode_pelanggan', 'nama_pelanggan', 'no_telp', 'alamat', 'is_aktif', 'id_pelanggan'],
+            'id_pelanggan',
+            'DESC'
+        );
 
-        $query = $this->pelangganModel->orderBy($sort, $dir);
-        
+        $query = $this->pelangganModel->orderBy($pg['sort'], $pg['dir']);
+
         if ($status !== null && $status !== '') {
             $query->where('is_aktif', $status);
         }
-        
+
         if (!empty($keyword)) {
             $query->groupStart()
                   ->like('nama_pelanggan', $keyword)
@@ -46,25 +42,23 @@ class Pelanggan extends BaseController
                   ->groupEnd();
         }
 
-        $items = $query->findAll($limit + 1, $offset);
-        $hasNext = count($items) > $limit;
-        if ($hasNext) {
-            array_pop($items);
-        }
-        $hasPrev = $page > 1;
+        $result = $this->paginateResults(
+            $query->findAll($pg['limit'] + 1, $pg['offset']),
+            $pg['limit']
+        );
 
         $data = [
             'title'      => 'Data Pelanggan',
             'activeMenu' => 'pelanggan',
-            'pelanggan'  => $items,
-            'page'       => $page,
-            'hasPrev'    => $hasPrev,
-            'hasNext'    => $hasNext,
-            'limit'      => $limit,
+            'pelanggan'  => $result['items'],
+            'page'       => $pg['page'],
+            'hasPrev'    => $pg['page'] > 1,
+            'hasNext'    => $result['has_next'],
+            'limit'      => $pg['limit'],
             'keyword'    => $keyword,
             'status'     => $status,
-            'sort'       => $sort,
-            'dir'        => $dir,
+            'sort'       => $pg['sort'],
+            'dir'        => $pg['dir'],
         ];
 
         return view('backend/template/header', $data)
@@ -113,10 +107,16 @@ class Pelanggan extends BaseController
     {
 
 
+        $pelanggan = $this->pelangganModel->find($id);
+        if (!$pelanggan) {
+            session()->setFlashdata('error', 'Data pelanggan tidak ditemukan.');
+            return redirect()->to('/pelanggan');
+        }
+
         $data = [
             'title'      => 'Edit Pelanggan',
             'activeMenu' => 'pelanggan',
-            'pelanggan'  => $this->pelangganModel->find($id),
+            'pelanggan'  => $pelanggan,
         ];
 
         return view('backend/template/header', $data)
@@ -201,14 +201,13 @@ class Pelanggan extends BaseController
 
         $keyword = $this->request->getGet('q');
         $status = $this->request->getGet('status');
-        $sort = $this->request->getGet('sort') ?? 'id_pelanggan';
-        $dir  = strtoupper($this->request->getGet('dir') ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $allowedSort = ['kode_pelanggan', 'nama_pelanggan', 'no_telp', 'alamat', 'is_aktif', 'id_pelanggan'];
-        if (!in_array($sort, $allowedSort)) {
-            $sort = 'id_pelanggan';
-        }
+        $pg = $this->parsePagination(
+            ['kode_pelanggan', 'nama_pelanggan', 'no_telp', 'alamat', 'is_aktif', 'id_pelanggan'],
+            'id_pelanggan',
+            'DESC'
+        );
 
-        $query   = $this->pelangganModel->orderBy($sort, $dir);
+        $query = $this->pelangganModel->orderBy($pg['sort'], $pg['dir']);
 
         if ($status !== null && $status !== '') {
             $query->where('is_aktif', $status);

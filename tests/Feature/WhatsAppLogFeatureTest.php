@@ -2,23 +2,26 @@
 
 namespace Tests\Feature;
 
-use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * Feature tests for WhatsApp Log functionality.
  *
  * @internal
  */
-final class WhatsAppLogFeatureTest extends FeatureTestCase
+final class WhatsAppLogFeatureTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     protected function setUp(): void
     {
@@ -31,7 +34,7 @@ final class WhatsAppLogFeatureTest extends FeatureTestCase
 
     public function testLogWhatsappPageLoads(): void
     {
-        $this->session([
+        $this->withSession([
             'isLoggedIn'    => true,
             'id_karyawan'   => 1,
             'nama_karyawan' => 'Kasir Test',
@@ -53,12 +56,12 @@ final class WhatsAppLogFeatureTest extends FeatureTestCase
     {
         $this->seeInDatabase('tb_log_whatsapp', [
             'no_nota'            => 'LAU/20260522/0001',
-            'id_status_whatsapp' => 2,
+            'id_status_whatsapp' => 1,
         ]);
 
         $this->seeInDatabase('tb_log_whatsapp', [
             'no_nota'            => 'LAU/20260522/0001',
-            'id_status_whatsapp' => 3,
+            'id_status_whatsapp' => 2,
         ]);
     }
 }

@@ -14,10 +14,11 @@ final class TransaksiModelTest extends CIUnitTestCase
     use DatabaseTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     public function testGenerateNotaReturnsCorrectFormat(): void
     {
@@ -43,10 +44,13 @@ final class TransaksiModelTest extends CIUnitTestCase
         $expected = [
             'no_nota', 'id_pelanggan', 'id_kasir', 'tgl_masuk',
             'tgl_selesai_estimasi', 'tgl_selesai_aktual', 'total_berat',
-            'total_biaya', 'diskon', 'poin_ditebus', 'poin_diperoleh', 'grand_total', 'status', 'status_pembayaran'
+            'total_biaya', 'diskon', 'poin_ditebus', 'poin_diperoleh', 'grand_total', 'id_status_transaksi', 'id_status_pembayaran', 'id_metode_pembayaran', 'pin_pengambilan'
         ];
         
-        $this->assertEquals($expected, $model->getAllowedFields());
+        $reflection = new \ReflectionClass($model);
+        $property = $reflection->getProperty('allowedFields');
+        $property->setAccessible(true);
+        $this->assertEquals($expected, $property->getValue($model));
     }
 
     public function testTableNameIsCorrect(): void
@@ -62,7 +66,7 @@ final class TransaksiModelTest extends CIUnitTestCase
 
         $this->assertNotNull($result);
         $this->assertEquals('LAU/20260522/0001', $result['no_nota']);
-        $this->assertEquals('menunggu', $result['status']);
+        $this->assertEquals(1, $result['id_status_transaksi']);
         $this->assertEquals(35000, $result['grand_total']);
     }
 }

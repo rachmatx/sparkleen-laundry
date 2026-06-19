@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Data Inventaris</h3>
                 <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="/inventaris" class="m-0">
+                    <form method="get" action="<?= base_url('inventaris') ?>" class="m-0">
                         <div class="input-group input-group-sm" style="width: 250px;">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
@@ -22,13 +22,13 @@
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
                     <?php if($jumlahKritis > 0): ?>
-                    <a href="/inventaris/warning" class="btn btn-danger btn-sm text-nowrap">
+                    <a href="<?= base_url('/inventaris/warning') ?>" class="btn btn-danger btn-sm text-nowrap">
                         <i class="fas fa-exclamation-triangle me-1"></i>
                         <?= $jumlahKritis ?> Stok Kritis
                     </a>
                     <?php endif; ?>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="/inventaris/create" class="btn btn-warning btn-sm text-dark text-nowrap">
+                    <a href="<?= base_url('/inventaris/create') ?>" class="btn btn-warning btn-sm text-dark text-nowrap">
                         <i class="fas fa-plus me-1"></i> Tambah
                     </a>
                     <?php endif; ?>
@@ -101,18 +101,18 @@
                                 </td>
                                 <td class="text-center">
                                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                                    <a href="/inventaris/edit/<?= $inv['id_inventaris'] ?>" class="btn btn-warning btn-sm">
+                                    <a href="<?= base_url('/inventaris/edit/' . ($inv['id_inventaris'])) ?>" class="btn btn-warning btn-sm">
                                         <i class="fas fa-edit me-1"></i> Edit
                                     </a>
                                     <?php if ($inv['is_aktif'] == 1): ?>
-                                        <form action="/inventaris/toggle/<?= $inv['id_inventaris'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan barang ini?');">
+                                        <form action="<?= base_url('inventaris/toggle/' . ($inv['id_inventaris'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan barang ini?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fas fa-power-off me-1"></i> Nonaktif
                                             </button>
                                         </form>
                                     <?php else: ?>
-                                        <form action="/inventaris/toggle/<?= $inv['id_inventaris'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan barang ini?');">
+                                        <form action="<?= base_url('inventaris/toggle/' . ($inv['id_inventaris'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan barang ini?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="fas fa-power-off me-1"></i> Aktifkan

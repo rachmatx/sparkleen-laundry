@@ -22,13 +22,13 @@ $growthPositive = $growthNominal >= 0;
                 <i class="fas fa-file-export me-2"></i>Export Laporan
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow">
-                <li><a class="dropdown-item py-2" href="/laporan/export_harian_pdf"><i class="fas fa-file-pdf text-danger me-2"></i>Export Harian PDF</a></li>
-                <li><a class="dropdown-item py-2" href="/laporan/export_bulanan_pdf"><i class="fas fa-file-pdf text-danger me-2"></i>Export Bulanan PDF</a></li>
-                <li><a class="dropdown-item py-2" href="/laporan/rentang"><i class="fas fa-file-pdf text-danger me-2"></i>Export Rentang PDF</a></li>
+                <li><a class="dropdown-item py-2" href="<?= base_url('/laporan/export_harian_pdf') ?>"><i class="fas fa-file-pdf text-danger me-2"></i>Export Harian PDF</a></li>
+                <li><a class="dropdown-item py-2" href="<?= base_url('/laporan/export_bulanan_pdf') ?>"><i class="fas fa-file-pdf text-danger me-2"></i>Export Bulanan PDF</a></li>
+                <li><a class="dropdown-item py-2" href="<?= base_url('/laporan/rentang') ?>"><i class="fas fa-file-pdf text-danger me-2"></i>Export Rentang PDF</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item py-2" href="/laporan/export_harian_excel"><i class="fas fa-file-excel text-success me-2"></i>Export Harian Excel</a></li>
-                <li><a class="dropdown-item py-2" href="/laporan/export_bulanan_excel"><i class="fas fa-file-excel text-success me-2"></i>Export Bulanan Excel</a></li>
-                <li><a class="dropdown-item py-2" href="/laporan/rentang"><i class="fas fa-file-excel text-success me-2"></i>Export Rentang Excel</a></li>
+                <li><a class="dropdown-item py-2" href="<?= base_url('/laporan/export_harian_excel') ?>"><i class="fas fa-file-excel text-success me-2"></i>Export Harian Excel</a></li>
+                <li><a class="dropdown-item py-2" href="<?= base_url('/laporan/export_bulanan_excel') ?>"><i class="fas fa-file-excel text-success me-2"></i>Export Bulanan Excel</a></li>
+                <li><a class="dropdown-item py-2" href="<?= base_url('/laporan/rentang') ?>"><i class="fas fa-file-excel text-success me-2"></i>Export Rentang Excel</a></li>
             </ul>
         </div>
     </div>
@@ -47,7 +47,7 @@ $growthPositive = $growthNominal >= 0;
                 </p>
             </div>
             <div class="small-box-icon"><i class="fas fa-money-bill-wave"></i></div>
-            <a href="/laporan/bulanan" class="small-box-footer link-light link-underline-opacity-0 mt-auto">
+            <a href="<?= base_url('/laporan/bulanan') ?>" class="small-box-footer link-light link-underline-opacity-0 mt-auto">
                 Lihat Laporan <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -69,7 +69,7 @@ $growthPositive = $growthNominal >= 0;
             <div class="small-box-icon">
                 <i class="fas <?= $growthPositive ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' ?>"></i>
             </div>
-            <a href="/laporan/bulanan" class="small-box-footer link-light link-underline-opacity-0 mt-auto">
+            <a href="<?= base_url('/laporan/bulanan') ?>" class="small-box-footer link-light link-underline-opacity-0 mt-auto">
                 Detail <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -103,7 +103,7 @@ $growthPositive = $growthNominal >= 0;
                 </p>
             </div>
             <div class="small-box-icon"><i class="fas fa-user-plus"></i></div>
-            <a href="/pelanggan" class="small-box-footer link-dark link-underline-opacity-0 mt-auto">
+            <a href="<?= base_url('/pelanggan') ?>" class="small-box-footer link-dark link-underline-opacity-0 mt-auto">
                 Kelola Data <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>

@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Tambah Karyawan Baru</h3>
             </div>
-            <form action="/karyawan/store" method="post">
+            <form action="<?= base_url('karyawan/store') ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
 
@@ -102,7 +102,7 @@
 
                 </div>
                 <div class="card-footer d-flex align-items-center">
-                    <a href="/karyawan" class="btn btn-secondary">
+                    <a href="<?= base_url('/karyawan') ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                     <button type="submit" class="btn btn-success ms-auto">

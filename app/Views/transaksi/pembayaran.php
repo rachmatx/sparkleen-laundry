@@ -53,7 +53,7 @@
 
                 <?php if($sisa > 0): ?>
                 <hr>
-                <form action="/transaksi/simpanPembayaran" method="post">
+                <form action="<?= base_url('transaksi/simpanPembayaran') ?>" method="post">
                     <?= csrf_field() ?>
                     <input type="hidden" name="id_transaksi" value="<?= $transaksi['id_transaksi'] ?>">
                     <div class="mb-3">
@@ -122,8 +122,8 @@
                 <?php else: ?>
                 <?php endif; ?>
             </div>
-            <div class="card-footer">
-                <a href="/transaksi/detail/<?= $transaksi['id_transaksi'] ?>" class="btn btn-secondary w-100">
+            <div class="card-footer" style="background:#fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
+                <a href="<?= base_url('/transaksi/detail/' . ($transaksi['id_transaksi'])) ?>" class="btn btn-secondary w-100">
                     <i class="fas fa-arrow-left me-1"></i> Kembali ke Detail
                 </a>
             </div>

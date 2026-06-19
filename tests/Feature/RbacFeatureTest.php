@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * Feature tests for Role-Based Access Control (RBAC).
@@ -11,15 +12,17 @@ use CodeIgniter\Test\DatabaseTestTrait;
  *
  * @internal
  */
-final class RbacFeatureTest extends FeatureTestCase
+final class RbacFeatureTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     protected function setUp(): void
     {
@@ -38,7 +41,7 @@ final class RbacFeatureTest extends FeatureTestCase
             'pemilik' => ['id' => 3, 'nama' => 'Pemilik Test', 'user' => 'pemilik_test'],
         ];
 
-        $this->session([
+        $this->withSession([
             'isLoggedIn'    => true,
             'id_karyawan'   => $map[$role]['id'],
             'nama_karyawan' => $map[$role]['nama'],

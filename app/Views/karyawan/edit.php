@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Edit Data Karyawan</h3>
             </div>
-            <form action="/karyawan/update/<?= $karyawan['id_karyawan'] ?>" method="post">
+            <form action="<?= base_url('karyawan/update/' . ($karyawan['id_karyawan'])) ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
 
@@ -95,8 +95,8 @@
                     </div>
 
                 </div>
-                <div class="card-footer d-flex align-items-center">
-                    <a href="/karyawan" class="btn btn-secondary">
+                <div class="card-footer d-flex align-items-center" style="background:#fff; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
+                    <a href="<?= base_url('/karyawan') ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                     <button type="submit" class="btn btn-warning text-dark ms-auto">

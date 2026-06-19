@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Daftar Karyawan</h3>
                 <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="/karyawan" class="m-0">
+                    <form method="get" action="<?= base_url('karyawan') ?>" class="m-0">
                         <div class="input-group input-group-sm" style="width: 240px;">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
@@ -20,7 +20,7 @@
                         </div>
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
-                    <a href="/karyawan/create" class="btn btn-success btn-sm text-nowrap">
+                    <a href="<?= base_url('/karyawan/create') ?>" class="btn btn-success btn-sm text-nowrap">
                         <i class="fas fa-plus"></i> Tambah Karyawan
                     </a>
                 </div>
@@ -30,6 +30,12 @@
                     <div class="alert alert-success alert-dismissible m-3">
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         <i class="fas fa-check-circle me-1"></i> <?= esc(session()->getFlashdata('success')) ?>
+                    </div>
+                <?php endif; ?>
+                <?php if(session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger alert-dismissible m-3">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <i class="fas fa-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?>
                     </div>
                 <?php endif; ?>
                 <div class="table-responsive">
@@ -89,18 +95,18 @@
                                     }
                                     ?>
                                     <?php if($canManage): ?>
-                                    <a href="/karyawan/edit/<?= $k['id_karyawan'] ?>" class="btn btn-warning btn-sm text-dark me-1">
+                                    <a href="<?= base_url('/karyawan/edit/' . ($k['id_karyawan'])) ?>" class="btn btn-warning btn-sm text-dark me-1">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
                                     <?php if ($k['is_aktif'] == 1): ?>
-                                        <form action="/karyawan/toggle/<?= $k['id_karyawan'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan karyawan ini?');">
+                                        <form action="<?= base_url('karyawan/toggle/' . ($k['id_karyawan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan karyawan ini?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-danger btn-sm">
                                                 <i class="fas fa-power-off"></i> Nonaktif
                                             </button>
                                         </form>
                                     <?php else: ?>
-                                        <form action="/karyawan/toggle/<?= $k['id_karyawan'] ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan karyawan ini?');">
+                                        <form action="<?= base_url('karyawan/toggle/' . ($k['id_karyawan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan karyawan ini?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="fas fa-power-off"></i> Aktifkan

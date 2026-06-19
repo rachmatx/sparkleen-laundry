@@ -8,6 +8,8 @@ class AlterTempKeranjangAddFk extends Migration
 {
     public function up()
     {
+        if (!$this->db->tableExists('tb_temp_keranjang')) return;
+
         // Clean up any orphaned data first before adding constraints
         $this->db->query("DELETE FROM tb_temp_keranjang WHERE id_pelanggan NOT IN (SELECT id_pelanggan FROM tb_pelanggan)");
         $this->db->query("DELETE FROM tb_temp_keranjang WHERE id_kasir NOT IN (SELECT id_karyawan FROM tb_karyawan)");
@@ -22,6 +24,8 @@ class AlterTempKeranjangAddFk extends Migration
 
     public function down()
     {
+        if (!$this->db->tableExists('tb_temp_keranjang')) return;
+
         $this->db->query("ALTER TABLE tb_temp_keranjang
             DROP FOREIGN KEY fk_cart_pelanggan,
             DROP FOREIGN KEY fk_cart_kasir,

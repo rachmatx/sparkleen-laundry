@@ -2,23 +2,26 @@
 
 namespace Tests\Feature;
 
-use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * Security tests for login rate limiting (brute-force protection).
  *
  * @internal
  */
-final class RateLimitTest extends FeatureTestCase
+final class RateLimitTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     protected function setUp(): void
     {
@@ -112,14 +115,14 @@ final class RateLimitTest extends FeatureTestCase
 
         // Trigger blocking
         for ($i = 0; $i < $maxAttempts; $i++) {
-            $this->call('post', 'doLogin', [
+            $this->call('POST', 'doLogin', [
                 'username' => 'kasir_test',
                 'password' => 'wrong_pass_' . $i,
             ]);
         }
 
         // One more attempt while blocked
-        $this->call('post', 'doLogin', [
+        $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'still_wrong',
         ]);

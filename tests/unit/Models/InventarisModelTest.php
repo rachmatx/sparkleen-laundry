@@ -15,9 +15,10 @@ final class InventarisModelTest extends CIUnitTestCase
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
     protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     public function testKurangiStokReducesCorrectly(): void
     {

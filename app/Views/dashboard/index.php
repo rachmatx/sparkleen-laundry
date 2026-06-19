@@ -7,7 +7,7 @@
                 <p>Pendapatan Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-money-bill-wave"></i></div>
-            <a href="/laporan/rentang" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/laporan/rentang') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Laporan <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -19,7 +19,7 @@
                 <p>Transaksi Hari Ini</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-receipt"></i></div>
-            <a href="/transaksi/daftar" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -31,7 +31,7 @@
                 <p>Sedang Diproses</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-spinner"></i></div>
-            <a href="/transaksi/daftar" class="small-box-footer link-dark link-underline-opacity-0">
+            <a href="<?= base_url('/transaksi/daftar') ?>" class="small-box-footer link-dark link-underline-opacity-0">
                 Lihat Daftar <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -43,7 +43,7 @@
                 <p>Total Pelanggan</p>
             </div>
             <div class="small-box-icon"><i class="fas fa-users"></i></div>
-            <a href="/pelanggan" class="small-box-footer link-light link-underline-opacity-0">
+            <a href="<?= base_url('/pelanggan') ?>" class="small-box-footer link-light link-underline-opacity-0">
                 Kelola Data <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -59,7 +59,7 @@
             <div class="flex-grow-1">
                 <strong>Peringatan Stok!</strong>
                 <?= count($stokKritis) ?> barang inventaris memiliki stok di bawah batas minimal.
-                <a href="/inventaris/warning" class="ms-2 alert-link">Lihat Detail</a>
+                <a href="<?= base_url('/inventaris/warning') ?>" class="ms-2 alert-link">Lihat Detail</a>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -167,7 +167,7 @@
                     Transaksi Terbaru
                 </h3>
                 <div class="card-tools">
-                    <a href="/transaksi/daftar" class="btn btn-sm btn-outline-secondary">
+                    <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-sm btn-outline-secondary">
                         Lihat Semua <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -195,7 +195,7 @@
                             <?php foreach($transaksiTerbaru as $t): ?>
                             <tr>
                                 <td>
-                                    <a href="/transaksi/detail/<?= $t['id_transaksi'] ?? '#' ?>"
+                                    <a href="<?= base_url('/transaksi/detail/<?= $t['id_transaksi'] ?? '#' ?>') ?>"
                                        class="text-decoration-none">
                                         <code><?= $t['no_nota'] ?></code>
                                     </a>
@@ -243,17 +243,17 @@
             <div class="card-body py-2">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <span class="text-muted small me-2">Aksi Cepat:</span>
-                    <a href="/transaksi" class="btn btn-primary btn-sm">
+                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus me-1"></i> Transaksi Baru
                     </a>
-                    <a href="/transaksi/daftar" class="btn btn-info btn-sm text-white">
+                    <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-info btn-sm text-white">
                         <i class="fas fa-list me-1"></i> Daftar Transaksi
                     </a>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="/laporan/rentang" class="btn btn-success btn-sm">
+                    <a href="<?= base_url('/laporan/rentang') ?>" class="btn btn-success btn-sm">
                         <i class="fas fa-chart-bar me-1"></i> Laporan Hari Ini
                     </a>
-                    <a href="/inventaris" class="btn btn-warning btn-sm text-dark">
+                    <a href="<?= base_url('/inventaris') ?>" class="btn btn-warning btn-sm text-dark">
                         <i class="fas fa-boxes me-1"></i> Inventaris
                     </a>
                     <?php endif; ?>

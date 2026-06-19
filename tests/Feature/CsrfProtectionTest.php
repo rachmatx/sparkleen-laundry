@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * Security tests for CSRF protection.
@@ -11,15 +12,17 @@ use CodeIgniter\Test\DatabaseTestTrait;
  *
  * @internal
  */
-final class CsrfProtectionTest extends FeatureTestCase
+final class CsrfProtectionTest extends CIUnitTestCase
 {
     use DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $seed = '\Tests\Support\Database\Seeds\TestDataSeeder';
-    protected $seedOnce = false;
-    protected $migrateOnce = false;
-    protected $migrate = false;
+    protected $seedOnce = true;
+    protected $migrateOnce = true;
+    protected $migrate = true;
     protected $DBGroup = 'tests';
+    protected $namespace = null;
 
     protected function setUp(): void
     {
@@ -29,7 +32,7 @@ final class CsrfProtectionTest extends FeatureTestCase
 
     public function testPostWithoutCsrfIsRejected(): void
     {
-        $this->session([
+        $this->withSession([
             'isLoggedIn'    => true,
             'id_karyawan'   => 1,
             'nama_karyawan' => 'Kasir Test',
@@ -53,7 +56,7 @@ final class CsrfProtectionTest extends FeatureTestCase
 
     public function testGetRequestsNotAffectedByCsrf(): void
     {
-        $this->session([
+        $this->withSession([
             'isLoggedIn'    => true,
             'id_karyawan'   => 1,
             'nama_karyawan' => 'Kasir Test',

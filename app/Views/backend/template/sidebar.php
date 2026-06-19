@@ -4,7 +4,7 @@
 <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
     <!-- Brand Logo -->
     <div class="sidebar-brand">
-        <a href="/dashboard" class="brand-link">
+        <a href="<?= base_url('/dashboard') ?>" class="brand-link">
             <span class="brand-text font-weight-light">Sparkleen</span>
         </a>
     </div>
@@ -28,21 +28,21 @@
                 <!-- ===================================================== -->
                 <li class="nav-header pt-3">MAIN NAVIGATION</li>
                 <li class="nav-item">
-                    <a href="/dashboard" class="nav-link <?= ($activeMenu ?? '') == 'dashboard' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/dashboard') ?>" class="nav-link <?= ($activeMenu ?? '') == 'dashboard' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
                 <?php if (in_array(session()->get('level'), ['admin', 'kasir'])): ?>
                 <li class="nav-item">
-                    <a href="/transaksi" class="nav-link <?= ($activeMenu ?? '') == 'transaksi' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/transaksi') ?>" class="nav-link <?= ($activeMenu ?? '') == 'transaksi' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-plus-circle text-primary"></i>
                         <p>Transaksi Baru</p>
                     </a>
                 </li>
                 <?php endif; ?>
                 <li class="nav-item">
-                    <a href="/transaksi/daftar" class="nav-link <?= ($activeMenu ?? '') == 'daftar_transaksi' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/transaksi/daftar') ?>" class="nav-link <?= ($activeMenu ?? '') == 'daftar_transaksi' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-list-alt"></i>
                         <p>Daftar Transaksi</p>
                     </a>
@@ -53,20 +53,20 @@
                 <!-- ===================================================== -->
                 <li class="nav-header pt-3">MASTER DATA</li>
                 <li class="nav-item">
-                    <a href="/pelanggan" class="nav-link <?= ($activeMenu ?? '') == 'pelanggan' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/pelanggan') ?>" class="nav-link <?= ($activeMenu ?? '') == 'pelanggan' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-users"></i>
                         <p>Pelanggan</p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/layanan" class="nav-link <?= ($activeMenu ?? '') == 'layanan' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/layanan') ?>" class="nav-link <?= ($activeMenu ?? '') == 'layanan' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-soap"></i>
                         <p>Layanan</p>
                     </a>
                 </li>
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])): ?>
                 <li class="nav-item">
-                    <a href="/inventaris" class="nav-link <?= ($activeMenu ?? '') == 'inventaris' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/inventaris') ?>" class="nav-link <?= ($activeMenu ?? '') == 'inventaris' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-boxes"></i>
                         <p>Inventaris</p>
                     </a>
@@ -74,7 +74,7 @@
                 <?php endif; ?>
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                 <li class="nav-item">
-                    <a href="/karyawan" class="nav-link <?= ($activeMenu ?? '') == 'karyawan' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/karyawan') ?>" class="nav-link <?= ($activeMenu ?? '') == 'karyawan' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-id-badge"></i>
                         <p>Karyawan</p>
                     </a>
@@ -87,7 +87,7 @@
                 <li class="nav-header pt-3">REPORTING & LOGS</li>
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                 <li class="nav-item">
-                    <a href="/laporan" class="nav-link <?= in_array($activeMenu ?? '', ['laporan', 'laporan_bulanan', 'laporan_harian']) ? 'active' : '' ?>">
+                    <a href="<?= base_url('/laporan') ?>" class="nav-link <?= in_array($activeMenu ?? '', ['laporan', 'laporan_bulanan', 'laporan_harian']) ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-chart-line text-success"></i>
                         <p>Laporan Keuangan</p>
                     </a>
@@ -95,7 +95,7 @@
                 <?php endif; ?>
                 <?php if (session()->get('level') === 'pemilik'): ?>
                 <li class="nav-item">
-                    <a href="/log-aktivitas" class="nav-link <?= ($activeMenu ?? '') == 'log_aktivitas' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/log-aktivitas') ?>" class="nav-link <?= ($activeMenu ?? '') == 'log_aktivitas' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-history text-warning"></i>
                         <p>Log Aktivitas</p>
                     </a>
@@ -103,7 +103,7 @@
                 <?php endif; ?>
                 <?php if (in_array(session()->get('level'), ['admin', 'pemilik', 'kasir'])): ?>
                 <li class="nav-item">
-                    <a href="/log-whatsapp" class="nav-link <?= ($activeMenu ?? '') == 'log_whatsapp' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/log-whatsapp') ?>" class="nav-link <?= ($activeMenu ?? '') == 'log_whatsapp' ? 'active' : '' ?>">
                         <i class="nav-icon fab fa-whatsapp text-success"></i>
                         <p>Log WhatsApp</p>
                     </a>
@@ -116,7 +116,7 @@
                 <?php if (session()->get('level') === 'pemilik'): ?>
                 <li class="nav-header pt-3">SISTEM</li>
                 <li class="nav-item">
-                    <a href="/backup" class="nav-link <?= ($activeMenu ?? '') == 'backup' ? 'active' : '' ?>">
+                    <a href="<?= base_url('/backup') ?>" class="nav-link <?= ($activeMenu ?? '') == 'backup' ? 'active' : '' ?>">
                         <i class="nav-icon fas fa-database text-info"></i>
                         <p>Backup Database</p>
                     </a>

@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h3 class="card-title">Edit Layanan</h3>
             </div>
-            <form action="/layanan/update/<?= $layanan['id_layanan'] ?>" method="post">
+            <form action="<?= base_url('layanan/update/' . ($layanan['id_layanan'])) ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
                     <div class="mb-3">
@@ -30,7 +30,7 @@
                     </div>
                 </div>
                 <div class="card-footer d-flex align-items-center">
-                    <a href="/layanan" class="btn btn-secondary">
+                    <a href="<?= base_url('/layanan') ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                     <button type="submit" class="btn btn-warning text-dark ms-auto">

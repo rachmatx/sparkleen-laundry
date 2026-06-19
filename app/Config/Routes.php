@@ -125,6 +125,8 @@ $routes->group('laporan', ['filter' => 'role:admin,pemilik'], static function ($
     $routes->get('bulanan', 'Laporan::bulanan');
     $routes->get('export_bulanan_pdf', 'Laporan::export_bulanan_pdf');
     $routes->get('export_bulanan_excel', 'Laporan::export_bulanan_excel');
+    $routes->get('export_harian_pdf', 'Laporan::export_harian_pdf');
+    $routes->get('export_harian_excel', 'Laporan::export_harian_excel');
     $routes->get('rentang', 'Laporan::rentang');
     $routes->get('export_rentang_pdf', 'Laporan::export_rentang_pdf');
     $routes->get('export_rentang_excel', 'Laporan::export_rentang_excel');

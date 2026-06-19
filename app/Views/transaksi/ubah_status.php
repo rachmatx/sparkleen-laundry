@@ -7,7 +7,7 @@
             <div class="card-header">
                 <h3 class="card-title">Update Status Transaksi</h3>
             </div>
-            <form action="/transaksi/prosesUbahStatus" method="post">
+            <form action="<?= base_url('transaksi/prosesUbahStatus') ?>" method="post">
                 <?= csrf_field() ?>
                 <div class="card-body">
                     <?php if (session()->getFlashdata('error')): ?>
@@ -68,7 +68,7 @@
 
                 </div>
                 <div class="card-footer d-flex align-items-center">
-                    <a href="/transaksi/detail/<?= $transaksi['id_transaksi'] ?>" class="btn btn-secondary">
+                    <a href="<?= base_url('/transaksi/detail/' . ($transaksi['id_transaksi'])) ?>" class="btn btn-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Batal
                     </a>
                     <button type="submit" class="btn btn-warning text-dark ms-auto">
