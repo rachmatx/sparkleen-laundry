@@ -34,6 +34,26 @@ $routes->group('pelanggan', ['filter' => 'role:admin,pemilik'], static function 
     $routes->post('toggle/(:num)', 'Pelanggan::toggleStatus/$1');
 });
 
+$routes->get('/debug-db', function() {
+    $seeder = \Config\Database::seeder();
+    try {
+        $seeder->call('MasterSeeder');
+        $seeder->call('AdminSeeder');
+        $seedMsg = "Seeders executed.";
+    } catch (\Exception $e) {
+        $seedMsg = "Seeder error: " . $e->getMessage();
+    }
+    
+    $db = \Config\Database::connect();
+    $tables = $db->listTables();
+    $migrations = [];
+    if ($db->tableExists('migrations')) {
+        $migrations = $db->table('migrations')->get()->getResultArray();
+    }
+    
+    return "<pre>Seed Status: $seedMsg\n\nTables:\n" . print_r($tables, true) . "\n\nMigrations:\n" . print_r($migrations, true) . "</pre>";
+});
+
 $routes->get('/seed', function() {
     $seeder = \Config\Database::seeder();
     try {

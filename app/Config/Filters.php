@@ -83,6 +83,7 @@ class Filters extends BaseFilters
                     'lacak',
                     'lacak/*',
                     'debug',
+                    'debug-db',
                 ],
             ],
         ],
