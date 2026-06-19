@@ -1,14 +1,15 @@
 # Sparkleen Laundry Management System — Architecture Description
 
 > **Target audience:** AI Diagram Generators (system architecture, data flow, ERD)
-> **Framework:** CodeIgniter 4 (PHP MVC) · **Database:** MySQL · **Runtime:** Apache/XAMPP
+> **Framework:** CodeIgniter 4 (PHP MVC) · **Database:** MySQL 
+> **Runtime:** Docker (Nginx + PHP-FPM) / Apache / Vercel Serverless
 > **PHP:** 8.2+ · **Package manager:** Composer
 
 ---
 
 ## 1. HIGH-LEVEL SYSTEM OVERVIEW
 
-Sparkleen is a **web-based laundry management system** running on CodeIgniter 4 (PHP MVC). It is a single-server, monolithic application built on the classic server-rendered template pattern (PHP + AdminLTE 4). The system is **hybrid I/O**: most browser traffic is synchronous HTTP form submissions and full page loads, but a small but growing set of endpoints return **JSON via AJAX** (live counters, live search, quick view, public order tracking, WhatsApp manual resend). An optional outbound HTTP call is made to a third-party WhatsApp API provider (Fonnte or Wablas) for customer notifications.
+Sparkleen is a **web-based laundry management system** running on CodeIgniter 4 (PHP MVC). It is a monolithic application built on the classic server-rendered template pattern (PHP + AdminLTE 4), fully containerized via Docker and deployable to Cloud PaaS (Vercel, Railway, VPS). The system is **hybrid I/O**: most browser traffic is synchronous HTTP form submissions and full page loads, but a small but growing set of endpoints return **JSON via AJAX** (live counters, live search, quick view, public order tracking, WhatsApp manual resend). An optional outbound HTTP call is made to a third-party WhatsApp API provider (Fonnte or Wablas) for customer notifications.
 
 **Three user roles exist, each with a scoped dashboard and access level, plus one anonymous public surface:**
 
@@ -27,7 +28,8 @@ The application is structured in three layers: **Controller → Service / Librar
 
 | Component      | File                         | Responsibility                                                                 |
 | -------------- | ---------------------------- | ------------------------------------------------------------------------------ |
-| Apache / XAMPP | `public/.htaccess`           | Rewrites all HTTP requests to `public/index.php`                               |
+| Docker / Nginx | `Dockerfile`, `docker-compose.yml`, `nginx.conf` | Containerizes the app, handles PHP-FPM routing and static files |
+| Apache / XAMPP | `public/.htaccess`           | Rewrites all HTTP requests to `public/index.php` (fallback for local dev)      |
 | Bootstrap      | `public/index.php`           | Loads CodeIgniter core; dispatches to Router                                   |
 | Router         | `app/Config/Routes.php`      | Maps URI patterns to Controller::method pairs; declares route-level filters   |
 | AuthFilter     | `app/Filters/AuthFilter.php` | Global before-filter: redirects unauthenticated requests to `/login`           |
