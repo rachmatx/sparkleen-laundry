@@ -210,7 +210,8 @@ class App extends BaseConfig
         
         // If behind a proxy (like Railway)
         if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
-            $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+            $protos = explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO']);
+            $scheme = trim($protos[0]);
         }
         
         // Only override if we are actually accessed via a web request
