@@ -24,41 +24,51 @@ A premium laundry management system built on top of **CodeIgniter 4** framework.
 
 ## 📥 Panduan Instalasi & Setup
 
+Proyek ini mendukung dua metode instalasi: **Lokal (Manual)** dan **Docker Container**.
+
+### Metode 1: Instalasi dengan Docker (Direkomendasikan)
+Aplikasi ini sudah dipersiapkan penuh untuk dijalankan di dalam container Docker beserta *database* bawaan.
+1. **Clone Repositori**: `git clone <url-repo-anda> && cd laundry_app`
+2. **Siapkan Konfigurasi**: `cp .env.example .env`
+3. **Jalankan Docker Compose**:
+   ```bash
+   docker compose up -d --build
+   ```
+4. **Migrasi Database**:
+   ```bash
+   docker compose exec app php spark migrate
+   ```
+   *(Aplikasi otomatis dapat diakses di `http://localhost:8080`)*
+
+### Metode 2: Instalasi Lokal (Manual)
 1. **Clone Repositori & Salin Konfigurasi**:
-   Salin file template `.env.example` menjadi `.env` di direktori utama:
    ```bash
    cp .env.example .env
    ```
-
-2. **Konfigurasi Database & Base URL**:
-   Buka file `.env` yang baru dibuat dan sesuaikan konfigurasi database Anda:
-   ```env
-   CI_ENVIRONMENT = development
-   app.baseURL = 'http://localhost:8080/'
-
-   database.default.hostname = localhost
-   database.default.database = nama_database_laundry
-   database.default.username = root
-   database.default.password = 
-   ```
-
+2. **Konfigurasi Database & Base URL**: Sesuaikan `.env` Anda (hostname, database, username, password).
 3. **Install Dependensi Composer**:
    ```bash
    composer install
    ```
-
 4. **Jalankan Migrasi Database**:
    ```bash
-   php spark db:create nama_database_laundry (jika belum ada database)
+   php spark db:create nama_database_laundry
    php spark migrate
-   php spark db:seed (jika ada seeder)
+   php spark db:seed (opsional, jika ada seeder)
    ```
-
 5. **Jalankan Server Lokal**:
    ```bash
    php spark serve
    ```
-   Aplikasi dapat diakses di `http://localhost:8080` (atau sesuaikan port default Anda).
+
+---
+
+## ☁️ Panduan Deployment (Vercel, Railway, VPS)
+
+Aplikasi ini sudah dioptimalkan untuk _deployment_ di berbagai platform Cloud dan VPS menggunakan arsitektur Docker. Untuk instruksi lebih lengkap, silakan merujuk ke dokumen berikut:
+* **Vercel**: Hubungkan repository GitHub ini langsung ke Vercel. Jangan lupa mengatur semua konfigurasi database dan kredensial API pada menu *Environment Variables* di _dashboard_ Vercel.
+* **Railway (CI/CD)**: Baca panduan di file [`RAILWAY_DEPLOY.md`](RAILWAY_DEPLOY.md).
+* **VPS (Docker & Nginx SSL)**: Baca panduan lengkap di file [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ---
 
