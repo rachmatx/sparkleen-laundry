@@ -1,0 +1,62 @@
+# Version control
+.git
+.gitignore
+
+# Environment files (Railway uses Dashboard variables)
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode
+.idea
+.qoder
+.gemini
+
+# Documentation (not needed in container)
+*.md
+*.docx
+*.txt
+*.png
+
+# Diagrams & presentations
+diagram v2/
+diagrams/
+diagrams rev/
+diagrams-viewer.html
+sparkleen-presentation.html
+mermaid_renderer.html
+_test_mermaid.html
+
+# Database dumps
+*.sql
+*.sql.gz
+
+# Tests (not needed in production image)
+tests/
+phpunit.xml.dist
+run_tests.bat
+
+# Development files
+audit/
+prompts/
+builds
+note.txt
+
+# Node
+node_modules
+npm-debug.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs (will be generated at runtime)
+*.log
+writable/logs/*
+writable/cache/*
+writable/debugbar/*
+writable/session/*
+
+# Python scripts
+*.py

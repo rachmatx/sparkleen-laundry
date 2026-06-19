@@ -1,62 +1,64 @@
-# Multi-stage build for CodeIgniter 4 application
-FROM php:8.2-fpm as builder
+# Dockerfile for CodeIgniter 4 — Railway-ready (single-container Apache)
+FROM php:8.2-apache
 
-# Install system dependencies
+# Install system dependencies + PHP extensions needed by CI4, dompdf, phpspreadsheet, qr-code
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
     libicu-dev \
+    libzip-dev \
+    zlib1g-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     intl \
-    mbstring \
-    json \
     pdo_mysql \
-    curl \
+    zip \
+    gd \
     && rm -rf /var/lib/apt/lists/*
+
+# Enable Apache mod_rewrite for CodeIgniter clean URLs
+RUN a2enmod rewrite
+
+# Configure Apache: listen on $PORT (Railway injects PORT env var)
+RUN sed -i 's/Listen 80/Listen ${PORT}/g' /etc/apache2/ports.conf \
+    && sed -i 's/:80>/:${PORT}>/g' /etc/apache2/sites-available/000-default.conf
+
+# Set DocumentRoot to CodeIgniter's public/ directory
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -i "s|/var/www/html|${APACHE_DOCUMENT_ROOT}|g" /etc/apache2/sites-available/000-default.conf \
+    && sed -i "s|/var/www/html|${APACHE_DOCUMENT_ROOT}|g" /etc/apache2/apache2.conf
+
+# Allow .htaccess overrides (required for CI4 routing)
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+
+# Configure PHP for production
+COPY php.ini /usr/local/etc/php/conf.d/app.ini
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+WORKDIR /var/www/html
 
-# Copy composer files and install dependencies
+# Copy composer files and install dependencies (layer caching)
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts
-
-# Final stage
-FROM php:8.2-fpm
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libicu-dev \
-    && docker-php-ext-install -j$(nproc) \
-    intl \
-    mbstring \
-    json \
-    pdo_mysql \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Configure PHP
-COPY php.ini /usr/local/etc/php/conf.d/app.ini
-
-WORKDIR /app
-
-# Copy vendor from builder
-COPY --from=builder /app/vendor /app/vendor
 
 # Copy application code
 COPY . .
 
-# Create writable directories for CodeIgniter
-RUN mkdir -p writable && chmod -R 777 writable
+# Create writable directories and set permissions
+RUN mkdir -p writable/cache writable/logs writable/session writable/uploads writable/debugbar \
+    && chmod -R 777 writable
 
-# Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+# Copy startup script
+COPY start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
 
-EXPOSE 9000
+# Default PORT for Railway
+ENV PORT=8080
 
-CMD ["php-fpm"]
+EXPOSE ${PORT}
+
+CMD ["/usr/local/bin/start.sh"]

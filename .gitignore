@@ -150,7 +150,6 @@ note.txt
 .docker/
 docker-volumes/
 /var/lib/
-.dockerignore
 docker-compose.override.yml
 
 #-------------------------
