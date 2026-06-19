@@ -67,6 +67,10 @@ echo "[INFO] Server will listen on port: $PORT"
             echo 'Seed check failed: ' . \$e->getMessage() . PHP_EOL;
         }
     " 2>&1 || echo "[WARNING] Seeder check failed"
+
+    # Seed Admin user (idempotent)
+    echo "[INFO] Ensuring default Admin user exists..."
+    php spark db:seed AdminSeeder 2>&1 || echo "[WARNING] AdminSeeder failed"
 ) &
 
 # Start Apache
