@@ -19,14 +19,11 @@ echo "[INFO] Server will listen on port: $PORT"
 
     while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         if php -r "
-            \$host = getenv('database.default.hostname') ?: 'localhost';
-            \$port = getenv('database.default.port') ?: '3306';
-            \$conn = @new mysqli(\$host, 
-                getenv('database.default.username') ?: 'root',
-                getenv('database.default.password') ?: '',
-                null,
-                (int)\$port
-            );
+            \$host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST') ?: getenv('database.default.hostname') ?: 'localhost';
+            \$port = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: getenv('database.default.port') ?: '3306';
+            \$user = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: getenv('database.default.username') ?: 'root';
+            \$pass = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: getenv('database.default.password') ?: '';
+            \$conn = @new mysqli(\$host, \$user, \$pass, null, (int)\$port);
             if (\$conn->connect_error) { exit(1); }
             \$conn->close();
             exit(0);

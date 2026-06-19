@@ -201,12 +201,13 @@ class Database extends Config
         }
 
         // Auto-detect Railway MySQL environment variables
-        if (getenv('MYSQL_HOST')) {
-            $this->default['hostname'] = getenv('MYSQL_HOST');
-            $this->default['database'] = getenv('MYSQL_DATABASE') ?: 'railway';
-            $this->default['username'] = getenv('MYSQL_USER') ?: 'root';
-            $this->default['password'] = getenv('MYSQL_PASSWORD') ?: '';
-            $this->default['port']     = getenv('MYSQL_PORT') ?: 3306;
+        $host = getenv('MYSQLHOST') ?: getenv('MYSQL_HOST');
+        if ($host) {
+            $this->default['hostname'] = $host;
+            $this->default['database'] = getenv('MYSQLDATABASE') ?: getenv('MYSQL_DATABASE') ?: 'railway';
+            $this->default['username'] = getenv('MYSQLUSER') ?: getenv('MYSQL_USER') ?: 'root';
+            $this->default['password'] = getenv('MYSQLPASSWORD') ?: getenv('MYSQL_PASSWORD') ?: '';
+            $this->default['port']     = getenv('MYSQLPORT') ?: getenv('MYSQL_PORT') ?: 3306;
         }
     }
 }
