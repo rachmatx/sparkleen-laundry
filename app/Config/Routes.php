@@ -34,6 +34,17 @@ $routes->group('pelanggan', ['filter' => 'role:admin,pemilik'], static function 
     $routes->post('toggle/(:num)', 'Pelanggan::toggleStatus/$1');
 });
 
+$routes->get('/seed', function() {
+    $seeder = \Config\Database::seeder();
+    try {
+        $seeder->call('MasterSeeder');
+        $seeder->call('AdminSeeder');
+        return "Database berhasil di-seed! Silakan coba login.";
+    } catch (\Exception $e) {
+        return "Gagal seed database: " . $e->getMessage();
+    }
+});
+
 // Profil / Ganti Password
 $routes->get('/profile', 'Profile::index');
 $routes->post('/profile/update', 'Profile::update');
