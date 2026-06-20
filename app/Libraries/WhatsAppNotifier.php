@@ -213,7 +213,7 @@ class WhatsAppNotifier
             . "🔒 *PIN PENGAMBILAN: {$pin}*\n"
             . "_Harap tunjukkan PIN ini kepada Kasir saat mengambil cucian. Jangan berikan kepada siapapun!_\n\n"
             . "Anda dapat memeriksa status cucian Anda secara real-time melalui tautan berikut:\n"
-            . base_url('lacak') . "?kode={$nota}\n\n"
+            . base_url('lacak') . "?nota={$nota}\n\n"
             . "Anda akan menerima notifikasi kembali jika cucian Anda sudah siap diambil.\n\n"
             . '_Pesan otomatis dari sistem._';
     }

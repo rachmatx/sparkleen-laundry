@@ -188,9 +188,9 @@
     </div>
 </div>
 <script>
-    // URL Lacak Publik (contoh: https://domain.com/lacak?kode=LAU...)
-    // Jika belum ada fitur /lacak, ini bisa diarahkan ke manapun.
-    const lacakUrl = "<?= base_url('/lacak?kode=' . $transaksi['no_nota']) ?>";
+    // URL Lacak Publik (contoh: https://domain.com/lacak?nota=LAU...)
+    // QR Code ini akan mengarahkan pelanggan ke halaman lacak order publik
+    const lacakUrl = "<?= base_url('/lacak?nota=' . $transaksi['no_nota']) ?>";
     new QRCode(document.getElementById("qrcode"), {
         text: lacakUrl,
         width: 80,
