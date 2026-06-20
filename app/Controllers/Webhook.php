@@ -14,7 +14,7 @@ class Webhook extends ResourceController
     {
         $payload = $this->request->getJSON(true);
         $signature = $this->request->getHeaderLine('X-Signature');
-        $secret = getenv('PAYMENT_API_KEY');
+        $secret = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
 
         // Jika request bukan JSON atau signature kosong
         if (!$payload || !$signature) {
