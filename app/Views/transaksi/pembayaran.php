@@ -122,18 +122,20 @@
                         </div>
                     </div>
                     <?php if(!empty($transaksi['payment_ref'])): ?>
-                        <div class="alert alert-info mt-3">
-                            <h6 class="fw-bold"><i class="fas fa-info-circle me-1"></i> Menunggu Pembayaran (Via API)</h6>
-                            <p class="mb-1 small">ID Transaksi API: <strong><?= $transaksi['payment_ref'] ?></strong></p>
-                            <p class="mt-2 mb-2 small text-muted">Sistem akan otomatis mengupdate status saat pelanggan membayar.</p>
-                            
-                            <form action="<?= base_url('transaksi/batalAPI/' . $transaksi['id_transaksi']) ?>" method="POST" class="mt-3">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Apakah Anda yakin ingin membatalkan permintaan pembayaran ini? Pelanggan tidak akan bisa membayarnya via API lagi.')">
-                                    <i class="fas fa-times-circle me-1"></i> Batalkan Permintaan
-                                </button>
-                            </form>
+                        <!-- Ganti tombol Proses dengan status loading dan tombol Batal -->
+                        <div class="mt-4 text-center">
+                            <div class="spinner-border text-primary spinner-border-sm mb-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="small text-muted mb-3 fw-bold">Sistem sedang menunggu pembayaran pelanggan...</p>
                         </div>
+                        
+                        <form action="<?= base_url('transaksi/batalAPI/' . $transaksi['id_transaksi']) ?>" method="POST" class="mt-2">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Apakah Anda yakin ingin membatalkan permintaan pembayaran ini? Pelanggan tidak akan bisa membayarnya via API lagi.')">
+                                <i class="fas fa-times-circle me-1"></i> Batalkan & Ubah Metode
+                            </button>
+                        </form>
                     <?php else: ?>
                         <button type="submit" class="btn btn-success w-100 mt-2">
                             <i class="fas fa-money-bill-wave me-1"></i> Proses Pembayaran
