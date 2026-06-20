@@ -172,11 +172,10 @@ class PelangganBayar extends BaseController
         }
 
         // Tembak API Node.js confirm internal
-        $apiUrl = getenv('PAYMENT_API_URL'); 
+        $apiUrl = env('PAYMENT_API_URL') ?: getenv('PAYMENT_API_URL'); 
         // Ubah dari /api/transactions ke /api/transactions/:id/confirm
-        // PAYMENT_API_URL = http://localhost:3000/api/transactions
         $confirmUrl = $apiUrl . '/' . $trx_id . '/confirm';
-        $apiKey = getenv('PAYMENT_API_KEY');
+        $apiKey = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
 
         try {
             $client = \Config\Services::curlrequest();
