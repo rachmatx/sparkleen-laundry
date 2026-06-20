@@ -68,9 +68,9 @@
                     </div>
                     <div class="mb-4">
                         <label class="form-label fw-semibold">Metode Pembayaran <span class="text-danger">*</span></label>
-                        <select class="form-select" name="id_metode_pembayaran" id="metode_bayar" required>
+                        <select class="form-select" name="id_metode_pembayaran" id="metode_bayar" <?= !empty($transaksi['payment_ref']) ? 'disabled' : 'required' ?>>
                             <?php foreach($metode_list as $m): ?>
-                                <option value="<?= $m['id'] ?>" data-nama="<?= strtolower($m['nama_metode']) ?>">
+                                <option value="<?= $m['id'] ?>" data-nama="<?= strtolower($m['nama_metode']) ?>" <?= ($transaksi['id_metode_pembayaran'] == $m['id']) ? 'selected' : '' ?>>
                                     <?= ucfirst($m['nama_metode']) ?>
                                 </option>
                             <?php endforeach; ?>
@@ -118,7 +118,7 @@
                     <?php if(!empty($transaksi['payment_ref'])): 
                         $pd = json_decode($transaksi['payment_detail'], true);
                     ?>
-                        <div class="alert alert-info mt-3">
+                        <div class="alert alert-info mt-3 d-none">
                             <h6 class="fw-bold"><i class="fas fa-info-circle me-1"></i> Menunggu Pembayaran (Via API)</h6>
                             <p class="mb-1 small">ID Transaksi API: <strong><?= $transaksi['payment_ref'] ?></strong></p>
                             <?php if($transaksi['id_metode_pembayaran'] == 2 && isset($pd['qris_data'])): ?>
