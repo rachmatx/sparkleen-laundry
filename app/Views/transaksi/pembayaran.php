@@ -58,6 +58,12 @@
                     <input type="hidden" name="id_transaksi" value="<?= $transaksi['id_transaksi'] ?>">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Nominal Bayar <span class="text-danger">*</span></label>
+                        <?php 
+                            $pd = null;
+                            if(!empty($transaksi['payment_detail'])) {
+                                $pd = json_decode($transaksi['payment_detail'], true);
+                            }
+                        ?>
                         <div class="input-group">
                             <span class="input-group-text">Rp</span>
                             <input type="text" inputmode="numeric" id="input_nominal_display" class="form-control"
@@ -102,7 +108,7 @@
                                 <div class="col-8 fw-bold">Bank BCA</div>
                                 <div class="col-4 text-muted">No. Rekening</div>
                                 <div class="col-8 fw-bold text-primary fs-6 d-flex align-items-center">
-                                    <span id="bank-acc-num">12345678</span>
+                                    <span id="bank-acc-num"><?= isset($pd['account_number']) ? $pd['account_number'] : '1234567890' ?></span>
                                     <button type="button" class="btn btn-xs btn-outline-secondary ms-2 py-0 px-1" onclick="copyBankAccount()" style="font-size: 0.7rem;">
                                         <i class="far fa-copy me-1"></i> Salin
                                     </button>
@@ -115,9 +121,7 @@
                             </div>
                         </div>
                     </div>
-                    <?php if(!empty($transaksi['payment_ref'])): 
-                        $pd = json_decode($transaksi['payment_detail'], true);
-                    ?>
+                    <?php if(!empty($transaksi['payment_ref'])): ?>
                         <div class="alert alert-info mt-3 d-none">
                             <h6 class="fw-bold"><i class="fas fa-info-circle me-1"></i> Menunggu Pembayaran (Via API)</h6>
                             <p class="mb-1 small">ID Transaksi API: <strong><?= $transaksi['payment_ref'] ?></strong></p>

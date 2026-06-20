@@ -21,8 +21,7 @@
             </div>
             <div class="mb-4">
                 <label class="form-label small fw-semibold text-muted">Nomor Rekening Tujuan</label>
-                <input type="text" class="form-control form-control-lg border-0 bg-light" id="rekening" placeholder="Contoh: 137-00-998877-6" value="1234567890" required>
-                <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle"></i> Untuk simulasi, gunakan rekening 1234567890</small>
+                <input type="text" class="form-control form-control-lg border-0 bg-light" id="rekening" placeholder="Contoh: 137-00-998877-6" required>
             </div>
             <div class="mb-4">
                 <label class="form-label small fw-semibold text-muted">Nominal Transfer</label>
