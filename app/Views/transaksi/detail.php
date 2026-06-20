@@ -46,7 +46,7 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
 <!-- Action Buttons Row -->
 <div class="row mb-3">
     <div class="col-12">
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-grid gap-2 d-md-flex flex-wrap">
             <a href="<?= base_url('/transaksi/daftar') ?>" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-1"></i> Kembali
             </a>
@@ -68,7 +68,7 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
             </a>
             <?php endif; ?>
             <?php if (in_array($transaksi['status'], ['selesai', 'diambil'])): ?>
-            <form action="<?= base_url('transaksi/kirim-wa-api/' . ($transaksi['id_transaksi']) . '/' . ($transaksi['status'])) ?>" method="post" class="d-inline">
+            <form action="<?= base_url('transaksi/kirim-wa-api/' . ($transaksi['id_transaksi']) . '/' . ($transaksi['status'])) ?>" method="post" class="d-inline d-grid d-md-block">
                 <button type="submit" class="btn btn-outline-success" onclick="return confirm('Kirim (ulang) notifikasi WhatsApp via API ke pelanggan?')">
                     <i class="fab fa-whatsapp me-1"></i> Kirim Ulang WA (API)
                 </button>
@@ -87,54 +87,56 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
                 <h3 class="card-title">Informasi Transaksi</h3>
             </div>
             <div class="card-body p-0">
-                <table class="table table-borderless mb-0">
-                    <tbody>
-                        <tr>
-                            <td class="text-muted" width="45%">No Nota</td>
-                            <td><strong><?= $transaksi['no_nota'] ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Pelanggan</td>
-                            <td><?= esc($transaksi['nama_pelanggan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Kasir</td>
-                            <td><?= esc($transaksi['nama_karyawan']) ?></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Tgl Masuk</td>
-                            <td><?= date('d/m/Y H:i', strtotime($transaksi['tgl_masuk'])) ?></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Est. Selesai</td>
-                            <td><?= date('d/m/Y H:i', strtotime($transaksi['tgl_selesai_estimasi'])) ?></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Total Berat</td>
-                            <td><?= $transaksi['total_berat'] ?> kg</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Grand Total</td>
-                            <td><strong>Rp <?= number_format($transaksi['grand_total'], 0, ',', '.') ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Status</td>
-                            <td>
-                                <span class="badge <?= statusBadgeClass($transaksi['status']) ?>">
-                                    <?= ucfirst($transaksi['status']) ?>
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Pembayaran</td>
-                            <td>
-                                <span class="badge <?= bayarBadgeClass($transaksi['status_pembayaran']) ?>">
-                                    <?= strtoupper($transaksi['status_pembayaran']) ?>
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" width="45%">No Nota</td>
+                                <td><strong><?= $transaksi['no_nota'] ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Pelanggan</td>
+                                <td><?= esc($transaksi['nama_pelanggan']) ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Kasir</td>
+                                <td><?= esc($transaksi['nama_karyawan']) ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Tgl Masuk</td>
+                                <td><?= date('d/m/Y H:i', strtotime($transaksi['tgl_masuk'])) ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Est. Selesai</td>
+                                <td><?= date('d/m/Y H:i', strtotime($transaksi['tgl_selesai_estimasi'])) ?></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Total Berat</td>
+                                <td><?= $transaksi['total_berat'] ?> kg</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Grand Total</td>
+                                <td><strong>Rp <?= number_format($transaksi['grand_total'], 0, ',', '.') ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Status</td>
+                                <td>
+                                    <span class="badge <?= statusBadgeClass($transaksi['status']) ?>">
+                                        <?= ucfirst($transaksi['status']) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Pembayaran</td>
+                                <td>
+                                    <span class="badge <?= bayarBadgeClass($transaksi['status_pembayaran']) ?>">
+                                        <?= strtoupper($transaksi['status_pembayaran']) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card card-outline card-primary">
+        <div class="card card-outline card-primary shadow-sm border-0">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h3 class="card-title m-0">Daftar Transaksi</h3>
                 <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
@@ -11,7 +11,7 @@
                         <?php if(!empty($statusFilter)): ?>
                             <input type="hidden" name="status" value="<?= esc($statusFilter) ?>">
                         <?php endif; ?>
-                        <div class="input-group input-group-sm w-100" style="max-width: 260px;">
+                        <div class="input-group input-group-sm w-100 w-md-auto">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
                             </span>
@@ -29,7 +29,7 @@
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
                     <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 260px;">
+                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm text-nowrap w-100 w-md-auto text-center">
                         <i class="fas fa-plus"></i> Transaksi Baru
                     </a>
                     <?php endif; ?>
@@ -91,12 +91,12 @@
                                 <td class="text-center">
                                     <?php
                                         $statusClass = match($t['status']) {
-                                            'menunggu' => 'text-bg-warning',
-                                            'proses'   => 'text-bg-info',
-                                            'setrika'  => 'text-bg-secondary',
-                                            'selesai'  => 'text-bg-success',
-                                            'diambil'  => 'text-bg-primary',
-                                            default    => 'text-bg-dark',
+                                            'menunggu' => 'bg-warning-subtle text-warning-emphasis',
+                                            'proses'   => 'bg-info-subtle text-info-emphasis',
+                                            'setrika'  => 'bg-secondary-subtle text-secondary-emphasis',
+                                            'selesai'  => 'bg-success-subtle text-success-emphasis',
+                                            'diambil'  => 'bg-primary-subtle text-primary-emphasis',
+                                            default    => 'bg-dark-subtle text-dark-emphasis',
                                         };
                                     ?>
                                     <span class="badge <?= $statusClass ?>"><?= ucfirst($t['status']) ?></span>
@@ -104,9 +104,9 @@
                                 <td class="text-center">
                                     <?php
                                         $bayarClass = match($t['status_pembayaran']) {
-                                            'lunas' => 'text-bg-success',
-                                            'cicil' => 'text-bg-warning',
-                                            default => 'text-bg-danger',
+                                            'lunas' => 'bg-success-subtle text-success-emphasis',
+                                            'cicil' => 'bg-warning-subtle text-warning-emphasis',
+                                            default => 'bg-danger-subtle text-danger-emphasis',
                                         };
                                     ?>
                                     <span class="badge <?= $bayarClass ?>">
@@ -179,9 +179,9 @@
                     <p class="mt-2 text-muted">Memuat detail transaksi...</p>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <a href="#" id="btnFullDetail" class="btn btn-outline-primary">Lihat Halaman Penuh</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            <div class="modal-footer bg-light d-flex flex-column flex-md-row w-100 gap-2">
+                <a href="#" id="btnFullDetail" class="btn btn-outline-primary w-100 w-md-auto">Lihat Halaman Penuh</a>
+                <button type="button" class="btn btn-secondary w-100 w-md-auto" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -254,14 +254,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             const formatRp = (num) => 'Rp ' + parseInt(num).toLocaleString('id-ID');
                             
-                            let badgeStatus = 'bg-dark';
-                            if(t.status === 'menunggu') badgeStatus = 'bg-warning text-dark';
-                            if(t.status === 'proses') badgeStatus = 'bg-info text-dark';
-                            if(t.status === 'setrika') badgeStatus = 'bg-secondary';
-                            if(t.status === 'selesai') badgeStatus = 'bg-success';
-                            if(t.status === 'diambil') badgeStatus = 'bg-primary';
+                            let badgeStatus = 'bg-dark-subtle text-dark-emphasis';
+                            if(t.status === 'menunggu') badgeStatus = 'bg-warning-subtle text-warning-emphasis';
+                            if(t.status === 'proses') badgeStatus = 'bg-info-subtle text-info-emphasis';
+                            if(t.status === 'setrika') badgeStatus = 'bg-secondary-subtle text-secondary-emphasis';
+                            if(t.status === 'selesai') badgeStatus = 'bg-success-subtle text-success-emphasis';
+                            if(t.status === 'diambil') badgeStatus = 'bg-primary-subtle text-primary-emphasis';
 
-                            let badgeBayar = t.status_pembayaran === 'lunas' ? 'bg-success' : (t.status_pembayaran === 'cicil' ? 'bg-warning text-dark' : 'bg-danger');
+                            let badgeBayar = t.status_pembayaran === 'lunas' ? 'bg-success-subtle text-success-emphasis' : (t.status_pembayaran === 'cicil' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-danger-subtle text-danger-emphasis');
 
                             let itemsHtml = '';
                             data.detail.forEach(d => {
@@ -278,18 +278,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             let html = `
                                 <div class="row g-3 mb-4">
                                     <div class="col-md-6">
-                                        <table class="table table-sm table-borderless mb-0">
-                                            <tr><td width="120" class="text-muted">No. Nota</td><td><code class="fs-6">${t.no_nota}</code></td></tr>
-                                            <tr><td class="text-muted">Pelanggan</td><td class="fw-bold">${t.nama_pelanggan} <br><small class="text-muted fw-normal">${t.no_telp}</small></td></tr>
-                                            <tr><td class="text-muted">Kasir</td><td>${t.nama_karyawan}</td></tr>
-                                        </table>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr><td width="120" class="text-muted">No. Nota</td><td><code class="fs-6">${t.no_nota}</code></td></tr>
+                                                <tr><td class="text-muted">Pelanggan</td><td class="fw-bold">${t.nama_pelanggan} <br><small class="text-muted fw-normal">${t.no_telp}</small></td></tr>
+                                                <tr><td class="text-muted">Kasir</td><td>${t.nama_karyawan}</td></tr>
+                                            </table>
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <table class="table table-sm table-borderless mb-0">
-                                            <tr><td width="120" class="text-muted">Status Cucian</td><td><span class="badge ${badgeStatus} fs-6">${t.status.toUpperCase()}</span></td></tr>
-                                            <tr><td class="text-muted">Pembayaran</td><td><span class="badge ${badgeBayar} fs-6">${t.status_pembayaran.toUpperCase()}</span></td></tr>
-                                            <tr><td class="text-muted">Tgl Masuk</td><td>${t.tgl_masuk}</td></tr>
-                                        </table>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr><td width="120" class="text-muted">Status Cucian</td><td><span class="badge ${badgeStatus} fs-6">${t.status.toUpperCase()}</span></td></tr>
+                                                <tr><td class="text-muted">Pembayaran</td><td><span class="badge ${badgeBayar} fs-6">${t.status_pembayaran.toUpperCase()}</span></td></tr>
+                                                <tr><td class="text-muted">Tgl Masuk</td><td>${t.tgl_masuk}</td></tr>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                                 

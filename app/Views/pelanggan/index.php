@@ -1,16 +1,16 @@
 <div class="row">
     <div class="col-12">
-        <div class="card card-outline card-primary">
+        <div class="card card-outline card-primary shadow-sm border-0">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h3 class="card-title m-0">Daftar Pelanggan</h3>
                 <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
                     <form method="get" action="<?= base_url('pelanggan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
-                        <select name="status" class="form-select form-select-sm w-100" style="max-width: 150px;" onchange="document.getElementById('liveSearchInput').dataset.status = this.value; document.getElementById('liveSearchInput').dispatchEvent(new Event('input'));">
+                        <select name="status" class="form-select form-select-sm w-100 w-md-auto" onchange="document.getElementById('liveSearchInput').dataset.status = this.value; document.getElementById('liveSearchInput').dispatchEvent(new Event('input'));">
                             <option value="">Semua Status</option>
                             <option value="1" <?= (isset($status) && $status === '1') ? 'selected' : '' ?>>Aktif</option>
                             <option value="0" <?= (isset($status) && $status === '0') ? 'selected' : '' ?>>Nonaktif</option>
                         </select>
-                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
+                        <div class="input-group input-group-sm w-100 w-md-auto">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted" id="liveSearchIcon"></i>
                             </span>
@@ -28,7 +28,7 @@
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
                     <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                        <a href="<?= base_url('/pelanggan/create') ?>" class="btn btn-primary btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
+                        <a href="<?= base_url('/pelanggan/create') ?>" class="btn btn-primary btn-sm text-nowrap w-100 w-md-auto text-center">
                             <i class="fas fa-plus me-1"></i> Tambah
                         </a>
                     <?php endif; ?>
@@ -78,34 +78,36 @@
                                 <td><?= esc($p['alamat']) ?></td>
                                 <td class="text-center">
                                     <?php if ($p['is_aktif'] == 1): ?>
-                                        <span class="badge text-bg-success">Aktif</span>
+                                        <span class="badge bg-success-subtle text-success-emphasis">Aktif</span>
                                     <?php else: ?>
-                                        <span class="badge text-bg-secondary">Nonaktif</span>
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">Nonaktif</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
-                                    <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                                    <a href="<?= base_url('/pelanggan/edit/' . ($p['id_pelanggan'])) ?>" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit me-1"></i> Edit
-                                    </a>
-                                    <?php endif; ?>
-                                    <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                                        <?php if ($p['is_aktif'] == 1): ?>
-                                            <form action="<?= base_url('pelanggan/toggle/' . ($p['id_pelanggan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan pelanggan ini?');">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="fas fa-power-off me-1"></i> Nonaktif
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <form action="<?= base_url('pelanggan/toggle/' . ($p['id_pelanggan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan pelanggan ini?');">
-                                                <?= csrf_field() ?>
-                                                <button type="submit" class="btn btn-success btn-sm">
-                                                    <i class="fas fa-power-off me-1"></i> Aktifkan
-                                                </button>
-                                            </form>
+                                    <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                        <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
+                                        <a href="<?= base_url('/pelanggan/edit/' . ($p['id_pelanggan'])) ?>" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit me-1"></i> Edit
+                                        </a>
                                         <?php endif; ?>
-                                    <?php endif; ?>
+                                        <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
+                                            <?php if ($p['is_aktif'] == 1): ?>
+                                                <form action="<?= base_url('pelanggan/toggle/' . ($p['id_pelanggan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan pelanggan ini?');">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                                                        <i class="fas fa-power-off me-1"></i> Nonaktif
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <form action="<?= base_url('pelanggan/toggle/' . ($p['id_pelanggan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan pelanggan ini?');">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="btn btn-success btn-sm w-100">
+                                                        <i class="fas fa-power-off me-1"></i> Aktifkan
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
