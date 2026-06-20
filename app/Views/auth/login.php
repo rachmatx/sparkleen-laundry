@@ -15,16 +15,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" crossorigin="anonymous">
     
     <style>
+        html, body {
+            overflow-x: hidden;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
             position: relative;
-            overflow: hidden;
         }
 
         /* Dekorasi latar belakang (Glassmorphism circle) */

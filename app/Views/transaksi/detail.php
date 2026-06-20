@@ -68,8 +68,8 @@ $waHref         = $flashWaLink ?: ($waLink ?? null);
             </a>
             <?php endif; ?>
             <?php if (in_array($transaksi['status'], ['selesai', 'diambil'])): ?>
-            <form action="<?= base_url('transaksi/kirim-wa-api/' . ($transaksi['id_transaksi']) . '/' . ($transaksi['status'])) ?>" method="post" class="d-inline d-grid d-md-block">
-                <button type="submit" class="btn btn-outline-success" onclick="return confirm('Kirim (ulang) notifikasi WhatsApp via API ke pelanggan?')">
+            <form action="<?= base_url('transaksi/kirim-wa-api/' . ($transaksi['id_transaksi']) . '/' . ($transaksi['status'])) ?>" method="post" class="d-inline d-grid d-md-block" data-confirm="Kirim (ulang) notifikasi WhatsApp via API ke pelanggan?">
+                <button type="submit" class="btn btn-outline-success">
                     <i class="fab fa-whatsapp me-1"></i> Kirim Ulang WA (API)
                 </button>
             </form>

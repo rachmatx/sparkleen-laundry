@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" crossorigin="anonymous">
     
     <style>
+        html, body {
+            overflow-x: hidden;
+        }
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);

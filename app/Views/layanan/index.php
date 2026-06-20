@@ -3,26 +3,27 @@
         <div class="card card-outline card-info">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h3 class="card-title m-0">Daftar Layanan Laundry</h3>
-                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
-                    <form method="get" action="<?= base_url('layanan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
-                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end ms-auto">
+                    <form method="get" action="<?= base_url('layanan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                        <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white border-end-0">
-                                <i class="fas fa-search text-muted"></i>
+                                <i class="fas fa-search text-muted" id="liveSearchIcon"></i>
                             </span>
                             <input type="text" id="liveSearchInput"
                                    name="q"
                                    class="form-control border-start-0 ps-0"
                                    placeholder="Cari nama layanan..."
+                                   value="<?= esc($keyword ?? '') ?>"
                                    data-page="layanan"
-                                   data-sort="<?= esc($sort ?? 'nama_layanan') ?>"
-                                   data-dir="<?= esc($dir ?? 'ASC') ?>"
+                                   data-sort="<?= esc($sort ?? 'id_layanan') ?>"
+                                   data-dir="<?= esc($dir ?? 'DESC') ?>"
                                    autocomplete="off">
                         </div>
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="<?= base_url('/layanan/create') ?>" class="btn btn-info btn-sm text-white text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
-                        <i class="fas fa-plus me-1"></i> Tambah Layanan
+                    <a href="<?= base_url('/layanan/create') ?>" class="btn btn-info btn-sm text-nowrap text-center text-white">
+                        <i class="fas fa-plus"></i> Tambah Layanan
                     </a>
                     <?php endif; ?>
                 </div>
@@ -78,29 +79,31 @@
                                 </td>
                                 <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
                                 <td class="text-center">
-                                     <?php if(session()->get('level') === 'admin'): ?>
-                                     <a href="<?= base_url('/layanan/resep/' . ($l['id_layanan'])) ?>" class="btn btn-info btn-sm text-white me-1">
-                                         <i class="fas fa-flask me-1"></i> Resep
-                                     </a>
-                                     <?php endif; ?>
-                                     <a href="<?= base_url('/layanan/edit/' . ($l['id_layanan'])) ?>" class="btn btn-warning btn-sm">
-                                         <i class="fas fa-edit me-1"></i> Edit
-                                     </a>
-                                    <?php if ($l['is_aktif'] == 1): ?>
-                                        <form action="<?= base_url('layanan/toggle/' . ($l['id_layanan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan layanan ini?');">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="fas fa-power-off me-1"></i> Nonaktif
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <form action="<?= base_url('layanan/toggle/' . ($l['id_layanan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan layanan ini?');">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="fas fa-power-off me-1"></i> Aktifkan
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
+                                    <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                        <?php if(session()->get('level') === 'admin'): ?>
+                                        <a href="<?= base_url('/layanan/resep/' . ($l['id_layanan'])) ?>" class="btn btn-info btn-sm text-white" title="Resep">
+                                            <i class="fas fa-flask"></i> Resep
+                                        </a>
+                                        <?php endif; ?>
+                                        <a href="<?= base_url('/layanan/edit/' . ($l['id_layanan'])) ?>" class="btn btn-warning btn-sm text-dark" title="Edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <?php if ($l['is_aktif'] == 1): ?>
+                                            <form action="<?= base_url('layanan/toggle/' . ($l['id_layanan'])) ?>" method="POST" class="d-inline" data-confirm="Yakin ingin menonaktifkan layanan ini?">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Nonaktifkan">
+                                                    <i class="fas fa-power-off"></i>
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <form action="<?= base_url('layanan/toggle/' . ($l['id_layanan'])) ?>" method="POST" class="d-inline" data-confirm="Yakin ingin mengaktifkan layanan ini?">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-success btn-sm" title="Aktifkan">
+                                                    <i class="fas fa-power-off"></i>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <?php endif; ?>
                             </tr>

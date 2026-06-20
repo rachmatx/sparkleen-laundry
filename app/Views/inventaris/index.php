@@ -3,11 +3,11 @@
         <div class="card card-outline card-warning">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h3 class="card-title m-0">Data Inventaris</h3>
-                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
-                    <form method="get" action="<?= base_url('inventaris') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
-                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end ms-auto">
+                    <form method="get" action="<?= base_url('inventaris') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                        <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white border-end-0">
-                                <i class="fas fa-search text-muted"></i>
+                                <i class="fas fa-search text-muted" id="liveSearchIcon"></i>
                             </span>
                             <input type="text" id="liveSearchInput"
                                    name="q"
@@ -15,21 +15,18 @@
                                    placeholder="Cari nama barang..."
                                    value="<?= esc($keyword ?? '') ?>"
                                    data-page="inventaris"
-                                   data-sort="<?= esc($sort ?? 'nama_barang') ?>"
-                                   data-dir="<?= esc($dir ?? 'ASC') ?>"
+                                   data-sort="<?= esc($sort ?? 'id_inventaris') ?>"
+                                   data-dir="<?= esc($dir ?? 'DESC') ?>"
                                    autocomplete="off">
                         </div>
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
-                    <?php if($jumlahKritis > 0): ?>
-                    <a href="<?= base_url('/inventaris/warning') ?>" class="btn btn-danger btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
-                        <i class="fas fa-exclamation-triangle me-1"></i>
-                        <?= $jumlahKritis ?> Stok Kritis
-                    </a>
-                    <?php endif; ?>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="<?= base_url('/inventaris/create') ?>" class="btn btn-warning btn-sm text-dark text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
-                        <i class="fas fa-plus me-1"></i> Tambah
+                    <a href="<?= base_url('/inventaris/warning') ?>" class="btn btn-danger btn-sm text-nowrap text-center" id="btn-stok-kritis">
+                        <i class="fas fa-exclamation-triangle"></i> <span id="badge-stok-kritis">0</span> Stok Kritis
+                    </a>
+                    <a href="<?= base_url('/inventaris/create') ?>" class="btn btn-warning btn-sm text-nowrap text-center text-dark">
+                        <i class="fas fa-plus"></i> Tambah
                     </a>
                     <?php endif; ?>
                 </div>
@@ -46,7 +43,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th width="50" class="text-center">No</th>
-                                <th data-sort="nama_barang" class="text-center">Nama Barang</th>
+                                <th data-sort="nama_barang">Nama Barang</th>
                                 <th data-sort="stok" class="text-center">Stok</th>
                                 <th data-sort="satuan" class="text-center">Satuan</th>
                                 <th data-sort="harga_beli" class="text-center">Harga Beli</th>
@@ -69,7 +66,7 @@
                             <?php $kritis = $inv['stok'] <= $inv['stok_minimal']; ?>
                             <tr class="<?= $kritis ? 'table-danger' : '' ?>">
                                 <td class="text-center"><?= $no++ ?></td>
-                                <td class="text-center">
+                                <td>
                                     <?= esc($inv['nama_barang']) ?>
                                     <?php if($kritis): ?>
                                         <span class="badge text-bg-danger ms-1">
@@ -101,24 +98,26 @@
                                 </td>
                                 <td class="text-center">
                                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                                    <a href="<?= base_url('/inventaris/edit/' . ($inv['id_inventaris'])) ?>" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit me-1"></i> Edit
-                                    </a>
-                                    <?php if ($inv['is_aktif'] == 1): ?>
-                                        <form action="<?= base_url('inventaris/toggle/' . ($inv['id_inventaris'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan barang ini?');">
+                                    <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                        <a href="<?= base_url('/inventaris/edit/' . ($inv['id_inventaris'])) ?>" class="btn btn-warning btn-sm text-dark" title="Edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <?php if ($inv['is_aktif'] == 1): ?>
+                                        <form action="<?= base_url('inventaris/toggle/' . ($inv['id_inventaris'])) ?>" method="POST" class="d-inline" data-confirm="Yakin ingin menonaktifkan barang ini?">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="fas fa-power-off me-1"></i> Nonaktif
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Nonaktifkan">
+                                                <i class="fas fa-power-off"></i>
                                             </button>
                                         </form>
-                                    <?php else: ?>
-                                        <form action="<?= base_url('inventaris/toggle/' . ($inv['id_inventaris'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan barang ini?');">
+                                        <?php else: ?>
+                                        <form action="<?= base_url('inventaris/toggle/' . ($inv['id_inventaris'])) ?>" method="POST" class="d-inline" data-confirm="Yakin ingin mengaktifkan barang ini?">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="fas fa-power-off me-1"></i> Aktifkan
+                                            <button type="submit" class="btn btn-success btn-sm" title="Aktifkan">
+                                                <i class="fas fa-power-off"></i>
                                             </button>
                                         </form>
-                                    <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                     <?php else: ?>
                                         <span class="text-muted small">-</span>
                                     <?php endif; ?>

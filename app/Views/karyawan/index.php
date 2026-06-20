@@ -3,9 +3,9 @@
         <div class="card card-outline card-success">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <h3 class="card-title m-0">Daftar Karyawan</h3>
-                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
-                    <form method="get" action="<?= base_url('karyawan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
-                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end ms-auto">
+                    <form method="get" action="<?= base_url('karyawan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 justify-content-md-end">
+                        <div class="input-group input-group-sm">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
                             </span>
@@ -20,7 +20,7 @@
                         </div>
                     </form>
                     <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
-                    <a href="<?= base_url('/karyawan/create') ?>" class="btn btn-success btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
+                    <a href="<?= base_url('/karyawan/create') ?>" class="btn btn-success btn-sm text-nowrap text-center">
                         <i class="fas fa-plus"></i> Tambah Karyawan
                     </a>
                 </div>
@@ -95,24 +95,26 @@
                                     }
                                     ?>
                                     <?php if($canManage): ?>
-                                    <a href="<?= base_url('/karyawan/edit/' . ($k['id_karyawan'])) ?>" class="btn btn-warning btn-sm text-dark me-1">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <?php if ($k['is_aktif'] == 1): ?>
-                                        <form action="<?= base_url('karyawan/toggle/' . ($k['id_karyawan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menonaktifkan karyawan ini?');">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                <i class="fas fa-power-off"></i> Nonaktif
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <form action="<?= base_url('karyawan/toggle/' . ($k['id_karyawan'])) ?>" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin mengaktifkan karyawan ini?');">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="fas fa-power-off"></i> Aktifkan
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a href="<?= base_url('/karyawan/edit/' . ($k['id_karyawan'])) ?>" class="btn btn-warning btn-sm text-dark" title="Edit">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <?php if ($k['is_aktif'] == 1): ?>
+                                            <form action="<?= base_url('karyawan/toggle/' . ($k['id_karyawan'])) ?>" method="POST" class="d-inline" data-confirm="Yakin ingin menonaktifkan karyawan ini?">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Nonaktifkan">
+                                                    <i class="fas fa-power-off"></i>
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <form action="<?= base_url('karyawan/toggle/' . ($k['id_karyawan'])) ?>" method="POST" class="d-inline" data-confirm="Yakin ingin mengaktifkan karyawan ini?">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-success btn-sm" title="Aktifkan">
+                                                    <i class="fas fa-power-off"></i>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </div>
                                     <?php else: ?>
                                         <span class="text-muted"><i class="fas fa-lock"></i></span>
                                     <?php endif; ?>

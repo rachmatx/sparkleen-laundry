@@ -328,26 +328,40 @@ $(document).ready(function() {
     });
 
     // Handle hapus keranjang menjaga state pelanggan
-    $('.btn-hapus-keranjang').on('click', function() {
-        if(confirm('Hapus item ini?')) {
-            var idTemp = $(this).data('id');
-            var idPelanggan = $('#id_pelanggan_state').val();
-            var form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?= base_url('transaksi/removeFromCart/') ?>' + idTemp;
-            var csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '<?= csrf_token() ?>';
-            csrfInput.value = '<?= csrf_hash() ?>';
-            form.appendChild(csrfInput);
-            var idPelangganInput = document.createElement('input');
-            idPelangganInput.type = 'hidden';
-            idPelangganInput.name = 'id_pelanggan_state';
-            idPelangganInput.value = idPelanggan;
-            form.appendChild(idPelangganInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
+    $('.btn-hapus-keranjang').on('click', function(e) {
+        e.preventDefault();
+        var idTemp = $(this).data('id');
+        var idPelanggan = $('#id_pelanggan_state').val();
+        
+        Swal.fire({
+            title: 'Hapus item ini?',
+            text: "Item akan dihapus dari keranjang belanja Anda",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?= base_url('transaksi/removeFromCart/') ?>' + idTemp;
+                var csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '<?= csrf_token() ?>';
+                csrfInput.value = '<?= csrf_hash() ?>';
+                form.appendChild(csrfInput);
+                var idPelangganInput = document.createElement('input');
+                idPelangganInput.type = 'hidden';
+                idPelangganInput.name = 'id_pelanggan_state';
+                idPelangganInput.value = idPelanggan;
+                form.appendChild(idPelangganInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     });
 });
 

@@ -95,9 +95,42 @@
         // (race: submit handler fire → button disabled → form submit di-cancel)
         // Solusi: defer disable pakai setTimeout(0) supaya form submit jalan duluan,
         // ATAU cukup change visual aja (text + spinner icon)
+        // Global handler for form submission with SweetAlert2 confirmation
         const forms = document.querySelectorAll('form');
         forms.forEach(form => {
-            form.addEventListener('submit', function() {
+            form.addEventListener('submit', function(e) {
+                // If form requires confirmation and hasn't been confirmed yet
+                if (this.hasAttribute('data-confirm') && !this.dataset.confirmed) {
+                    e.preventDefault();
+                    const message = this.getAttribute('data-confirm');
+                    Swal.fire({
+                        title: 'Konfirmasi',
+                        text: message,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0d6efd',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, lanjutkan!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.dataset.confirmed = 'true';
+                            // programmatic submit doesn't fire the 'submit' event again
+                            // so we trigger spinner manually before submitting
+                            const submitBtn = this.querySelector('button[type="submit"]');
+                            if (submitBtn && !submitBtn.disabled) {
+                                submitBtn.dataset.originalHtml = submitBtn.innerHTML;
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
+                            }
+                            this.submit(); 
+                        }
+                    });
+                    return; // Stop here until confirmed
+                }
+
+                // If confirmed or no confirmation needed, do the normal spinner logic
                 const submitBtn = this.querySelector('button[type="submit"]');
                 if (submitBtn && !submitBtn.disabled) {
                     submitBtn.dataset.originalHtml = submitBtn.innerHTML;
@@ -107,6 +140,30 @@
                         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Memproses...';
                     }, 0);
                 }
+            });
+        });
+
+        // Global handler for link clicks with SweetAlert2 confirmation
+        const confirmLinks = document.querySelectorAll('a[data-confirm-click]');
+        confirmLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const message = this.getAttribute('data-confirm-click');
+                Swal.fire({
+                    title: 'Konfirmasi',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, lanjutkan!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = this.href;
+                    }
+                });
             });
         });
 
