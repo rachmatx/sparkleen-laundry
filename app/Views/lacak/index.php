@@ -461,9 +461,14 @@
                                 <strong>Terdapat <?= (int)$transaksi['total_nota_aktif'] ?> cucian aktif</strong>
                                 untuk nomor HP ini.
                                 <div class="small text-muted mt-1 mb-2">
-                                    Menampilkan nota terbaru. Untuk cek nota lainnya,
-                                    buka <strong>pesan WhatsApp</strong> dari kami (nomor nota tercantum di dalam pesan)
-                                    atau pilih dari daftar di bawah:
+                                    <?php if ($transaksi['total_nota_aktif'] > 5): ?>
+                                        Menampilkan <strong>5 nota terbaru</strong>. Untuk cek sisa nota lainnya,
+                                        buka <strong>pesan WhatsApp</strong> dari kami.
+                                    <?php else: ?>
+                                        Menampilkan nota terbaru. Untuk cek nota lainnya,
+                                        buka <strong>pesan WhatsApp</strong> dari kami (nomor nota tercantum di dalam pesan)
+                                        atau pilih dari daftar di bawah:
+                                    <?php endif; ?>
                                 </div>
                                 <div class="list-group list-group-flush bg-transparent">
                                     <?php foreach (($daftarNotaAktif ?? []) as $n): ?>

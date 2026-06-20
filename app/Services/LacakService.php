@@ -188,6 +188,7 @@ class LacakService
             ->where('tb_transaksi.id_pelanggan', $pelanggan['id_pelanggan'])
             ->whereNotIn('tb_transaksi.id_status_transaksi', [StatusTransaksi::DIAMBIL])
             ->orderBy('tb_transaksi.id_transaksi', 'DESC')
+            ->limit(5)
             ->findAll();
 
         // Fallback: ambil transaksi apapun (termasuk yang sudah diambil)
