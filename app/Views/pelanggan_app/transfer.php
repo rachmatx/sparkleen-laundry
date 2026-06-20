@@ -44,6 +44,7 @@
 <script>
     $('#transferForm').on('submit', function(e) {
         e.preventDefault();
+        const bank = $('#bank').val();
         const rekening = $('#rekening').val();
         const nominal = $('#nominal').val();
 
@@ -53,6 +54,7 @@
             url: '<?= base_url('pelanggan-bayar/cekTransfer') ?>',
             type: 'POST',
             data: {
+                bank: bank,
                 rekening: rekening,
                 nominal: nominal,
                 '<?= csrf_token() ?>': '<?= csrf_hash() ?>'

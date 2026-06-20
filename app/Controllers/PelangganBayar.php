@@ -112,6 +112,7 @@ class PelangganBayar extends BaseController
     {
         if (!$this->checkLogin()) return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
 
+        $bank = $this->request->getPost('bank');
         $rek = $this->request->getPost('rekening');
         $nominal = (float) $this->request->getPost('nominal');
 
@@ -125,7 +126,16 @@ class PelangganBayar extends BaseController
         
         foreach ($transaksis as $t) {
             $pd = json_decode($t['payment_detail'], true);
-            if (isset($pd['account_number']) && $pd['account_number'] == $rek && $t['grand_total'] == $nominal) {
+            
+            // Periksa bank (case-insensitive substring match)
+            $isBankMatch = true;
+            if (isset($pd['bank_name']) && !empty($bank)) {
+                if (stripos($pd['bank_name'], $bank) === false) {
+                    $isBankMatch = false;
+                }
+            }
+
+            if ($isBankMatch && isset($pd['account_number']) && $pd['account_number'] == $rek && $t['grand_total'] == $nominal) {
                 return $this->response->setJSON([
                     'success' => true,
                     'transaction_id' => $t['payment_ref'],
