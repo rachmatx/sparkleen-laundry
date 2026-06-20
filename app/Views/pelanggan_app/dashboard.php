@@ -8,7 +8,10 @@
         </div>
         <span class="fw-bold">Hai, Test User!</span>
     </div>
-    <a href="<?= base_url('pelanggan-bayar/logout') ?>" class="text-danger"><i class="fas fa-sign-out-alt"></i></a>
+    <div>
+        <a href="<?= base_url('pelanggan-bayar/pengaturan') ?>" class="text-secondary me-3"><i class="fas fa-cog"></i></a>
+        <a href="<?= base_url('pelanggan-bayar/logout') ?>" class="text-danger"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
 </div>
 
 <div class="content-area pt-2">

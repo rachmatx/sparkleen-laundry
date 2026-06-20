@@ -35,13 +35,19 @@ class PelangganBayar extends BaseController
         $username = $this->request->getPost('username');
         $password = $this->request->getPost('password');
 
-        if ($username === 'test' && $password === 'test123') {
+        $user_session = session()->get('pelanggan_app_user') ?? 'test';
+        $pass_session = session()->get('pelanggan_app_pass') ?? 'test123';
+
+        if ($username === $user_session && $password === $pass_session) {
             session()->set('pelanggan_app_logged_in', true);
             if (!session()->has('pelanggan_app_saldo')) {
                 session()->set('pelanggan_app_saldo', 1000000); // 1 Juta default
             }
             if (!session()->has('pelanggan_app_history')) {
                 session()->set('pelanggan_app_history', []);
+            }
+            if (!session()->has('pelanggan_app_pin')) {
+                session()->set('pelanggan_app_pin', '123456');
             }
             return redirect()->to('/pelanggan-bayar/dashboard');
         }
@@ -172,8 +178,9 @@ class PelangganBayar extends BaseController
         $trx_id = $this->request->getPost('trx_id');
         $amount = (float) $this->request->getPost('amount');
         $saldo = session()->get('pelanggan_app_saldo');
+        $pin_session = session()->get('pelanggan_app_pin') ?? '123456';
 
-        if ($pin !== '123456') {
+        if ($pin !== $pin_session) {
             return $this->response->setJSON(['success' => false, 'message' => 'PIN salah!']);
         }
 
@@ -263,5 +270,36 @@ class PelangganBayar extends BaseController
         
         $data['history'] = session()->get('pelanggan_app_history') ?? [];
         return view('pelanggan_app/riwayat', $data);
+    }
+
+    public function pengaturan()
+    {
+        if (!$this->checkLogin()) return redirect()->to('/pelanggan-bayar');
+        
+        $data = [
+            'username' => session()->get('pelanggan_app_user') ?? 'test',
+            'password' => session()->get('pelanggan_app_pass') ?? 'test123',
+            'pin'      => session()->get('pelanggan_app_pin') ?? '123456',
+        ];
+        return view('pelanggan_app/pengaturan', $data);
+    }
+
+    public function simpanPengaturan()
+    {
+        if (!$this->checkLogin()) return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+
+        $username = $this->request->getPost('username');
+        $password = $this->request->getPost('password');
+        $pin      = $this->request->getPost('pin');
+
+        if (empty($username) || empty($password) || empty($pin)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Semua kolom harus diisi!']);
+        }
+
+        session()->set('pelanggan_app_user', $username);
+        session()->set('pelanggan_app_pass', $password);
+        session()->set('pelanggan_app_pin', $pin);
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Pengaturan berhasil disimpan.']);
     }
 }

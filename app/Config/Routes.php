@@ -74,6 +74,8 @@ $routes->group('pelanggan-bayar', function ($routes) {
     $routes->get('topup', 'PelangganBayar::topup');
     $routes->post('prosesTopup', 'PelangganBayar::prosesTopup');
     $routes->get('riwayat', 'PelangganBayar::riwayat');
+    $routes->get('pengaturan', 'PelangganBayar::pengaturan');
+    $routes->post('simpanPengaturan', 'PelangganBayar::simpanPengaturan');
 });
 
 // CRUD Layanan
