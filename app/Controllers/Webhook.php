@@ -26,6 +26,7 @@ class Webhook extends ResourceController
         // Verifikasi HMAC menggunakan raw body
         $expectedSignature = hash_hmac('sha256', $rawBody, $secret);
         if (!hash_equals($expectedSignature, $signature)) {
+            log_message('error', "Webhook HMAC mismatch. Expected: $expectedSignature, Got: $signature");
             return $this->failUnauthorized('Invalid signature');
         }
 
@@ -60,10 +61,14 @@ class Webhook extends ResourceController
                         'sisa_tagihan'         => 0,
                         'id_metode_pembayaran' => $transaksi['id_metode_pembayaran'], // QRIS(2) / TF(3)
                     ]);
+                    log_message('info', "Webhook: Payment inserted for Trx {$transaksi['id_transaksi']}");
+                } else {
+                    log_message('info', "Webhook: Trx {$transaksi['id_transaksi']} already paid (sisa <= 0)");
                 }
 
                 return $this->respond(['status' => 'success', 'message' => 'Payment confirmed']);
             } else {
+                log_message('error', "Webhook: Transaction not found for ref $transactionId");
                 return $this->failNotFound('Transaction not found');
             }
         }
