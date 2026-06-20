@@ -3,10 +3,10 @@
 
 <div class="top-nav justify-content-between">
     <div class="d-flex align-items-center">
-        <div class="bg-primary-custom text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:36px; height:36px; font-weight:bold;">
-            T
+        <div class="bg-primary-custom text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:36px; height:36px; font-weight:bold; text-transform: uppercase;">
+            <?= esc(substr($username, 0, 1)) ?>
         </div>
-        <span class="fw-bold">Hai, Test User!</span>
+        <span class="fw-bold">Hai, <?= esc($username) ?>!</span>
     </div>
     <div>
         <a href="<?= base_url('pelanggan-bayar/pengaturan') ?>" class="text-secondary me-3"><i class="fas fa-cog"></i></a>

@@ -67,6 +67,7 @@ class PelangganBayar extends BaseController
         if (!$this->checkLogin()) return redirect()->to('/pelanggan-bayar');
         
         $data['saldo'] = session()->get('pelanggan_app_saldo');
+        $data['username'] = session()->get('pelanggan_app_user') ?? 'test';
         return view('pelanggan_app/dashboard', $data);
     }
 
