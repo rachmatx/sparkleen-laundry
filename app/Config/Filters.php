@@ -85,6 +85,8 @@ class Filters extends BaseFilters
                     'debug',
                     'debug-db',
                     'webhook/payment',
+                    'pelanggan-bayar',
+                    'pelanggan-bayar/*',
                 ],
             ],
             'csrf' => [
