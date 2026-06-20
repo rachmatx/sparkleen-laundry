@@ -1,11 +1,11 @@
 <div class="row">
     <div class="col-12">
         <div class="card card-outline card-warning">
-            <div class="card-header">
-                <h3 class="card-title">Data Inventaris</h3>
-                <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="<?= base_url('inventaris') ?>" class="m-0">
-                        <div class="input-group input-group-sm" style="width: 250px;">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <h3 class="card-title m-0">Data Inventaris</h3>
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+                    <form method="get" action="<?= base_url('inventaris') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
+                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
                             </span>
@@ -20,15 +20,15 @@
                                    autocomplete="off">
                         </div>
                     </form>
-                    <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
+                    <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
                     <?php if($jumlahKritis > 0): ?>
-                    <a href="<?= base_url('/inventaris/warning') ?>" class="btn btn-danger btn-sm text-nowrap">
+                    <a href="<?= base_url('/inventaris/warning') ?>" class="btn btn-danger btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
                         <i class="fas fa-exclamation-triangle me-1"></i>
                         <?= $jumlahKritis ?> Stok Kritis
                     </a>
                     <?php endif; ?>
                     <?php if(in_array(session()->get('level'), ['admin', 'pemilik'])): ?>
-                    <a href="<?= base_url('/inventaris/create') ?>" class="btn btn-warning btn-sm text-dark text-nowrap">
+                    <a href="<?= base_url('/inventaris/create') ?>" class="btn btn-warning btn-sm text-dark text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
                         <i class="fas fa-plus me-1"></i> Tambah
                     </a>
                     <?php endif; ?>

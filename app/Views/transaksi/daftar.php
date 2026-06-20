@@ -4,14 +4,14 @@
 <div class="row">
     <div class="col-12">
         <div class="card card-outline card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Transaksi</h3>
-                <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="<?= base_url('transaksi/daftar') ?>" class="m-0">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <h3 class="card-title m-0">Daftar Transaksi</h3>
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+                    <form method="get" action="<?= base_url('transaksi/daftar') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
                         <?php if(!empty($statusFilter)): ?>
                             <input type="hidden" name="status" value="<?= esc($statusFilter) ?>">
                         <?php endif; ?>
-                        <div class="input-group input-group-sm" style="width: 260px;">
+                        <div class="input-group input-group-sm w-100" style="max-width: 260px;">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
                             </span>
@@ -27,9 +27,9 @@
                                    autocomplete="off">
                         </div>
                     </form>
-                    <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
+                    <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
                     <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm text-nowrap">
+                    <a href="<?= base_url('/transaksi') ?>" class="btn btn-primary btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 260px;">
                         <i class="fas fa-plus"></i> Transaksi Baru
                     </a>
                     <?php endif; ?>

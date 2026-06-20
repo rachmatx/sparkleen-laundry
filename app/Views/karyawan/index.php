@@ -1,11 +1,11 @@
 <div class="row">
     <div class="col-12">
         <div class="card card-outline card-success">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Karyawan</h3>
-                <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="<?= base_url('karyawan') ?>" class="m-0">
-                        <div class="input-group input-group-sm" style="width: 240px;">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <h3 class="card-title m-0">Daftar Karyawan</h3>
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+                    <form method="get" action="<?= base_url('karyawan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
+                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted"></i>
                             </span>
@@ -19,8 +19,8 @@
                                    autocomplete="off">
                         </div>
                     </form>
-                    <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
-                    <a href="<?= base_url('/karyawan/create') ?>" class="btn btn-success btn-sm text-nowrap">
+                    <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
+                    <a href="<?= base_url('/karyawan/create') ?>" class="btn btn-success btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
                         <i class="fas fa-plus"></i> Tambah Karyawan
                     </a>
                 </div>

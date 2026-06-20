@@ -1,16 +1,16 @@
 <div class="row">
     <div class="col-12">
         <div class="card card-outline card-primary">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Pelanggan</h3>
-                <div class="card-tools d-flex gap-2 align-items-center">
-                    <form method="get" action="<?= base_url('pelanggan') ?>" class="m-0 d-flex gap-2">
-                        <select name="status" class="form-select form-select-sm" style="width: 130px;" onchange="document.getElementById('liveSearchInput').dataset.status = this.value; document.getElementById('liveSearchInput').dispatchEvent(new Event('input'));">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <h3 class="card-title m-0">Daftar Pelanggan</h3>
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+                    <form method="get" action="<?= base_url('pelanggan') ?>" class="m-0 d-flex flex-column flex-md-row gap-2 w-100 justify-content-md-end">
+                        <select name="status" class="form-select form-select-sm w-100" style="max-width: 150px;" onchange="document.getElementById('liveSearchInput').dataset.status = this.value; document.getElementById('liveSearchInput').dispatchEvent(new Event('input'));">
                             <option value="">Semua Status</option>
                             <option value="1" <?= (isset($status) && $status === '1') ? 'selected' : '' ?>>Aktif</option>
                             <option value="0" <?= (isset($status) && $status === '0') ? 'selected' : '' ?>>Nonaktif</option>
                         </select>
-                        <div class="input-group input-group-sm" style="width: 250px;">
+                        <div class="input-group input-group-sm w-100" style="max-width: 250px;">
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="fas fa-search text-muted" id="liveSearchIcon"></i>
                             </span>
@@ -26,9 +26,9 @@
                                    autocomplete="off">
                         </div>
                     </form>
-                    <small id="liveSearchInfo" class="text-muted text-nowrap"></small>
+                    <small id="liveSearchInfo" class="text-muted text-nowrap align-self-md-center"></small>
                     <?php if(in_array(session()->get('level'), ['admin', 'kasir'])): ?>
-                        <a href="<?= base_url('/pelanggan/create') ?>" class="btn btn-primary btn-sm text-nowrap">
+                        <a href="<?= base_url('/pelanggan/create') ?>" class="btn btn-primary btn-sm text-nowrap w-100 w-md-auto text-center" style="max-width: 250px;">
                             <i class="fas fa-plus me-1"></i> Tambah
                         </a>
                     <?php endif; ?>
