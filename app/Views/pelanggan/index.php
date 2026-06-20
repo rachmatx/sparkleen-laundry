@@ -78,9 +78,9 @@
                                 <td><?= esc($p['alamat']) ?></td>
                                 <td class="text-center">
                                     <?php if ($p['is_aktif'] == 1): ?>
-                                        <span class="badge bg-success-subtle text-success-emphasis">Aktif</span>
+                                        <span class="badge text-bg-success">Aktif</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">Nonaktif</span>
+                                        <span class="badge text-bg-secondary">Nonaktif</span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">

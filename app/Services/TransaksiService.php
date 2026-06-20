@@ -248,6 +248,53 @@ class TransaksiService
             $nominal_bayar = $sisa;
         }
 
+        // INTEGRASI PAYMENT API NODE.JS (Untuk QRIS dan Transfer)
+        // 1 = Cash, 2 = QRIS, 3 = Transfer
+        if ($id_metode_pembayaran === 2 || $id_metode_pembayaran === 3) {
+            $methodName = $id_metode_pembayaran === 2 ? 'QRIS' : 'BANK_TRANSFER';
+            
+            $apiUrl = getenv('PAYMENT_API_URL');
+            $apiKey = getenv('PAYMENT_API_KEY');
+
+            if ($apiUrl && $apiKey) {
+                try {
+                    $client = \Config\Services::curlrequest();
+                    $response = $client->post($apiUrl, [
+                        'headers' => [
+                            'X-Api-Key'    => $apiKey,
+                            'Accept'       => 'application/json',
+                            'Content-Type' => 'application/json',
+                        ],
+                        'json' => [
+                            'amount'       => $nominal_bayar,
+                            'method'       => $methodName,
+                            'customer_ref' => (string) $id_transaksi
+                        ],
+                        'timeout' => 5
+                    ]);
+
+                    $resData = json_decode($response->getBody(), true);
+                    if (isset($resData['success']) && $resData['success'] === true) {
+                        // Update tb_transaksi dgn payment_ref dari API
+                        $this->transaksiModel->update($id_transaksi, [
+                            'payment_ref'    => $resData['data']['transaction_id'],
+                            'payment_detail' => json_encode($resData['data']['payment_detail']),
+                            'id_metode_pembayaran' => $id_metode_pembayaran,
+                        ]);
+
+                        return [
+                            'success' => true, 
+                            'message' => "Permintaan {$methodName} berhasil dikirim ke API. Menunggu pembayaran pelanggan/kasir via Node API."
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'API Payment Gagal: ' . $e->getMessage());
+                    // Fallback to normal behavior if API fails or unreachable
+                }
+            }
+        }
+
+        // Lanjut ke alur CASH atau Fallback jika API gagal
         $sisaSetelah = $sisa - $nominal_bayar;
 
         $db = db_connect();

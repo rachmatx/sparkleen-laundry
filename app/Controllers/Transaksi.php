@@ -561,4 +561,19 @@ class Transaksi extends BaseController
 
         return redirect()->back();
     }
+
+    public function ajaxCekPembayaran($id)
+    {
+        $transaksi = $this->transaksiModel->find($id);
+        if (!$transaksi) return $this->response->setJSON(['sisa' => -1]);
+        
+        $totalDibayar = $this->pembayaranModel
+            ->selectSum('nominal_bayar', 'total')
+            ->where('id_transaksi', $id)
+            ->first();
+        $sudahDibayar = $totalDibayar['total'] ?? 0;
+        $sisa         = (float) $transaksi['grand_total'] - $sudahDibayar;
+        
+        return $this->response->setJSON(['sisa' => $sisa, 'status' => $transaksi['id_status_pembayaran']]);
+    }
 }

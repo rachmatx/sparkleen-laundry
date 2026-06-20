@@ -99,25 +99,42 @@
                             </div>
                             <div class="row g-2 text-start small">
                                 <div class="col-4 text-muted">Bank</div>
-                                <div class="col-8 fw-bold">Bank Mandiri</div>
+                                <div class="col-8 fw-bold">Bank BCA</div>
                                 <div class="col-4 text-muted">No. Rekening</div>
                                 <div class="col-8 fw-bold text-primary fs-6 d-flex align-items-center">
-                                    <span id="bank-acc-num">137-00-998877-6</span>
+                                    <span id="bank-acc-num">12345678</span>
                                     <button type="button" class="btn btn-xs btn-outline-secondary ms-2 py-0 px-1" onclick="copyBankAccount()" style="font-size: 0.7rem;">
                                         <i class="far fa-copy me-1"></i> Salin
                                     </button>
                                 </div>
                                 <div class="col-4 text-muted">Atas Nama</div>
-                                <div class="col-8 fw-bold">Sparkleen Laundry Group</div>
+                                <div class="col-8 fw-bold">Sparkleen Laundry</div>
                             </div>
                             <div class="small text-muted mt-2 border-top pt-2">
                                 <i class="fas fa-info-circle me-1 text-info"></i> Harap kirimkan bukti transfer ke kasir setelah transaksi selesai.
                             </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="fas fa-money-bill-wave me-1"></i> Proses Pembayaran
-                    </button>
+                    <?php if(!empty($transaksi['payment_ref'])): 
+                        $pd = json_decode($transaksi['payment_detail'], true);
+                    ?>
+                        <div class="alert alert-info mt-3">
+                            <h6 class="fw-bold"><i class="fas fa-info-circle me-1"></i> Menunggu Pembayaran (Via API)</h6>
+                            <p class="mb-1 small">ID Transaksi API: <strong><?= $transaksi['payment_ref'] ?></strong></p>
+                            <?php if($transaksi['id_metode_pembayaran'] == 2 && isset($pd['qris_data'])): ?>
+                                <p class="mb-1 small">String QRIS: <?= $pd['qris_data'] ?></p>
+                                <!-- Kita bisa generate ulang QR dari string QRIS ini, tapi kita pakai generator bawaan CI4 untuk demo -->
+                            <?php elseif($transaksi['id_metode_pembayaran'] == 3 && isset($pd['bank_name'])): ?>
+                                <p class="mb-1 small">Bank: <?= $pd['bank_name'] ?></p>
+                                <p class="mb-1 small">No Rek: <strong><?= $pd['account_number'] ?></strong> (<?= $pd['account_holder'] ?>)</p>
+                            <?php endif; ?>
+                            <p class="mt-2 mb-0 small text-muted">Sistem akan otomatis mengupdate status saat pelanggan membayar.</p>
+                        </div>
+                    <?php else: ?>
+                        <button type="submit" class="btn btn-success w-100 mt-2">
+                            <i class="fas fa-money-bill-wave me-1"></i> Proses Pembayaran
+                        </button>
+                    <?php endif; ?>
                 </form>
                 <?php else: ?>
                 <?php endif; ?>
@@ -193,9 +210,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (val === 'qris') {
                 container.classList.remove('d-none');
                 detailsQris.classList.remove('d-none');
+                if (inputDisplay) {
+                    inputDisplay.value = sisaTagihan.toLocaleString('id-ID');
+                    inputRaw.value = sisaTagihan;
+                    inputDisplay.dispatchEvent(new Event('input'));
+                }
             } else if (val === 'transfer') {
                 container.classList.remove('d-none');
                 detailsTransfer.classList.remove('d-none');
+                if (inputDisplay) {
+                    inputDisplay.value = sisaTagihan.toLocaleString('id-ID');
+                    inputRaw.value = sisaTagihan;
+                    inputDisplay.dispatchEvent(new Event('input'));
+                }
+            } else {
+                if (inputDisplay && !inputDisplay.getAttribute('data-manual')) {
+                    inputDisplay.value = '';
+                    inputRaw.value = '';
+                    inputDisplay.dispatchEvent(new Event('input'));
+                }
             }
         });
 
@@ -238,6 +271,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    <?php if($sisa > 0 && !empty($transaksi['payment_ref'])): ?>
+    // Auto-refresh logic (Polling) untuk mengecek status pembayaran API
+    setInterval(function() {
+        fetch('<?= base_url("transaksi/ajaxCekPembayaran/" . $transaksi["id_transaksi"]) ?>')
+            .then(response => response.json())
+            .then(data => {
+                // Jika tagihan sudah lunas (sisa <= 0)
+                if(data.sisa <= 0) {
+                    Swal.fire({
+                        title: 'Pembayaran Berhasil!',
+                        text: 'Sistem telah menerima pembayaran dari API.',
+                        icon: 'success',
+                        confirmButtonText: 'Tutup & Muat Ulang',
+                        allowOutsideClick: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.reload();
+                        }
+                    });
+                }
+            })
+            .catch(err => console.log('Polling error:', err));
+    }, 3000);
+    <?php endif; ?>
 });
 
 function copyBankAccount() {

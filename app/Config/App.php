@@ -216,7 +216,11 @@ class App extends BaseConfig
         
         // Only override if we are actually accessed via a web request
         if (isset($_SERVER['HTTP_HOST'])) {
-            $this->baseURL = $scheme . '://' . $host . '/';
+            $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+            $scriptDir = str_replace('\\', '/', $scriptDir);
+            if ($scriptDir === '/') $scriptDir = '';
+            
+            $this->baseURL = $scheme . '://' . $host . $scriptDir . '/';
         }
     }
 }

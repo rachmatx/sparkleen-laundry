@@ -91,12 +91,12 @@
                                 <td class="text-center">
                                     <?php
                                         $statusClass = match($t['status']) {
-                                            'menunggu' => 'bg-warning-subtle text-warning-emphasis',
-                                            'proses'   => 'bg-info-subtle text-info-emphasis',
-                                            'setrika'  => 'bg-secondary-subtle text-secondary-emphasis',
-                                            'selesai'  => 'bg-success-subtle text-success-emphasis',
-                                            'diambil'  => 'bg-primary-subtle text-primary-emphasis',
-                                            default    => 'bg-dark-subtle text-dark-emphasis',
+                                            'menunggu' => 'text-bg-warning',
+                                            'proses'   => 'text-bg-info',
+                                            'setrika'  => 'text-bg-secondary',
+                                            'selesai'  => 'text-bg-success',
+                                            'diambil'  => 'text-bg-primary',
+                                            default    => 'text-bg-dark',
                                         };
                                     ?>
                                     <span class="badge <?= $statusClass ?>"><?= ucfirst($t['status']) ?></span>
@@ -104,9 +104,9 @@
                                 <td class="text-center">
                                     <?php
                                         $bayarClass = match($t['status_pembayaran']) {
-                                            'lunas' => 'bg-success-subtle text-success-emphasis',
-                                            'cicil' => 'bg-warning-subtle text-warning-emphasis',
-                                            default => 'bg-danger-subtle text-danger-emphasis',
+                                            'lunas' => 'text-bg-success',
+                                            'cicil' => 'text-bg-warning',
+                                            default => 'text-bg-danger',
                                         };
                                     ?>
                                     <span class="badge <?= $bayarClass ?>">
@@ -254,14 +254,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             
                             const formatRp = (num) => 'Rp ' + parseInt(num).toLocaleString('id-ID');
                             
-                            let badgeStatus = 'bg-dark-subtle text-dark-emphasis';
-                            if(t.status === 'menunggu') badgeStatus = 'bg-warning-subtle text-warning-emphasis';
-                            if(t.status === 'proses') badgeStatus = 'bg-info-subtle text-info-emphasis';
-                            if(t.status === 'setrika') badgeStatus = 'bg-secondary-subtle text-secondary-emphasis';
-                            if(t.status === 'selesai') badgeStatus = 'bg-success-subtle text-success-emphasis';
-                            if(t.status === 'diambil') badgeStatus = 'bg-primary-subtle text-primary-emphasis';
+                            let badgeStatus = 'text-bg-dark';
+                            if(t.status === 'menunggu') badgeStatus = 'text-bg-warning';
+                            if(t.status === 'proses') badgeStatus = 'text-bg-info';
+                            if(t.status === 'setrika') badgeStatus = 'text-bg-secondary';
+                            if(t.status === 'selesai') badgeStatus = 'text-bg-success';
+                            if(t.status === 'diambil') badgeStatus = 'text-bg-primary';
 
-                            let badgeBayar = t.status_pembayaran === 'lunas' ? 'bg-success-subtle text-success-emphasis' : (t.status_pembayaran === 'cicil' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-danger-subtle text-danger-emphasis');
+                            let badgeBayar = t.status_pembayaran === 'lunas' ? 'text-bg-success' : (t.status_pembayaran === 'cicil' ? 'text-bg-warning' : 'text-bg-danger');
 
                             let itemsHtml = '';
                             data.detail.forEach(d => {

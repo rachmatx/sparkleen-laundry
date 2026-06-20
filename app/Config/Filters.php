@@ -84,6 +84,15 @@ class Filters extends BaseFilters
                     'lacak/*',
                     'debug',
                     'debug-db',
+                    'webhook/payment',
+                ],
+            ],
+            'csrf' => [
+                'except' => [
+                    'webhook/payment',
+                    'pelanggan-bayar/cekQr',
+                    'pelanggan-bayar/cekTransfer',
+                    'pelanggan-bayar/prosesBayar',
                 ],
             ],
         ],
@@ -107,7 +116,7 @@ class Filters extends BaseFilters
      * @var array<string, list<string>>
      */
     public array $methods = [
-        'POST' => ['csrf'],
+        // 'POST' => ['csrf'], // Dipindah ke globals agar bisa except webhook
     ];
 
     /**

@@ -59,6 +59,23 @@ $routes->get('/debug', function() {
 $routes->get('/profile', 'Profile::index');
 $routes->post('/profile/update', 'Profile::update');
 
+// Rute khusus untuk prototype Pelanggan App (Mobile E-Wallet)
+$routes->group('pelanggan-bayar', function ($routes) {
+    $routes->get('/', 'PelangganBayar::index');
+    $routes->post('doLogin', 'PelangganBayar::doLogin');
+    $routes->get('logout', 'PelangganBayar::logout');
+    $routes->get('dashboard', 'PelangganBayar::dashboard');
+    $routes->get('scan', 'PelangganBayar::scan');
+    $routes->post('cekQr', 'PelangganBayar::cekQr');
+    $routes->get('transfer', 'PelangganBayar::transfer');
+    $routes->post('cekTransfer', 'PelangganBayar::cekTransfer');
+    $routes->get('konfirmasi', 'PelangganBayar::konfirmasi');
+    $routes->post('prosesBayar', 'PelangganBayar::prosesBayar');
+    $routes->get('topup', 'PelangganBayar::topup');
+    $routes->post('prosesTopup', 'PelangganBayar::prosesTopup');
+    $routes->get('riwayat', 'PelangganBayar::riwayat');
+});
+
 // CRUD Layanan
 $routes->group('layanan', ['filter' => 'role:admin,kasir,pemilik'], static function ($routes) {
     $routes->get('/', 'Layanan::index');
@@ -128,6 +145,7 @@ $routes->group('transaksi', ['filter' => 'role:admin,kasir'], static function ($
     $routes->post('prosesUbahStatus', 'Transaksi::prosesUbahStatus');
     $routes->get('pembayaran/(:num)', 'Transaksi::pembayaran/$1');
     $routes->post('simpanPembayaran', 'Transaksi::simpanPembayaran');
+    $routes->get('ajaxCekPembayaran/(:num)', 'Transaksi::ajaxCekPembayaran/$1');
 });
 
 // Transaksi Umum (Daftar, Detail, Nota - Terbuka sesuai akses sebelumnya)
@@ -152,3 +170,6 @@ $routes->group('laporan', ['filter' => 'role:admin,pemilik'], static function ($
     $routes->get('export_rentang_pdf', 'Laporan::export_rentang_pdf');
     $routes->get('export_rentang_excel', 'Laporan::export_rentang_excel');
 });
+
+// Webhook Payment
+$routes->post('webhook/payment', 'Webhook::payment');

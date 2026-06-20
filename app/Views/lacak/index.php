@@ -274,9 +274,9 @@
             font-weight: 600;
             font-size: 12px;
         }
-        .badge-payment-lunas { background-color: #e6f9eb; color: #198754; }
-        .badge-payment-cicil { background-color: #fff3cd; color: #856404; }
-        .badge-payment-belum_lunas { background-color: #f8d7da; color: #721c24; }
+        .badge-payment-lunas { background-color: #198754; color: #ffffff; }
+        .badge-payment-cicil { background-color: #ffc107; color: #000000; }
+        .badge-payment-belum_lunas { background-color: #dc3545; color: #ffffff; }
 
         .detail-table th {
             font-weight: 600;
