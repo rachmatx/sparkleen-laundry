@@ -146,6 +146,7 @@ $routes->group('transaksi', ['filter' => 'role:admin,kasir'], static function ($
     $routes->get('pembayaran/(:num)', 'Transaksi::pembayaran/$1');
     $routes->post('simpanPembayaran', 'Transaksi::simpanPembayaran');
     $routes->get('ajaxCekPembayaran/(:num)', 'Transaksi::ajaxCekPembayaran/$1');
+    $routes->post('batalAPI/(:num)', 'Transaksi::batalAPI/$1');
 });
 
 // Transaksi Umum (Daftar, Detail, Nota - Terbuka sesuai akses sebelumnya)
