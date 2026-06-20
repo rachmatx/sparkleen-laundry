@@ -253,8 +253,8 @@ class TransaksiService
         if ($id_metode_pembayaran === 2 || $id_metode_pembayaran === 3) {
             $methodName = $id_metode_pembayaran === 2 ? 'QRIS' : 'BANK_TRANSFER';
             
-            $apiUrl = getenv('PAYMENT_API_URL');
-            $apiKey = getenv('PAYMENT_API_KEY');
+            $apiUrl = env('PAYMENT_API_URL') ?: getenv('PAYMENT_API_URL');
+            $apiKey = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
 
             if ($apiUrl && $apiKey) {
                 try {
