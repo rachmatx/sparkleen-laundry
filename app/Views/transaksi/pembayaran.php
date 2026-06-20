@@ -130,12 +130,9 @@
                             <p class="small text-muted mb-3 fw-bold">Sistem sedang menunggu pembayaran pelanggan...</p>
                         </div>
                         
-                        <form action="<?= base_url('transaksi/batalAPI/' . $transaksi['id_transaksi']) ?>" method="POST" class="mt-2">
-                            <?= csrf_field() ?>
-                            <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Apakah Anda yakin ingin membatalkan permintaan pembayaran ini? Pelanggan tidak akan bisa membayarnya via API lagi.')">
-                                <i class="fas fa-times-circle me-1"></i> Batalkan & Ubah Metode
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancelAPI()">
+                            <i class="fas fa-times-circle me-1"></i> Batalkan & Ubah Metode
+                        </button>
                     <?php else: ?>
                         <button type="submit" class="btn btn-success w-100 mt-2">
                             <i class="fas fa-money-bill-wave me-1"></i> Proses Pembayaran
@@ -152,6 +149,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Hidden form for Cancel API -->
+    <?php if(!empty($transaksi['payment_ref'])): ?>
+    <form id="formBatalAPI" action="<?= base_url('transaksi/batalAPI/' . $transaksi['id_transaksi']) ?>" method="POST" class="d-none">
+        <?= csrf_field() ?>
+    </form>
+    <?php endif; ?>
 
     <!-- Riwayat Pembayaran -->
     <div class="col-md-7">
@@ -341,6 +345,23 @@ function copyBankAccount() {
         }, 2000);
     }).catch(function(err) {
         console.error('Gagal menyalin text: ', err);
+    });
+}
+
+function confirmCancelAPI() {
+    Swal.fire({
+        title: 'Batalkan Permintaan?',
+        text: "Pelanggan tidak akan bisa membayarnya via API lagi.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Batalkan!',
+        cancelButtonText: 'Kembali'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('formBatalAPI').submit();
+        }
     });
 }
 </script>

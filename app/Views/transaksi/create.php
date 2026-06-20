@@ -322,7 +322,11 @@ $(document).ready(function() {
         var id = $('#input_id_pelanggan_checkout').val();
         if(!id) {
             e.preventDefault();
-            alert('Mohon pilih pelanggan terlebih dahulu sebelum Checkout!');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Perhatian',
+                text: 'Mohon pilih pelanggan terlebih dahulu sebelum Checkout!'
+            });
             $('#select_pelanggan').select2('open');
         }
     });
