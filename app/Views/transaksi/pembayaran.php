@@ -122,17 +122,17 @@
                         </div>
                     </div>
                     <?php if(!empty($transaksi['payment_ref'])): ?>
-                        <div class="alert alert-info mt-3 d-none">
+                        <div class="alert alert-info mt-3">
                             <h6 class="fw-bold"><i class="fas fa-info-circle me-1"></i> Menunggu Pembayaran (Via API)</h6>
                             <p class="mb-1 small">ID Transaksi API: <strong><?= $transaksi['payment_ref'] ?></strong></p>
-                            <?php if($transaksi['id_metode_pembayaran'] == 2 && isset($pd['qris_data'])): ?>
-                                <p class="mb-1 small">String QRIS: <?= $pd['qris_data'] ?></p>
-                                <!-- Kita bisa generate ulang QR dari string QRIS ini, tapi kita pakai generator bawaan CI4 untuk demo -->
-                            <?php elseif($transaksi['id_metode_pembayaran'] == 3 && isset($pd['bank_name'])): ?>
-                                <p class="mb-1 small">Bank: <?= $pd['bank_name'] ?></p>
-                                <p class="mb-1 small">No Rek: <strong><?= $pd['account_number'] ?></strong> (<?= $pd['account_holder'] ?>)</p>
-                            <?php endif; ?>
-                            <p class="mt-2 mb-0 small text-muted">Sistem akan otomatis mengupdate status saat pelanggan membayar.</p>
+                            <p class="mt-2 mb-2 small text-muted">Sistem akan otomatis mengupdate status saat pelanggan membayar.</p>
+                            
+                            <form action="<?= base_url('transaksi/batalAPI/' . $transaksi['id_transaksi']) ?>" method="POST" class="mt-3">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Apakah Anda yakin ingin membatalkan permintaan pembayaran ini? Pelanggan tidak akan bisa membayarnya via API lagi.')">
+                                    <i class="fas fa-times-circle me-1"></i> Batalkan Permintaan
+                                </button>
+                            </form>
                         </div>
                     <?php else: ?>
                         <button type="submit" class="btn btn-success w-100 mt-2">
