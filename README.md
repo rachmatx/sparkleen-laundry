@@ -4,30 +4,29 @@ A premium laundry management system built on top of **CodeIgniter 4** framework.
 
 ---
 
-## 🚀 Fitur Utama
+## Fitur Utama
 1. **Manajemen Transaksi & Kasir**: Pembuatan order, pencetakan nota kasir termal (POS), kalkulasi tagihan, loyalitas poin, dan sisa kembalian secara presisi.
 2. **Resep Otomatis & Inventaris**: Pengurangan stok otomatis bahan baku (seperti sabun/pewangi) berdasarkan berat cucian menggunakan formula takaran (resep) default per layanan yang dapat diatur oleh Admin.
 3. **Program Poin Loyalitas**: Akumulasi poin belanja otomatis untuk pelanggan (tiap kelipatan Rp 10.000) dan penukaran poin menjadi diskon pemotong tagihan (1 poin = Rp 300 diskon).
-4. **Notifikasi WhatsApp Multi-Tahap**: Integrasi pengiriman notifikasi otomatis via API Fonnte/Wablas atau tautan manual (`wa.me`) ketika pesanan laundry Baru Diterima, Selesai Dicuci, atau Diambil Pelanggan.
+4. **Notifikasi WhatsApp Multi-Tahap**: Integrasi pengiriman otomatis via API Fonnte/Wablas atau tautan manual (`wa.me`) ketika pesanan laundry Baru Diterima, Selesai Dicuci, atau Diambil Pelanggan.
 5. **Log Keamanan & Backup Database**: Pencatatan log upaya keamanan login secara dinamis di database, serta penyediaan fitur ekspor (backup) database terenkripsi ke file SQL secara aman dan instan.
-6. **Keamanan & Kontrol Akses (RBAC)**: Pembatasan ketat berbasis role (kasir, admin, pemilik) dengan pertahanan serangan CSRF global, Brute Force protection (rate limiting IP login), dan sanitasi XSS.
-7. **Mermaid Live Renderer**: Halaman visualisasi diagram UML interaktif (`mermaid_renderer.html`) dengan preset diagram sistem lengkap, fitur *live editing preview*, ekspor HD PNG/SVG (latar belakang transparan/solid), serta navigasi *Drag-to-Scroll* yang adaptif.
+6. **Integrasi Ekosistem Smart Pay**: Tersambung secara langsung dengan sistem Node.js Payment API dan aplikasi mobile Flutter Smart Pay untuk memberikan fitur pembayaran QRIS dan Transfer otomatis tanpa verifikasi manual kasir.
 
 ---
 
-## ⚙️ Persyaratan Sistem
+## Persyaratan Sistem
 - **PHP** versi 8.2 atau lebih tinggi.
 - Ekstensi PHP wajib diaktifkan: `intl`, `mbstring`, `json`, `mysqlnd`, `libcurl`.
 - Database **MySQL** / MariaDB.
 
 ---
 
-## 📥 Panduan Instalasi & Setup
+## Panduan Instalasi & Setup
 
 Proyek ini mendukung dua metode instalasi: **Lokal (Manual)** dan **Docker Container**.
 
 ### Metode 1: Instalasi dengan Docker (Direkomendasikan)
-Aplikasi ini sudah dipersiapkan penuh untuk dijalankan di dalam container Docker beserta *database* bawaan.
+Aplikasi ini sudah dipersiapkan penuh untuk dijalankan di dalam container Docker beserta database bawaan.
 1. **Clone Repositori**: `git clone <url-repo-anda> && cd laundry_app`
 2. **Siapkan Konfigurasi**: `cp .env.example .env`
 3. **Jalankan Docker Compose**:
@@ -54,7 +53,6 @@ Aplikasi ini sudah dipersiapkan penuh untuk dijalankan di dalam container Docker
    ```bash
    php spark db:create nama_database_laundry
    php spark migrate
-   php spark db:seed (opsional, jika ada seeder)
    ```
 5. **Jalankan Server Lokal**:
    ```bash
@@ -63,25 +61,42 @@ Aplikasi ini sudah dipersiapkan penuh untuk dijalankan di dalam container Docker
 
 ---
 
-## ☁️ Panduan Deployment (Vercel, Railway, VPS)
+## Konfigurasi Payment API & Smart Pay (Penting)
 
-Aplikasi ini sudah dioptimalkan untuk _deployment_ di berbagai platform Cloud dan VPS menggunakan arsitektur Docker. Untuk instruksi lebih lengkap, silakan merujuk ke dokumen berikut:
-* **Vercel**: Hubungkan repository GitHub ini langsung ke Vercel. Jangan lupa mengatur semua konfigurasi database dan kredensial API pada menu *Environment Variables* di _dashboard_ Vercel.
-* **Railway (CI/CD)**: Baca panduan di file [`RAILWAY_DEPLOY.md`](RAILWAY_DEPLOY.md).
-* **VPS (Docker & Nginx SSL)**: Baca panduan lengkap di file [`DEPLOYMENT.md`](DEPLOYMENT.md).
+Aplikasi Laundry ini merupakan ujung tombak dari ekosistem pembayaran Smart Pay. Saat Anda mempublikasikan aplikasi ini ke produksi, Anda **wajib** menyambungkannya dengan server Payment API (Node.js).
+
+Buka file `.env` dan atur bagian berikut:
+
+```env
+# URL server Payment API (contoh URL dari Railway)
+PAYMENT_API_URL="https://payment-api-production-ba66.up.railway.app/api/transactions"
+
+# API Key rahasia bawaan server Node.js (harus sama dengan Node.js dan Flutter)
+PAYMENT_API_KEY="my-super-secret-key-123"
+```
+
+Tanpa pengaturan di atas, fitur pembayaran "Transfer" dan "QRIS" yang muncul di layar kasir Anda tidak akan dapat diteruskan ke aplikasi mobile Smart Pay pelanggan.
 
 ---
 
-## 🔒 Keamanan Repositori (Git & Kredensial)
+## Panduan Deployment (Vercel, Railway, VPS)
+
+Aplikasi ini sudah dioptimalkan untuk deployment di berbagai platform Cloud dan VPS menggunakan arsitektur Docker. Untuk instruksi lebih lengkap, silakan merujuk ke dokumen berikut:
+* **Railway (CI/CD)**: Baca panduan di file `RAILWAY_DEPLOY.md`.
+* **VPS (Docker & Nginx SSL)**: Baca panduan lengkap di file `DEPLOYMENT.md`.
+
+---
+
+## Keamanan Repositori (Git & Kredensial)
 
 Untuk menjaga keamanan informasi rahasia proyek:
-- File `.env` **wajib diabaikan** dari Git (tidak boleh di-upload ke GitHub). File ini sudah didaftarkan pada `.gitignore`.
+- File `.env` **wajib diabaikan** dari Git (tidak boleh di-upload ke GitHub).
 - Jangan pernah menulis kredensial database asli, password, atau Token API WhatsApp di file selain `.env` lokal Anda.
 - Jika ada penambahan variabel konfigurasi baru, daftarkan variabel baru tersebut ke file `.env.example` dengan nilai kosong/placeholder sebagai panduan bagi developer lain.
 
 ---
 
-## 💬 Konfigurasi Notifikasi WhatsApp
+## Konfigurasi Notifikasi WhatsApp
 
 Sistem ini mendukung pengiriman notifikasi otomatis saat status pesanan diubah menjadi **Selesai**. Konfigurasikan ini di file `.env` lokal Anda:
 
@@ -102,31 +117,15 @@ whatsapp.apiUrl = https://api.fonnte.com/send
 whatsapp.businessName = "Sparkleen Laundry"
 ```
 
-### Jenis Provider:
-* **`fonnte` / `wablas`**: Mengirimkan notifikasi WhatsApp secara **otomatis** di latar belakang menggunakan jalur API Gateway masing-masing.
-* **`link` (Manual)**: Tidak mengirim otomatis, melainkan menampilkan tombol **"Kirim WhatsApp"** di halaman Detail Transaksi yang mengarah ke tautan `wa.me` (berisi nomor tujuan & teks template pesan otomatis yang siap dikirim lewat web/aplikasi WhatsApp).
-
 ---
 
-## 📝 Changelog & Pembaruan Sistem Terkini
+## Changelog & Pembaruan Sistem Terkini
 
 Berbagai peningkatan **UI/UX dan Performa** telah diimplementasikan:
 
-1. **POS Layout (Transaksi Baru)**: Mengubah form vertikal menjadi format Grid modern yang memisahkan Input Form di kiri dan Struk Ringkasan di kanan untuk mempercepat kerja kasir.
-2. **Struk Thermal 58mm**: Menyesuaikan CSS *print media* agar hasil cetakan nota termal lebih presisi, menghilangkan margin besar, dan membuang elemen tabel/border yang tidak perlu.
-3. **Dashboard Informatif**: Mengubah grafik pendapatan dari bar ke line chart yang lebih halus animasinya. Menambahkan tabel cerdas **"Daftar Prioritas Cucian"** (menampilkan pesanan jatuh tempo hari ini/lewat batas yang belum diambil).
-4. **Notifikasi SweetAlert2**: Mencegah layout meloncat dengan mengganti Bootstrap Flashdata default menjadi notifikasi "Toast" SweetAlert2 yang mengambang mulus di pojok kanan atas (dengan durasi baca 5 detik).
-5. **Navigasi Sidebar Kategorikal**: Sidebar kini dikelompokkan menjadi kategori fungsional (MAIN NAVIGATION, MASTER DATA, REPORTING & LOGS, SISTEM) dengan jarak visual (*spacing*) agar bersih dan intuitif.
-6. **Quick View Detail Transaksi (AJAX)**: Kasir dapat melihat rincian sebuah transaksi secara instan dari halaman "Daftar Transaksi" melalui *Pop-up Modal* berbasis AJAX, tanpa harus memuat ulang halaman (*page reload*).
-7. **Penyempurnaan UML & Desain Sistem**: Pemutakhiran otomatis dokumentasi `uml_and_system_design_documentation.md` yang merangkum *Class Diagram*, fitur *Quick View*, dan penyesuaian ERD/LRS yang kini mencakup rekam jejak `tb_log_whatsapp`.
-8. **Live Search (AJAX)**: Pencarian pelanggan, transaksi, layanan, dan inventaris secara real-time tanpa perlu *reload* halaman.
-9. **Pelacakan Order Publik**: Pelanggan dapat mengecek status cucian lewat fitur "Lacak" dengan 5-tahapan proses yang disajikan dengan UI modern secara publik tanpa login.
-10. **Sistem PIN Pengambilan**: Tambahan keamanan dengan 4 digit PIN yang terintegrasi di tabel transaksi untuk pengambilan laundry.
-11. **Automated Testing Suite**: Peningkatan reliabilitas aplikasi melalui implementasi PHPUnit (Unit & Feature Testing), Data Seeder otomatis, dan detektor typo email (`validation_helper`).
-12. **Refactoring Struktur Database (Best Practice)**: Mengganti penggunaan tipe data `ENUM` menjadi relasi tabel referensi/master (*Lookup Tables*) seperti `tb_master_status_transaksi`, `tb_master_status_pembayaran`, `tb_master_metode_pembayaran`, dll. Hal ini meningkatkan skalabilitas dan mempermudah penambahan opsi baru di masa depan tanpa harus melakukan *ALTER TABLE*.
-13. **Sinkronisasi Log WhatsApp**: Mengkalibrasi ulang status keberhasilan kiriman pesan API Fonnte pada widget dashboard untuk memastikan keakuratan status Sukses, Gagal, dan Pending berdasarkan data *Lookup Table*.
-14. **Fitur Laporan Transaksi**: Merampingkan navigasi dengan menggabungkan Laporan Harian dan Laporan Rentang Waktu menjadi satu fitur Laporan Transaksi yang padat dan dinamis.
-15. **Soft Deletes Transaksi & Fix Checkout**: Memastikan seluruh data riwayat transaksi tidak terhapus permanen dari basis data (*Soft Delete*), dan memperbaiki *Foreign Key Constraint* yang menyebabkan interupsi saat kasir menambahkan barang ke keranjang sebelum memilih nama pelanggan.
-16. **Sparkleen Pay (E-Wallet Simulation)**: Menambahkan fitur *Pengaturan Akun* berbasis *Session* untuk mengubah *Username*, *Password*, dan *PIN Bayar* secara dinamis tanpa database. Memperketat validasi *Bank Transfer* dengan mencocokkan bank pilihan pelanggan terhadap respons API.
-17. **Perbaikan UI & Notifikasi (SweetAlert2)**: Menghilangkan notifikasi bawaan browser (`alert()` & `confirm()`) pada fitur keranjang belanja dan pembatalan API, menggantinya secara menyeluruh dengan dialog mulus dari SweetAlert2. Memperbaiki masalah tumpang-tindih (*nested*) pada form HTML kasir.
-18. **Auto-Tracking WhatsApp**: Memperbaiki tautan pelacakan status pesanan publik pada notifikasi otomatis WhatsApp dari parameter `?kode=` menjadi `?nota=` agar halaman Lacak Order langsung menampilkan detail pesanan seketika setelah di-klik.
+1. **Integrasi Smart Pay**: Sistem kasir kini mendukung pembuatan sesi pembayaran (Payment Session) ke perantara API Node.js secara dinamis.
+2. **Metadata Transaksi**: Penggunaan kolom `payment_detail` bertipe TEXT pada MySQL untuk melacak referensi pelanggan tanpa merombak skema yang kaku.
+3. **Penyempurnaan UI & Notifikasi (SweetAlert2)**: Menghilangkan notifikasi bawaan browser (`alert()` & `confirm()`) pada fitur keranjang belanja dan pembatalan API.
+4. **Live Search (AJAX)**: Pencarian pelanggan, transaksi, layanan, dan inventaris secara real-time tanpa perlu reload halaman.
+5. **Soft Deletes Transaksi**: Memastikan seluruh data riwayat transaksi tidak terhapus permanen dari basis data (Soft Delete).
+6. **Auto-Tracking WhatsApp**: Memperbaiki tautan pelacakan status pesanan publik pada notifikasi otomatis WhatsApp agar halaman Lacak Order langsung menampilkan detail pesanan seketika setelah di-klik.
