@@ -227,8 +227,17 @@ class PelangganBayar extends BaseController
             } else {
                 return $this->response->setJSON(['success' => false, 'message' => 'Pembayaran gagal di sistem.']);
             }
+        } catch (\CodeIgniter\HTTP\Exceptions\HTTPException $e) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Gagal terhubung ke API Payment.']);
         } catch (\Exception $e) {
-            return $this->response->setJSON(['success' => false, 'message' => 'Terjadi kesalahan komunikasi ke API.']);
+            $msg = 'Terjadi kesalahan komunikasi ke API.';
+            if (method_exists($e, 'getResponse')) {
+                $errBody = json_decode($e->getResponse()->getBody(), true);
+                if (isset($errBody['error'])) {
+                    $msg = $errBody['error'];
+                }
+            }
+            return $this->response->setJSON(['success' => false, 'message' => $msg]);
         }
     }
 

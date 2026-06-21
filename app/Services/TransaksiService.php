@@ -268,7 +268,7 @@ class TransaksiService
                         'json' => [
                             'amount'       => $nominal_bayar,
                             'method'       => $methodName,
-                            'customer_ref' => (string) $id_transaksi
+                            'customer_ref' => $transaksi['no_nota']
                         ],
                         'timeout' => 5
                     ]);
