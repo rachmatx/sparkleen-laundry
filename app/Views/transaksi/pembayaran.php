@@ -122,16 +122,25 @@
                         </div>
                     </div>
                     <?php if(!empty($transaksi['payment_ref'])): ?>
-                        <!-- Ganti tombol Proses dengan status loading dan tombol Batal -->
+                        <!-- Status: Menunggu pembayaran via SmartPay API -->
                         <div class="mt-4 text-center">
                             <div class="spinner-border text-primary spinner-border-sm mb-2" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <p class="small text-muted mb-3 fw-bold">Sistem sedang menunggu pembayaran pelanggan...</p>
+                            <p class="small text-muted mb-1 fw-bold">Sistem sedang menunggu pembayaran pelanggan...</p>
+                            <p class="small text-muted mb-3">
+                                ID Transaksi (API): <code id="payment-ref-id"><?= esc($transaksi['payment_ref']) ?></code>
+                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-1 ms-1" 
+                                        onclick="navigator.clipboard.writeText('<?= esc($transaksi['payment_ref']) ?>').then(()=>{ this.innerHTML='<i class=\'fas fa-check\'></i>'; setTimeout(()=>{ this.innerHTML='<i class=\'far fa-copy\'></i>'; },1500); })" 
+                                        title="Salin ID Transaksi">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </p>
                         </div>
+
                         
                         <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancelAPI()">
-                            <i class="fas fa-times-circle me-1"></i> Batalkan & Ubah Metode
+                            <i class="fas fa-times-circle me-1"></i> Batalkan &amp; Ubah Metode
                         </button>
                     <?php else: ?>
                         <button type="submit" class="btn btn-success w-100 mt-2">
@@ -207,6 +216,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const detailsQris = document.getElementById('details-qris');
     const detailsTransfer = document.getElementById('details-transfer');
 
+    // Deklarasi ini harus di atas sebelum dispatchEvent
+    const inputDisplay = document.getElementById('input_nominal_display');
+    const inputRaw = document.getElementById('input_nominal_raw');
+    const infoKembalian = document.getElementById('info-kembalian');
+    const sisaTagihan = <?= $sisa ?>;
+
     if (selectMetode && container && detailsQris && detailsTransfer) {
         selectMetode.addEventListener('change', function() {
             const option = this.options[this.selectedIndex];
@@ -245,12 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Trigger change initially in case of validation/reload state
         selectMetode.dispatchEvent(new Event('change'));
     }
-
-    // Auto Kembalian Calculator
-    const inputDisplay = document.getElementById('input_nominal_display');
-    const inputRaw = document.getElementById('input_nominal_raw');
-    const infoKembalian = document.getElementById('info-kembalian');
-    const sisaTagihan = <?= $sisa ?>;
 
     if (inputDisplay && inputRaw && infoKembalian) {
         inputDisplay.addEventListener('input', function(e) {
