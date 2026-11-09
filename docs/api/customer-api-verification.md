@@ -172,3 +172,13 @@ login berhasil sebelum batas blokir benar-benar memulihkan jumlah percobaan.
 Pemeriksaan log kegagalan/blokir tetap berjalan melalui controller sebenarnya.
 `php vendor/bin/phpunit --filter 'RateLimitTest|LoginThrottleTest'`:
 **14 test, 40 assertions lulus**. Tidak mengubah batas atau implementasi throttle.
+
+## Tahap 4: field model transaksi
+
+Test lama mengharapkan daftar field sebelum penambahan `payment_ref` dan
+`payment_detail`, padahal keduanya sudah ada pada migrasi Juni. Test pengganti
+memeriksa penyimpanan metadata melalui model, menolak perubahan primary key dan
+input tidak dikenal, serta memastikan nomor nota, nominal dan status pembayaran
+tidak ikut berubah. Model/skema aplikasi tidak diubah untuk memenuhi test lama.
+`php vendor/bin/phpunit --filter TransaksiModelTest`:
+**5 test, 16 assertions lulus**.

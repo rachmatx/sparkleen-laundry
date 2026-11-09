@@ -38,19 +38,30 @@ final class TransaksiModelTest extends CIUnitTestCase
         $this->assertStringContainsString($today, $nota);
     }
 
-    public function testAllowedFieldsAreCorrect(): void
+    public function testPaymentMetadataPersistsWithoutChangingTransactionIdentity(): void
     {
         $model = new MTransaksi();
-        $expected = [
-            'no_nota', 'id_pelanggan', 'id_kasir', 'tgl_masuk',
-            'tgl_selesai_estimasi', 'tgl_selesai_aktual', 'total_berat',
-            'total_biaya', 'diskon', 'poin_ditebus', 'poin_diperoleh', 'grand_total', 'id_status_transaksi', 'id_status_pembayaran', 'id_metode_pembayaran', 'pin_pengambilan'
-        ];
-        
-        $reflection = new \ReflectionClass($model);
-        $property = $reflection->getProperty('allowedFields');
-        $property->setAccessible(true);
-        $this->assertEquals($expected, $property->getValue($model));
+        $before = $model->find(1);
+        $detail = json_encode(['method' => 'qris', 'status' => 'PENDING'], JSON_THROW_ON_ERROR);
+
+        // Payment metadata belongs to the existing gateway schema; the primary
+        // key and unknown input must still be excluded from model updates.
+        $this->assertTrue($model->update(1, [
+            'payment_ref' => 'TEST-PAYMENT-REF',
+            'payment_detail' => $detail,
+            'id_transaksi' => 9999,
+            'unrecognized_input' => 'must not become a database column',
+        ]));
+
+        $stored = $model->find(1);
+        $this->assertNotNull($stored);
+        $this->assertSame('TEST-PAYMENT-REF', $stored['payment_ref']);
+        $this->assertSame($detail, $stored['payment_detail']);
+        $this->assertEquals($before['id_transaksi'], $stored['id_transaksi']);
+        $this->assertSame($before['no_nota'], $stored['no_nota']);
+        $this->assertSame($before['grand_total'], $stored['grand_total']);
+        $this->assertSame($before['id_status_pembayaran'], $stored['id_status_pembayaran']);
+        $this->assertNull($model->find(9999));
     }
 
     public function testTableNameIsCorrect(): void
