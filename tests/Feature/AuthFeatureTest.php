@@ -81,13 +81,21 @@ final class AuthFeatureTest extends CIUnitTestCase
 
     public function testDeactivatedAccountCannotLogin(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        // Exercise the controller through the real CSRF-protected login route.
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'nonaktif_test',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.');
+        $this->assertFalse((bool) session()->get('isLoggedIn'));
+        $this->assertNull(session()->get('id_karyawan'));
+        $this->seeInDatabase('tb_log_aktivitas', [
+            'aksi' => 'Login Akun Nonaktif',
+            'nama_referensi' => 'nonaktif_test',
+        ]);
     }
 
     public function testLoginWithEmailWorks(): void

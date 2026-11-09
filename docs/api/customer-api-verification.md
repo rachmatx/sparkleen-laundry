@@ -129,3 +129,16 @@ diakses perangkat dan konfigurasi release HTTPS.
   webhook/retry/otorisasi yang belum diselesaikan. Jalur debug/seed web lama juga
   perlu ditinjau sebelum deployment publik.
 - Perubahan ini disiapkan sebagai commit lokal per repo. Belum push atau deploy.
+
+## Tahap kecil berikutnya: test akun karyawan nonaktif
+
+10 November 2026. `testDeactivatedAccountCannotLogin` direproduksi gagal karena
+request test tidak menyertakan token CSRF dan ditolak sebelum mencapai controller.
+Request test diperbaiki dengan token CSRF yang valid; konfigurasi keamanan dan
+controller aplikasi tidak diubah. Test juga memastikan sesi login/id karyawan
+tidak terbentuk dan percobaan akun nonaktif tercatat pada log aktivitas.
+
+Verifikasi terarah: `php vendor/bin/phpunit --filter testDeactivatedAccountCannotLogin`
+lulus **1 test, 7 assertions** pada database test lokal. Suite keseluruhan tidak
+dijalankan ulang pada tahap kecil ini; angka 17 failure di atas adalah hasil
+baseline/verifikasi tahap sebelumnya, bukan klaim hasil suite terbaru.
