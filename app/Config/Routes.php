@@ -176,3 +176,22 @@ $routes->group('laporan', ['filter' => 'role:admin,pemilik'], static function ($
 
 // Webhook Payment
 $routes->post('webhook/payment', 'Webhook::payment');
+
+// Customer API: independent of cashier sessions; all private routes require Bearer auth.
+$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'cors'], static function ($routes) {
+    $routes->post('auth/register', 'AuthController::register');
+    $routes->post('auth/activate', 'AuthController::activate');
+    $routes->post('auth/login', 'AuthController::login');
+    $routes->options('(:any)', static fn () => service('response')->setStatusCode(204));
+    $routes->group('', ['filter' => 'apiauth'], static function ($routes) {
+        $routes->post('auth/logout', 'AuthController::logout');
+        $routes->get('me', 'CustomerController::me');
+        $routes->patch('me', 'CustomerController::update');
+        $routes->get('layanan', 'CustomerController::layanan');
+        $routes->get('outlet', 'CustomerController::outlet');
+        $routes->get('transaksi', 'TransaksiController::index');
+        $routes->get('transaksi/(:num)', 'TransaksiController::show/$1');
+        $routes->get('transaksi/(:num)/nota', 'TransaksiController::nota/$1');
+    });
+    $routes->match(['GET', 'POST', 'PATCH', 'PUT', 'DELETE'], '(:any)', static fn () => \App\Libraries\Mobile\ApiJson::error(new \App\Libraries\Mobile\ApiProblem('NOT_FOUND', 'Endpoint tidak ditemukan.', 404)));
+});

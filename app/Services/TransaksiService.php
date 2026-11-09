@@ -289,12 +289,14 @@ class TransaksiService
                     }
                 } catch (\Exception $e) {
                     log_message('error', 'API Payment Gagal: ' . $e->getMessage());
-                    // Fallback to normal behavior if API fails or unreachable
+                    // Return an explicit failure below; never record a local online payment.
                 }
             }
+            // An unavailable/rejected gateway is not proof that money was received.
+            return ['success' => false, 'message' => 'Pembayaran online belum terkonfirmasi. Layanan pembayaran tidak tersedia; coba lagi nanti.'];
         }
 
-        // Lanjut ke alur CASH atau Fallback jika API gagal
+        // Pembayaran tunai hanya melalui pilihan kasir yang eksplisit.
         $sisaSetelah = $sisa - $nominal_bayar;
 
         $db = db_connect();

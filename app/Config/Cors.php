@@ -68,7 +68,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
          */
-        'allowedHeaders' => [],
+        'allowedHeaders' => ['Authorization', 'Content-Type', 'Accept'],
 
         /**
          * Set headers to expose.
@@ -93,7 +93,7 @@ class Cors extends BaseConfig
          *
          * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
          */
-        'allowedMethods' => [],
+        'allowedMethods' => ['GET', 'POST', 'PATCH', 'OPTIONS'],
 
         /**
          * Set how many seconds the results of a preflight request can be cached.
@@ -102,4 +102,10 @@ class Cors extends BaseConfig
          */
         'maxAge' => 7200,
     ];
+    public function __construct()
+    {
+        parent::__construct();
+        $origins = (string) env('MOBILE_ALLOWED_ORIGINS', '');
+        $this->default['allowedOrigins'] = array_values(array_filter(array_map('trim', explode(',', $origins))));
+    }
 }

@@ -26,6 +26,7 @@ class Filters extends BaseFilters
      * or [filter_name => [classname1, classname2, ...]]
      */
     public array $aliases = [
+        'apiauth' => \App\Filters\ApiAuthFilter::class,
         'csrf'          => CSRF::class,
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
@@ -77,6 +78,8 @@ class Filters extends BaseFilters
         'before' => [
             'auth' => [
                 'except' => [
+                    'api/v1',
+                    'api/v1/*',
                     '/',
                     'login',
                     'doLogin',
@@ -91,6 +94,8 @@ class Filters extends BaseFilters
             ],
             'csrf' => [
                 'except' => [
+                    'api/v1',
+                    'api/v1/*',
                     'webhook/payment',
                     'pelanggan-bayar/cekQr',
                     'pelanggan-bayar/cekTransfer',

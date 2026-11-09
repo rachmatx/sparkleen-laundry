@@ -229,3 +229,13 @@ Dibuat menggunakan [CodeIgniter 4](https://codeigniter.com) &nbsp;·&nbsp; [MIT 
 
 </div>
 
+
+## API pelanggan Sparkleen App
+
+Branch fondasi API menambahkan 11 endpoint `/api/v1` untuk autentikasi pelanggan,
+profil, katalog, outlet, transaksi milik sendiri, dan nota digital. Kontrak,
+migrasi additive, konfigurasi CORS/outlet, serta cara uji terisolasi tersedia di
+[Customer API foundation](docs/api/customer-api-foundation.md).
+
+Jemput dan pembayaran pelanggan belum termasuk endpoint yang diimplementasikan.
+Gateway online yang gagal tidak lagi otomatis dicatat sebagai pembayaran lokal.

@@ -264,3 +264,7 @@ scratch.php
 #-------------------------
 /public/reports/*
 !/public/reports/index.html
+
+# Shared, guarded test harness
+!phpunit.xml.dist
+.phpunit.cache/
