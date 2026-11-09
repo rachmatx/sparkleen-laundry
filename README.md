@@ -244,3 +244,6 @@ Panduan rilis, backup/restore dan perubahan startup: [customer API rollout](docs
 
 Validasi nominal/identitas webhook dan deduplikasi pembayaran:
 [Webhook integrity](docs/payments/webhook-integrity.md).
+
+Permintaan jemput, antrean kasir dan konversi ke transaksi:
+[Pickup implementation](docs/pickup/implementation.md).

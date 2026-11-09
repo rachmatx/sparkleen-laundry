@@ -2,8 +2,9 @@
 
 Branch: `feat/customer-api-foundation`, based on Laundry `524f554`.
 
-This backend implements the 11 customer endpoints used by Sparkleen App. It does
-not implement pickup requests, mobile payment initiation, a wallet, or push messaging.
+The original foundation implemented the 11 customer endpoints used by Sparkleen App.
+Pickup requests are now added on `feat/pickup-requests`; see `docs/pickup/implementation.md`.
+Mobile payment initiation, a wallet and push messaging remain outside this scope.
 The existing cashier tables remain authoritative for amounts, points and order status.
 
 ## Routes

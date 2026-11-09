@@ -192,9 +192,17 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
         $routes->patch('me', 'CustomerController::update');
         $routes->get('layanan', 'CustomerController::layanan');
         $routes->get('outlet', 'CustomerController::outlet');
+        $routes->post('permintaan', 'PermintaanController::create');
+        $routes->get('permintaan', 'PermintaanController::index');
+        $routes->get('permintaan/(:num)', 'PermintaanController::show/$1');
+        $routes->post('permintaan/(:num)/batal', 'PermintaanController::cancel/$1');
         $routes->get('transaksi', 'TransaksiController::index');
         $routes->get('transaksi/(:num)', 'TransaksiController::show/$1');
         $routes->get('transaksi/(:num)/nota', 'TransaksiController::nota/$1');
     });
     $routes->match(['GET', 'POST', 'PATCH', 'PUT', 'DELETE'], '(:any)', static fn () => \App\Libraries\Mobile\ApiJson::error(new \App\Libraries\Mobile\ApiProblem('NOT_FOUND', 'Endpoint tidak ditemukan.', 404)));
 });
+
+// Pickup queue uses cashier sessions/roles and the existing web CSRF filter.
+$routes->get('penjemputan', 'Penjemputan::index', ['filter' => 'role:admin,kasir,pemilik']);
+$routes->post('penjemputan/(:num)/(:segment)', 'Penjemputan::update/$1/$2', ['filter' => 'role:admin,kasir']);
