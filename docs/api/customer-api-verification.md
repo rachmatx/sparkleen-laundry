@@ -2,7 +2,7 @@
 
 10 November 2026 · verifikasi lokal pada branch `feat/customer-api-foundation` di kedua repo.
 
-> Pembaruan tahap 2–5: 56 test terarah lulus, 290 assertions, tanpa failure/error.
+> Pembaruan tahap 6: suite penuh lulus, 104 test dan 392 assertions, tanpa failure/error.
 > Angka 17 failure pada bagian fondasi adalah hasil historis sebelum perbaikan test.
 > Hasil terbaru per tahap dan batas cakupannya ada di bagian akhir dokumen.
 
@@ -230,3 +230,14 @@ allowlist model, atau perilaku bisnis aplikasi untuk menyesuaikan ekspektasi lam
 
 Suite backend keseluruhan (tahap 6), Android fisik, push, dan deployment belum
 dikerjakan pada tahap ini. Hasil terarah ini tidak dianggap hasil suite penuh.
+
+## Tahap 6: suite backend penuh
+
+10 November 2026. Pada kode `4db71f5`, seluruh suite dijalankan satu kali secara
+berurutan dengan `php vendor/bin/phpunit --log-junit <laporan-lokal.xml>` pada
+MariaDB disposable lokal. Hasil: **104 test, 392 assertions, 0 failure, 0 error**,
+waktu PHPUnit **55,242 detik**. Semua 17 kegagalan yang dilaporkan pada tahap
+fondasi kini terselesaikan. Hasil XML diperiksa setelah proses selesai.
+
+Ini verifikasi lokal PHP 8.4.24/MariaDB 11.8.6; belum membuktikan perilaku Android
+fisik atau deployment operasional yang belum dapat diakses.
