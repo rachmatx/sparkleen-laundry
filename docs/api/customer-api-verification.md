@@ -2,6 +2,10 @@
 
 10 November 2026 · verifikasi lokal pada branch `feat/customer-api-foundation` di kedua repo.
 
+> Pembaruan tahap 2–5: 56 test terarah lulus, 290 assertions, tanpa failure/error.
+> Angka 17 failure pada bagian fondasi adalah hasil historis sebelum perbaikan test.
+> Hasil terbaru per tahap dan batas cakupannya ada di bagian akhir dokumen.
+
 ## Yang sudah diterapkan
 
 Backend Laundry memperoleh 11 endpoint pelanggan `/api/v1`: daftar, aktivasi,
@@ -182,3 +186,47 @@ input tidak dikenal, serta memastikan nomor nota, nominal dan status pembayaran
 tidak ikut berubah. Model/skema aplikasi tidak diubah untuk memenuhi test lama.
 `php vendor/bin/phpunit --filter TransaksiModelTest`:
 **5 test, 16 assertions lulus**.
+
+## Tahap 5: alur kasir
+
+Seluruh POST keranjang, transaksi dan pembayaran kini mengirim token CSRF valid.
+Filter web tetap dijalankan. Notifier WhatsApp pada fixture dinonaktifkan secara
+lokal dalam test agar alur ini tidak mengirim pesan keluar.
+
+Pemeriksaan meliputi tambah/hapus keranjang, penolakan transaksi tanpa pelanggan
+atau item, nota transaksi baru, potongan dan perolehan poin, stok turun tepat
+0,25 dari 50 menjadi 49,75, rekaman pemakaian inventaris, pelunasan tunai, serta
+kembalian Rp15.000 untuk uang Rp50.000 pada tagihan Rp35.000. Pembayaran yang
+tercatat tetap Rp35.000, sisa tagihan nol, dan satu rekaman pembayaran.
+
+Run pertama `php vendor/bin/phpunit --filter TransaksiFeatureTest` lulus
+**10 test, 47 assertions**. Setelah penambahan pemeriksaan nominal/stok dan
+ketiadaan transaksi pada input tidak valid, hasil gabungan dicatat berikut ini.
+
+## Verifikasi gabungan tahap 2–5
+
+Perintah:
+
+```sh
+php vendor/bin/phpunit --filter 'AuthFeatureTest|RateLimitTest|LoginThrottleTest|TransaksiModelTest|TransaksiFeatureTest|CustomerApiTest'
+```
+
+Hasil akhir: **56 test, 290 assertions, 0 failure, 0 error** (39,217 detik waktu
+PHPUnit; di luar inisialisasi database disposable). Rincian:
+
+| Kelompok | Test | Assertions |
+| --- | ---: | ---: |
+| Autentikasi web | 9 | 45 |
+| Rate limit web | 4 | 24 |
+| Unit LoginThrottle | 10 | 16 |
+| Model transaksi | 5 | 16 |
+| Alur kasir | 10 | 59 |
+| API pelanggan | 18 | 130 |
+
+Sebelum tahap 2–5, empat kelas sasaran dijalankan dan menghasilkan 28 test,
+15 failure. Kelompok itu kini lulus bersama pemeriksaan unit throttle dan API.
+Perubahan tahap 2–5 hanya pada test serta laporan; tidak melonggarkan CSRF,
+allowlist model, atau perilaku bisnis aplikasi untuk menyesuaikan ekspektasi lama.
+
+Suite backend keseluruhan (tahap 6), Android fisik, push, dan deployment belum
+dikerjakan pada tahap ini. Hasil terarah ini tidak dianggap hasil suite penuh.
