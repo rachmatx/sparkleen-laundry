@@ -34,26 +34,29 @@ $routes->group('pelanggan', ['filter' => 'role:admin,pemilik'], static function 
     $routes->post('toggle/(:num)', 'Pelanggan::toggleStatus/$1');
 });
 
-$routes->get('/debug-db', function() {
-    $db = \Config\Database::connect();
-    $karyawan = $db->table('tb_karyawan')->get()->getResultArray();
-    return "<pre>" . print_r($karyawan, true) . "</pre>";
-});
+// Diagnostic and bootstrap routes are available only for local development.
+if (ENVIRONMENT === 'development') {
+    $routes->get('/debug-db', function() {
+        $db = \Config\Database::connect();
+        $karyawan = $db->table('tb_karyawan')->get()->getResultArray();
+        return "<pre>" . print_r($karyawan, true) . "</pre>";
+    });
 
-$routes->get('/seed', function() {
-    $seeder = \Config\Database::seeder();
-    try {
-        $seeder->call('MasterSeeder');
-        $seeder->call('AdminSeeder');
-        return "Database berhasil di-seed! Silakan coba login.";
-    } catch (\Exception $e) {
-        return "Gagal seed database: " . $e->getMessage();
-    }
-});
+    $routes->get('/seed', function() {
+        $seeder = \Config\Database::seeder();
+        try {
+            $seeder->call('MasterSeeder');
+            $seeder->call('AdminSeeder');
+            return "Database berhasil di-seed! Silakan coba login.";
+        } catch (\Exception $e) {
+            return "Gagal seed database: " . $e->getMessage();
+        }
+    });
 
-$routes->get('/debug', function() {
-    return "Base URL is: " . base_url() . "<br>HTTP_HOST is: " . ($_SERVER['HTTP_HOST'] ?? 'null') . "<br>X-Forwarded-Host is: " . ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? 'null');
-});
+    $routes->get('/debug', function() {
+        return "Base URL is: " . base_url() . "<br>HTTP_HOST is: " . ($_SERVER['HTTP_HOST'] ?? 'null') . "<br>X-Forwarded-Host is: " . ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? 'null');
+    });
+}
 
 // Profil / Ganti Password
 $routes->get('/profile', 'Profile::index');

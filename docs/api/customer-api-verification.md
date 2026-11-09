@@ -2,7 +2,7 @@
 
 10 November 2026 · verifikasi lokal pada branch `feat/customer-api-foundation` di kedua repo.
 
-> Pembaruan tahap 6: suite penuh lulus, 104 test dan 392 assertions, tanpa failure/error.
+> Pembaruan terbaru tahap 6–8: suite penuh lulus, 106 test dan 404 assertions, tanpa failure/error.
 > Angka 17 failure pada bagian fondasi adalah hasil historis sebelum perbaikan test.
 > Hasil terbaru per tahap dan batas cakupannya ada di bagian akhir dokumen.
 
@@ -241,3 +241,39 @@ fondasi kini terselesaikan. Hasil XML diperiksa setelah proses selesai.
 
 Ini verifikasi lokal PHP 8.4.24/MariaDB 11.8.6; belum membuktikan perilaku Android
 fisik atau deployment operasional yang belum dapat diakses.
+
+## Tahap 7–8: pemeriksaan Android dan persiapan rilis
+
+10 November 2026. Tahap Android fisik **belum dapat dijalankan**: Android SDK,
+`adb`, emulator dan perangkat fisik belum tersedia dalam lingkungan ini. Java 21
+tersedia. Percobaan inventaris Flutter dihentikan/timed out tanpa hasil perangkat;
+ini bukan hasil lulus uji Android. Repo App kini memuat panduan uji perangkat pada
+`docs/release/android-verification.md`. Signing release masih menggunakan debug
+config, dan keystore pemilik belum tersedia; APK produksi belum dibuat.
+
+Persiapan backend yang diterapkan sebelum push/deploy:
+
+- Route diagnostik/seed hanya terdaftar dalam development; inventaris route
+  production diperiksa melalui `CI_ENVIRONMENT=production php spark routes`.
+- Startup standar tidak menjalankan migrasi/seeder/default owner account.
+  Flag environment container `RUN_DATABASE_MIGRATIONS=1` adalah pilihan eksplisit
+  setelah backup; kegagalan migrasi menghentikan startup sebelum Apache.
+- Tiga skenario shell startup lulus: boot default, migrasi eksplisit, dan fail-stop.
+- Test restore memakai output `BackupService` sebenarnya, termasuk alamat dengan
+  kutip, backslash, baris baru dan Unicode; migration runner kemudian menerapkan
+  skema mobile. Enam kelompok tabel bisnis cocok dengan snapshot sebelum perubahan.
+- Panduan backup operasional, staging, konfigurasi, smoke test dan rollback ada di
+  `docs/release/customer-api-rollout.md`. Backup/restore di atas memakai fixture
+  lokal; backup database operasional belum dilakukan.
+
+Sesudah perubahan rilis, suite penuh dijalankan lagi secara berurutan:
+**106 test, 404 assertions, 0 failure, 0 error**, waktu PHPUnit **56,184 detik**.
+Dua test kesiapan rilis menambah 12 assertions. `bash -n` dan pemeriksaan sintaks
+PHP terkait juga lulus.
+
+GitHub tidak terautentikasi (`gh auth status`), dan dry-run push ditolak karena
+kredensial tidak tersedia. Pemeriksaan remote hanya membuktikan Laundry `main`
+masih menunjuk `524f554`; tidak membuktikan versi service operasional. Belum ada
+push/deploy. Token GitHub lama tidak digunakan atau disimpan. Penyelesaian tahap
+7–8 memerlukan perangkat/SDK Android, konfigurasi signing yang benar, koneksi
+GitHub serta URL dan akses project/service hosting yang aktif.
