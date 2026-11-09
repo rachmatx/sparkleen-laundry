@@ -222,14 +222,42 @@ class TransaksiService
      */
     public function prosesPembayaran(int $id_transaksi, array $postData): array
     {
+        $db = db_connect();
+        if (!$db->transBegin()) {
+            return ['success' => false, 'message' => 'Pembayaran belum dapat diproses.'];
+        }
+        try {
+            // Cash and webhook use the same order lock before reading the balance.
+            $order = $db->query('SELECT * FROM tb_transaksi WHERE id_transaksi = ? AND deleted_at IS NULL FOR UPDATE', [$id_transaksi])->getRowArray();
+            $result = $order
+                ? $this->prosesPembayaranTerkunci($id_transaksi, $postData, $order)
+                : ['success' => false, 'message' => 'Transaksi tidak ditemukan.'];
+            if (!$result['success'] || !$db->transStatus()) {
+                $db->transRollback();
+                $db->resetTransStatus();
+                return ['success' => false, 'message' => $result['success'] ? 'Gagal menyimpan pembayaran.' : $result['message']];
+            }
+            if (!$db->transCommit()) {
+                throw new \RuntimeException('Payment commit failed.');
+            }
+            return $result;
+        } catch (\Throwable $error) {
+            $db->transRollback();
+            $db->resetTransStatus();
+            log_message('error', 'Cashier payment failure: {type}', ['type' => get_class($error)]);
+            return ['success' => false, 'message' => 'Pembayaran belum dapat diproses. Periksa konfigurasi dan tagihan.'];
+        }
+    }
+
+    private function prosesPembayaranTerkunci(int $id_transaksi, array $postData, array $transaksi): array
+    {
         $nominal_bayar        = (float) ($postData['nominal_bayar'] ?? 0);
         $id_metode_pembayaran = (int) ($postData['id_metode_pembayaran'] ?? 0);
 
-        if ($nominal_bayar <= 0) {
+        if (!is_finite($nominal_bayar) || $nominal_bayar <= 0 || !in_array($id_metode_pembayaran, [1, 2, 3], true)) {
             return ['success' => false, 'message' => 'Input tidak valid. Pastikan nominal lebih dari 0 dan metode bayar valid.'];
         }
 
-        $transaksi    = $this->transaksiModel->find($id_transaksi);
         $totalDibayar = $this->pembayaranModel
             ->selectSum('nominal_bayar', 'total')
             ->where('id_transaksi', $id_transaksi)
@@ -252,6 +280,9 @@ class TransaksiService
         // 1 = Cash, 2 = QRIS, 3 = Transfer
         if ($id_metode_pembayaran === 2 || $id_metode_pembayaran === 3) {
             $methodName = $id_metode_pembayaran === 2 ? 'QRIS' : 'BANK_TRANSFER';
+            if (floor($nominal_bayar) !== $nominal_bayar || $nominal_bayar > \App\Libraries\Payments\PaymentContract::MAX_RUPIAH) {
+                return ['success' => false, 'message' => 'Pembayaran online harus berupa integer rupiah yang didukung.'];
+            }
             
             $apiUrl = env('PAYMENT_API_URL') ?: getenv('PAYMENT_API_URL');
             $apiKey = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
@@ -275,7 +306,8 @@ class TransaksiService
 
                     $resData = json_decode($response->getBody(), true);
                     if (isset($resData['success']) && $resData['success'] === true) {
-                        // Update tb_transaksi dgn payment_ref dari API
+                        (new PaymentSettlementService())->recordIntent($transaksi, $resData['data'], (int) $nominal_bayar, $methodName);
+                        // The intent and displayed gateway reference commit together.
                         $this->transaksiModel->update($id_transaksi, [
                             'payment_ref'    => $resData['data']['transaction_id'],
                             'payment_detail' => json_encode($resData['data']['payment_detail']),
@@ -288,7 +320,7 @@ class TransaksiService
                         ];
                     }
                 } catch (\Exception $e) {
-                    log_message('error', 'API Payment Gagal: ' . $e->getMessage());
+                    log_message('error', 'Payment gateway failure: {type}', ['type' => get_class($e)]);
                     // Return an explicit failure below; never record a local online payment.
                 }
             }
@@ -298,9 +330,6 @@ class TransaksiService
 
         // Pembayaran tunai hanya melalui pilihan kasir yang eksplisit.
         $sisaSetelah = $sisa - $nominal_bayar;
-
-        $db = db_connect();
-        $db->transStart();
 
         $this->pembayaranModel->insert([
             'id_transaksi'         => $id_transaksi,
@@ -316,13 +345,6 @@ class TransaksiService
             'id_status_pembayaran' => $statusPembayaran,
             'id_metode_pembayaran' => $id_metode_pembayaran,
         ]);
-
-        $db->transComplete();
-
-        if (!$db->transStatus()) {
-            log_message('error', 'prosesPembayaran: DB transaction gagal untuk id_transaksi=' . $id_transaksi);
-            return ['success' => false, 'message' => 'Gagal menyimpan pembayaran ke database. Silakan coba lagi.'];
-        }
 
         $message = $kembalian > 0
             ? 'Pembayaran berhasil. Uang Kembalian: Rp ' . number_format($kembalian, 0, ',', '.')

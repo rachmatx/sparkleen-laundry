@@ -241,3 +241,6 @@ Jemput dan pembayaran pelanggan belum termasuk endpoint yang diimplementasikan.
 Gateway online yang gagal tidak lagi otomatis dicatat sebagai pembayaran lokal.
 
 Panduan rilis, backup/restore dan perubahan startup: [customer API rollout](docs/release/customer-api-rollout.md).
+
+Validasi nominal/identitas webhook dan deduplikasi pembayaran:
+[Webhook integrity](docs/payments/webhook-integrity.md).

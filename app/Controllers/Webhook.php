@@ -2,77 +2,51 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
-use CodeIgniter\API\ResponseTrait;
-use App\Models\MTransaksi;
+use App\Libraries\Payments\PaymentProblem;
+use App\Services\PaymentSettlementService;
 
-class Webhook extends ResourceController
+class Webhook extends BaseController
 {
-    use ResponseTrait;
-
     public function payment()
     {
-        $payload = $this->request->getJSON(true);
-        $signature = $this->request->getHeaderLine('X-Signature');
-        $secret = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
-
-        // Jika request bukan JSON atau signature kosong
-        if (!$payload || !$signature) {
-            return $this->failUnauthorized('Missing payload or signature');
-        }
-
-        $rawBody = $this->request->getBody();
-
-        // Verifikasi HMAC menggunakan raw body
-        $expectedSignature = hash_hmac('sha256', $rawBody, $secret);
-        if (!hash_equals($expectedSignature, $signature)) {
-            log_message('error', "Webhook HMAC mismatch. Expected: $expectedSignature, Got: $signature");
-            return $this->failUnauthorized('Invalid signature');
-        }
-
-        if ($payload['event'] === 'payment.success') {
-            $transactionId = $payload['transaction_id'];
-
-            $mTransaksi = new MTransaksi();
-            $transaksi = $mTransaksi->where('payment_ref', $transactionId)->first();
-
-            if ($transaksi) {
-                // Update status_pembayaran menjadi 1 (Lunas)
-                $mTransaksi->update($transaksi['id_transaksi'], [
-                    'id_status_pembayaran' => 1
-                ]);
-
-                // Catat ke tb_pembayaran agar masuk ke riwayat
-                $mPembayaran = new \App\Models\MPembayaran();
-                
-                // Hitung nominal karena bisa saja ini pelunasan bertahap (walau di protoype kita bayar full)
-                $totalDibayar = $mPembayaran
-                    ->selectSum('nominal_bayar', 'total')
-                    ->where('id_transaksi', $transaksi['id_transaksi'])
-                    ->first();
-                $sudahDibayar = $totalDibayar['total'] ?? 0;
-                $sisa         = (float) $transaksi['grand_total'] - $sudahDibayar;
-                
-                if ($sisa > 0) {
-                    $mPembayaran->insert([
-                        'id_transaksi'         => $transaksi['id_transaksi'],
-                        'tgl_bayar'            => date('Y-m-d H:i:s'),
-                        'nominal_bayar'        => $sisa, // Bayar full sisa tagihan
-                        'sisa_tagihan'         => 0,
-                        'id_metode_pembayaran' => $transaksi['id_metode_pembayaran'], // QRIS(2) / TF(3)
-                    ]);
-                    log_message('info', "Webhook: Payment inserted for Trx {$transaksi['id_transaksi']}");
-                } else {
-                    log_message('info', "Webhook: Trx {$transaksi['id_transaksi']} already paid (sisa <= 0)");
-                }
-
-                return $this->respond(['status' => 'success', 'message' => 'Payment confirmed']);
-            } else {
-                log_message('error', "Webhook: Transaction not found for ref $transactionId");
-                return $this->failNotFound('Transaction not found');
+        try {
+            $secret = env('PAYMENT_WEBHOOK_SECRET') ?: getenv('PAYMENT_WEBHOOK_SECRET');
+            $merchantKey = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
+            if (!is_string($secret) || trim($secret) === '' || (is_string($merchantKey) && hash_equals($secret, $merchantKey))) {
+                throw new PaymentProblem('WEBHOOK_NOT_CONFIGURED', 'Webhook pembayaran belum dikonfigurasi.', 503);
             }
+            $raw = $this->request->getBody();
+            if (strlen($raw) > 65536) {
+                throw new PaymentProblem('PAYLOAD_TOO_LARGE', 'Payload terlalu besar.', 413);
+            }
+            $signature = $this->request->getHeaderLine('X-Signature');
+            if (!preg_match('/^[a-f0-9]{64}$/D', $signature) || !hash_equals(hash_hmac('sha256', $raw, $secret), $signature)) {
+                throw new PaymentProblem('INVALID_SIGNATURE', 'Signature tidak valid.', 401);
+            }
+            try {
+                $payload = json_decode($raw, false, 32, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $error) {
+                throw new PaymentProblem('INVALID_JSON', 'JSON tidak valid.', 400);
+            }
+            if (!$payload instanceof \stdClass || !is_string($payload->event ?? null)) {
+                throw new PaymentProblem('INVALID_PAYLOAD', 'Payload event tidak valid.', 422);
+            }
+            if ($payload->event !== 'payment.success') {
+                return $this->json(['status' => 'ignored']);
+            }
+            $duplicate = (new PaymentSettlementService())->apply((array) $payload);
+            return $this->json(['status' => 'success', 'duplicate' => $duplicate]);
+        } catch (PaymentProblem $error) {
+            return $this->json(['status' => 'error', 'code' => $error->problemCode, 'message' => $error->getMessage()], $error->httpStatus);
+        } catch (\Throwable $error) {
+            // Never log request bodies, expected HMACs, signatures or gateway keys.
+            log_message('error', 'Payment webhook failure: {type}', ['type' => get_class($error)]);
+            return $this->json(['status' => 'error', 'code' => 'SERVER_ERROR', 'message' => 'Pembayaran belum dapat dikonfirmasi.'], 500);
         }
+    }
 
-        return $this->respond(['status' => 'ignored']);
+    private function json(array $body, int $status = 200)
+    {
+        return $this->response->setStatusCode($status)->setHeader('Cache-Control', 'no-store')->setJSON($body);
     }
 }

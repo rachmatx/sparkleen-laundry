@@ -20,6 +20,7 @@ class TestDataSeeder extends Seeder
             'tb_log_whatsapp',
             'tb_detail_transaksi',
             'tb_penggunaan_inventaris',
+            'tb_payment_intent',
             'tb_pembayaran',
             'tb_status_log',
             'tb_transaksi',
