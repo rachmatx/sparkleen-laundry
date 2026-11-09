@@ -163,3 +163,12 @@ menyertakan token CSRF yang valid. Pemeriksaan tambahan memastikan kegagalan tid
 membentuk sesi login, sedangkan login email memakai identitas admin yang benar.
 Mock konfigurasi filter yang tidak efektif dihapus; filter CSRF tetap aktif.
 `php vendor/bin/phpunit --filter AuthFeatureTest`: **9 test, 45 assertions lulus**.
+
+## Tahap 3: pembatasan percobaan login
+
+Request pada empat feature test rate limit kini menyertakan token CSRF baru untuk
+setiap POST. Test memastikan password benar tetap ditolak selama blokir, dan
+login berhasil sebelum batas blokir benar-benar memulihkan jumlah percobaan.
+Pemeriksaan log kegagalan/blokir tetap berjalan melalui controller sebenarnya.
+`php vendor/bin/phpunit --filter 'RateLimitTest|LoginThrottleTest'`:
+**14 test, 40 assertions lulus**. Tidak mengubah batas atau implementasi throttle.
