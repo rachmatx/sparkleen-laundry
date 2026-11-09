@@ -27,11 +27,6 @@ final class AuthFeatureTest extends CIUnitTestCase
     {
         parent::setUp();
 
-        // Disable CSRF for feature tests
-        $filterConfig = config('Filters');
-        $filterConfig->methods = [];
-        \CodeIgniter\Config\Factories::injectMock('config', 'Filters', $filterConfig);
-
         // Clear any throttle cache
         $throttle = service('loginThrottle');
         $throttle->clear('127.0.0.1', 'kasir_test');
@@ -68,24 +63,31 @@ final class AuthFeatureTest extends CIUnitTestCase
 
     public function testFailedLoginShowsError(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'wrong_password',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('error');
+        $this->assertStringContainsString('Username/email atau password salah.', session()->getFlashdata('error'));
+        $result->assertSessionMissing('isLoggedIn');
+        $result->assertSessionMissing('id_karyawan');
     }
 
     public function testEmptyCredentialsShowsError(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => '',
             'password' => '',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('error', 'Username/email dan password wajib diisi.');
+        $result->assertSessionMissing('isLoggedIn');
+        $result->assertSessionMissing('id_karyawan');
     }
 
     public function testDeactivatedAccountCannotLogin(): void
@@ -109,14 +111,17 @@ final class AuthFeatureTest extends CIUnitTestCase
 
     public function testLoginWithEmailWorks(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'admin@test.com',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('dashboard'));
         $result->assertSessionHas('isLoggedIn', true);
         $result->assertSessionHas('level', 'admin');
+        $result->assertSessionHas('username', 'admin_test');
+        $this->assertSame(2, (int) session()->get('id_karyawan'));
     }
 
     public function testLogoutDestroysSession(): void

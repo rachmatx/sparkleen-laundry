@@ -155,3 +155,11 @@ Verifikasi terarah bersama test akun nonaktif tahap sebelumnya:
 `php vendor/bin/phpunit --filter 'testSuccessfulLoginRedirectsToDashboard|testDeactivatedAccountCannotLogin'`
 lulus **2 test, 17 assertions** pada database test lokal. Suite keseluruhan tidak
 dijalankan ulang pada tahap ini.
+
+## Tahap 2: sisa skenario autentikasi
+
+10 November 2026. Request password salah, form kosong, dan login email kini
+menyertakan token CSRF yang valid. Pemeriksaan tambahan memastikan kegagalan tidak
+membentuk sesi login, sedangkan login email memakai identitas admin yang benar.
+Mock konfigurasi filter yang tidak efektif dihapus; filter CSRF tetap aktif.
+`php vendor/bin/phpunit --filter AuthFeatureTest`: **9 test, 45 assertions lulus**.
