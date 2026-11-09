@@ -142,3 +142,16 @@ Verifikasi terarah: `php vendor/bin/phpunit --filter testDeactivatedAccountCanno
 lulus **1 test, 7 assertions** pada database test lokal. Suite keseluruhan tidak
 dijalankan ulang pada tahap kecil ini; angka 17 failure di atas adalah hasil
 baseline/verifikasi tahap sebelumnya, bukan klaim hasil suite terbaru.
+
+## Tahap kecil berikutnya: test login kasir berhasil
+
+10 November 2026. `testSuccessfulLoginRedirectsToDashboard` direproduksi gagal
+karena request test juga tidak mengirim token CSRF. Test kini mengirim token yang
+valid dan memeriksa redirect dashboard, status login, peran kasir, username,
+identitas karyawan yang benar, serta log login. Controller dan konfigurasi
+keamanan aplikasi tidak diubah.
+
+Verifikasi terarah bersama test akun nonaktif tahap sebelumnya:
+`php vendor/bin/phpunit --filter 'testSuccessfulLoginRedirectsToDashboard|testDeactivatedAccountCannotLogin'`
+lulus **2 test, 17 assertions** pada database test lokal. Suite keseluruhan tidak
+dijalankan ulang pada tahap ini.

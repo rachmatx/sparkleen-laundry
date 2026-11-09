@@ -47,14 +47,23 @@ final class AuthFeatureTest extends CIUnitTestCase
 
     public function testSuccessfulLoginRedirectsToDashboard(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        // Submit the same CSRF-protected form as the browser.
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('dashboard'));
         $result->assertSessionHas('isLoggedIn', true);
         $result->assertSessionHas('level', 'kasir');
+        $result->assertSessionHas('username', 'kasir_test');
+        $this->assertSame(1, (int) session()->get('id_karyawan'));
+        $this->seeInDatabase('tb_log_aktivitas', [
+            'aksi' => 'Login',
+            'id_karyawan' => 1,
+            'nama_referensi' => 'kasir_test',
+        ]);
     }
 
     public function testFailedLoginShowsError(): void
