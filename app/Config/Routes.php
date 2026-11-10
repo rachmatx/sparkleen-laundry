@@ -199,6 +199,10 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
         $routes->get('transaksi', 'TransaksiController::index');
         $routes->get('transaksi/(:num)', 'TransaksiController::show/$1');
         $routes->get('transaksi/(:num)/nota', 'TransaksiController::nota/$1');
+        $routes->get('transaksi/(:num)/pembayaran', 'PembayaranController::show/$1');
+        $routes->post('transaksi/(:num)/pembayaran', 'PembayaranController::create/$1');
+        $routes->post('transaksi/(:num)/pembayaran/sinkronisasi', 'PembayaranController::sync/$1');
+        $routes->post('transaksi/(:num)/pembayaran/batal', 'PembayaranController::cancel/$1');
     });
     $routes->match(['GET', 'POST', 'PATCH', 'PUT', 'DELETE'], '(:any)', static fn () => \App\Libraries\Mobile\ApiJson::error(new \App\Libraries\Mobile\ApiProblem('NOT_FOUND', 'Endpoint tidak ditemukan.', 404)));
 });

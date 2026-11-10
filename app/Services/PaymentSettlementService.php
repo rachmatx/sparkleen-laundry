@@ -21,7 +21,9 @@ final class PaymentSettlementService
         if (!db_connect()->table('tb_payment_intent')->insert([
             'gateway_ref' => $data['transaction_id'], 'merchant_id' => $data['merchant_id'],
             'customer_ref' => $data['customer_ref'], 'id_transaksi' => $order['id_transaksi'],
-            'amount' => $amount, 'method' => $method, 'created_at' => date('Y-m-d H:i:s'),
+            'amount' => $amount, 'method' => $method, 'active_order_id' => $order['id_transaksi'],
+            'expires_at' => $data['expired_at'] ?? null, 'payment_detail' => json_encode($data['payment_detail'] ?? []),
+            'mode' => $data['mode'] ?? null, 'created_at' => date('Y-m-d H:i:s'),
         ])) {
             throw new \RuntimeException('Unable to persist payment intent.');
         }
@@ -80,7 +82,7 @@ final class PaymentSettlementService
                 if (!$db->table('tb_transaksi')->where('id_transaksi', $order['id_transaksi'])->update([
                     'id_status_pembayaran' => $remaining === 0 ? StatusPembayaran::LUNAS : StatusPembayaran::CICIL,
                 ]) || !$db->table('tb_payment_intent')->where('id_intent', $intent['id_intent'])->update([
-                    'status' => 'APPLIED', 'id_pembayaran' => $paymentId, 'applied_at' => date('Y-m-d H:i:s'),
+                    'status' => 'APPLIED', 'active_order_id' => null, 'id_pembayaran' => $paymentId, 'applied_at' => date('Y-m-d H:i:s'),
                 ])) {
                     throw new \RuntimeException('Unable to complete payment.');
                 }

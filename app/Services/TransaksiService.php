@@ -258,6 +258,23 @@ class TransaksiService
             return ['success' => false, 'message' => 'Input tidak valid. Pastikan nominal lebih dari 0 dan metode bayar valid.'];
         }
 
+        $active = db_connect()->query("SELECT * FROM tb_payment_intent WHERE id_transaksi = ? AND status IN ('CREATING','PENDING')
+            AND (active_order_id = ? OR gateway_ref = ?) ORDER BY id_intent DESC LIMIT 1", [$id_transaksi, $id_transaksi, $transaksi['payment_ref']])->getRowArray();
+        if ($active) {
+            if ($id_metode_pembayaran !== 1 && $active['status'] === 'PENDING'
+                && \App\Libraries\Payments\PaymentContract::METHODS[$active['method']] === $id_metode_pembayaran) {
+                return ['success' => true, 'message' => 'Tagihan online yang sama masih aktif.'];
+            }
+            return ['success' => false, 'message' => 'Masih ada tagihan online aktif. Batalkan dan pastikan status gateway sebelum pembayaran lain.'];
+        }
+
+        if ($transaksi['payment_ref']) {
+            $previous = db_connect()->table('tb_payment_intent')->where('gateway_ref', $transaksi['payment_ref'])->get()->getRowArray();
+            if (!$previous || $previous['status'] !== 'APPLIED') {
+                return ['success' => false, 'message' => 'Referensi pembayaran lama perlu diperiksa sebelum menerima pembayaran lain.'];
+            }
+        }
+
         $totalDibayar = $this->pembayaranModel
             ->selectSum('nominal_bayar', 'total')
             ->where('id_transaksi', $id_transaksi)
