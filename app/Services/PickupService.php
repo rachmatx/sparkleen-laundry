@@ -62,7 +62,9 @@ final class PickupService
                 'catatan' => trim($note) === '' ? null : trim($note), 'status' => 'menunggu',
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
             ]);
-            return $this->get((int) $db->insertID(), $customerId);
+            $id = (int) $db->insertID();
+            (new CustomerNotificationService())->publish($customerId, 'pickup:'.$id.':menunggu', 'pickup', 'Permintaan jemput diterima', 'Pantau konfirmasi outlet melalui riwayat penjemputan.', 'pickup', $id);
+            return $this->get($id, $customerId);
         });
     }
 
@@ -97,6 +99,7 @@ final class PickupService
             if ($row['status'] === 'dibatalkan') return $this->dto($row);
             if ($row['status'] !== 'menunggu') throw new ApiProblem('REQUEST_NOT_CANCELLABLE', 'Permintaan sudah diproses. Hubungi outlet untuk perubahan.', 409);
             $db->table('tb_permintaan_jemput')->where('id_permintaan', $id)->update(['status' => 'dibatalkan', 'active_customer_id' => null, 'updated_at' => date('Y-m-d H:i:s')]);
+            (new CustomerNotificationService())->publish($customerId, 'pickup:'.$id.':dibatalkan', 'pickup', 'Penjemputan dibatalkan', 'Permintaan jemput Anda sudah dibatalkan.', 'pickup', $id);
             return $this->get($id, $customerId);
         });
     }
@@ -145,6 +148,8 @@ final class PickupService
                 'modul' => 'Penjemputan', 'aksi' => $action, 'id_referensi' => $id, 'nama_referensi' => 'Permintaan #' . $id,
                 'detail' => 'Permintaan #' . $id . ': ' . $updates['status'], 'created_at' => date('Y-m-d H:i:s'),
             ]);
+            $label = ['diproses'=>'Penjemputan diproses','dikonfirmasi'=>'Cucian sudah diterima outlet','ditolak'=>'Permintaan jemput ditolak'][$updates['status']];
+            (new CustomerNotificationService())->publish((int)$row['id_pelanggan'], 'pickup:'.$id.':'.$updates['status'], 'pickup', $label, 'Buka riwayat penjemputan untuk melihat rincian terbaru.', 'pickup', $id);
             return $this->get($id);
         });
     }

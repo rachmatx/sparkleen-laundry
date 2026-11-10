@@ -196,6 +196,13 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
         $routes->get('permintaan', 'PermintaanController::index');
         $routes->get('permintaan/(:num)', 'PermintaanController::show/$1');
         $routes->post('permintaan/(:num)/batal', 'PermintaanController::cancel/$1');
+        $routes->get('notifikasi', 'EngagementController::notifications');
+        $routes->get('notifikasi/ringkasan', 'EngagementController::unread');
+        $routes->post('notifikasi/baca-semua', 'EngagementController::readAll');
+        $routes->post('notifikasi/(:num)/baca', 'EngagementController::read/$1');
+        $routes->get('loyalitas', 'EngagementController::loyalty');
+        $routes->get('transaksi/(:num)/poin', 'EngagementController::quote/$1');
+        $routes->post('transaksi/(:num)/poin', 'EngagementController::redeem/$1');
         $routes->get('transaksi', 'TransaksiController::index');
         $routes->get('transaksi/(:num)', 'TransaksiController::show/$1');
         $routes->get('transaksi/(:num)/nota', 'TransaksiController::nota/$1');

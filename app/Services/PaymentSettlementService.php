@@ -79,6 +79,8 @@ final class PaymentSettlementService
                     throw new \RuntimeException('Unable to insert payment.');
                 }
                 $paymentId = $db->insertID();
+                (new CustomerNotificationService())->publish((int)$order['id_pelanggan'], 'payment:'.$paymentId, 'payment',
+                    $remaining === 0 ? 'Pembayaran lunas' : 'Pembayaran diterima', 'Pembayaran online terkonfirmasi pada nota '.$order['no_nota'].'.', 'order', (int)$order['id_transaksi']);
                 if (!$db->table('tb_transaksi')->where('id_transaksi', $order['id_transaksi'])->update([
                     'id_status_pembayaran' => $remaining === 0 ? StatusPembayaran::LUNAS : StatusPembayaran::CICIL,
                 ]) || !$db->table('tb_payment_intent')->where('id_intent', $intent['id_intent'])->update([
