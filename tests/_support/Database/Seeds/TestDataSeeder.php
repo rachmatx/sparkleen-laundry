@@ -16,6 +16,7 @@ class TestDataSeeder extends Seeder
     {
         // ── Truncate all tables in reverse FK order ───────────────
         $tables = [
+            'tb_alamat_pelanggan',
             'tb_customer_notification',
             'tb_point_movement',
             'tb_point_redemption',

@@ -22,6 +22,7 @@
         <div class="row g-4"><div class="col-md-7">
             <h5 class="mb-1"><?= esc($row['nama_pelanggan']) ?></h5><p class="text-body-secondary mb-2"><?= esc($row['no_telp']) ?></p>
             <p class="mb-2"><i class="fas fa-map-marker-alt text-primary me-2" aria-hidden="true"></i><?= nl2br(esc($row['alamat_jemput'])) ?></p>
+            <?php if (!empty($row['patokan_jemput'])): ?><p class="text-muted mb-2"><?= esc($row['patokan_jemput']) ?></p><?php endif; ?>
             <?php if ($row['catatan']): ?><p class="small text-body-secondary mb-2">Catatan: <?= esc($row['catatan']) ?></p><?php endif ?>
             <?php if ($row['alasan_penolakan']): ?><p class="text-danger mb-2">Alasan: <?= esc($row['alasan_penolakan']) ?></p><?php endif ?>
             <p class="mb-0"><?= esc($row['nama_layanan']) ?> · Perkiraan <?= esc(number_format((float) $row['berat_perkiraan'], 2, ',', '.')) ?> kg · Rp <?= number_format((int) $row['estimasi_harga'], 0, ',', '.') ?></p>

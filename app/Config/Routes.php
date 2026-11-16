@@ -190,6 +190,12 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
         $routes->post('auth/logout', 'AuthController::logout');
         $routes->get('me', 'CustomerController::me');
         $routes->patch('me', 'CustomerController::update');
+        $routes->get('alamat', 'AddressController::index');
+        $routes->get('alamat/(:num)', 'AddressController::show/$1');
+        $routes->post('alamat', 'AddressController::create');
+        $routes->patch('alamat/(:num)', 'AddressController::update/$1');
+        $routes->post('alamat/(:num)/utama', 'AddressController::primary/$1');
+        $routes->delete('alamat/(:num)', 'AddressController::delete/$1');
         $routes->get('layanan', 'CustomerController::layanan');
         $routes->get('outlet', 'CustomerController::outlet');
         $routes->post('permintaan', 'PermintaanController::create');

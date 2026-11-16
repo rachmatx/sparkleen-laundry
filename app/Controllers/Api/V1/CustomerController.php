@@ -5,6 +5,7 @@ namespace App\Controllers\Api\V1;
 use App\Libraries\Mobile\ApiProblem;
 use App\Libraries\Mobile\CustomerAuth;
 use App\Libraries\Mobile\CustomerOrders;
+use App\Services\CustomerAddressService;
 
 class CustomerController extends BaseApiController
 {
@@ -29,8 +30,8 @@ class CustomerController extends BaseApiController
                 throw new ApiProblem('VALIDATION_ERROR', 'Isi nama atau alamat yang ingin diubah.', 422);
             }
             $updates['updated_at'] = date('Y-m-d H:i:s');
-            db_connect()->table('tb_pelanggan')->where('id_pelanggan', $customer['id_pelanggan'])->update($updates);
-            return $this->ok(CustomerAuth::profile(array_replace($customer, $updates)));
+            $updated = (new CustomerAddressService())->updateProfile((int) $customer['id_pelanggan'], $updates);
+            return $this->ok(CustomerAuth::profile($updated));
         });
     }
 

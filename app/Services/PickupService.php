@@ -29,8 +29,15 @@ final class PickupService
         if (!is_int($serviceId) || $serviceId < 1) $this->invalid('id_layanan', 'Pilih layanan yang tersedia.');
         $weight = $this->weight($data['berat_perkiraan'] ?? null);
         $address = $data['alamat_jemput'] ?? null;
-        if (!is_string($address) || mb_strlen(trim($address)) < 10 || mb_strlen(trim($address)) > 500) {
-            $this->invalid('alamat_jemput', 'Alamat harus 10–500 karakter.');
+        $addressId=$data['id_alamat']??null;
+        if ($addressId!==null) {
+            if (!is_int($addressId)||$addressId<1) $this->invalid('id_alamat','Pilih alamat yang valid.');
+            $saved=db_connect()->table('tb_alamat_pelanggan')->where('id_alamat',$addressId)->where('id_pelanggan',$customerId)->get()->getRowArray();
+            if (!$saved) throw new ApiProblem('NOT_FOUND','Alamat tidak ditemukan.',404);
+            $address=$saved['alamat'];
+        }
+        if (!is_string($address) || mb_strlen(trim($address)) < 10 || mb_strlen(trim($address)) > 1000) {
+            $this->invalid('alamat_jemput', 'Alamat harus 10–1000 karakter.');
         }
         $note = $data['catatan'] ?? '';
         if (!is_string($note) || mb_strlen(trim($note)) > 255) $this->invalid('catatan', 'Catatan maksimal 255 karakter.');
@@ -44,9 +51,16 @@ final class PickupService
         $scheduled = new \DateTimeImmutable($day->format('Y-m-d') . ' ' . self::SLOTS[$slot], $zone);
         if ($scheduled <= $now) $this->invalid('tgl_jemput', 'Slot penjemputan sudah lewat. Pilih jadwal berikutnya.');
 
-        return $this->atomic(function ($db) use ($customerId, $serviceId, $weight, $address, $note, $slot, $scheduled) {
+        return $this->atomic(function ($db) use ($customerId, $serviceId, $weight, $address, $addressId, $note, $slot, $scheduled) {
             $customer = $db->query('SELECT * FROM tb_pelanggan WHERE id_pelanggan = ? FOR UPDATE', [$customerId])->getRowArray();
             if (!$customer || !(int) $customer['is_aktif']) throw new ApiProblem('AUTH_INVALID_TOKEN', 'Akun tidak aktif.', 401);
+            $landmark=null;
+            if ($addressId!==null) {
+                $saved=$db->table('tb_alamat_pelanggan')->where('id_alamat',$addressId)->where('id_pelanggan',$customerId)->get()->getRowArray();
+                if (!$saved) throw new ApiProblem('NOT_FOUND','Alamat tidak ditemukan.',404);
+                $address=$saved['alamat']; $landmark=$saved['patokan'];
+                if (mb_strlen(trim($address))<10) $this->invalid('id_alamat','Lengkapi alamat sebelum mengajukan jemput.');
+            }
             $active = $db->query("SELECT id_permintaan FROM tb_permintaan_jemput WHERE active_customer_id = ? FOR UPDATE", [$customerId])->getRowArray();
             if ($active) throw new ApiProblem('ACTIVE_REQUEST_EXISTS', 'Masih ada permintaan jemput yang menunggu atau sedang diproses.', 409);
             $service = $db->table('tb_layanan')->where('id_layanan', $serviceId)->where('is_aktif', 1)->get()->getRowArray();
@@ -57,7 +71,7 @@ final class PickupService
                 'id_pelanggan' => $customerId, 'active_customer_id' => $customerId,
                 'id_layanan' => $serviceId, 'nama_layanan' => $service['nama_layanan'],
                 'berat_perkiraan' => $weight, 'estimasi_harga' => $estimate,
-                'estimasi_hari' => max(0, (int) $service['estimasi_hari']), 'alamat_jemput' => trim($address),
+                'estimasi_hari' => max(0, (int) $service['estimasi_hari']), 'alamat_jemput' => trim($address), 'patokan_jemput'=>$landmark,
                 'tgl_jemput' => $scheduled->format('Y-m-d H:i:s'), 'slot_jemput' => $slot,
                 'catatan' => trim($note) === '' ? null : trim($note), 'status' => 'menunggu',
                 'created_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s'),
@@ -175,7 +189,7 @@ final class PickupService
             'id_permintaan' => (int) $row['id_permintaan'], 'status' => $row['status'],
             'id_layanan' => (int) $row['id_layanan'], 'nama_layanan' => $row['nama_layanan'],
             'berat_perkiraan' => (float) $row['berat_perkiraan'], 'estimasi_harga' => (int) $row['estimasi_harga'],
-            'estimasi_hari' => (int) $row['estimasi_hari'], 'alamat_jemput' => $row['alamat_jemput'],
+            'estimasi_hari' => (int) $row['estimasi_hari'], 'alamat_jemput' => $row['alamat_jemput'], 'patokan_jemput'=>$row['patokan_jemput']??null,
             'tgl_jemput' => CustomerOrders::iso($row['tgl_jemput']), 'slot_jemput' => $row['slot_jemput'],
             'catatan' => $row['catatan'], 'id_transaksi' => $row['id_transaksi'] === null ? null : (int) $row['id_transaksi'],
             'alasan_penolakan' => $row['alasan_penolakan'], 'created_at' => CustomerOrders::iso($row['created_at']),

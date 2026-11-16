@@ -49,7 +49,7 @@ abstract class BaseApiController extends BaseController
     {
         $value = $data[$key] ?? null;
         if (!is_string($value) || mb_strlen(trim($value)) < $min || mb_strlen(trim($value)) > $max) {
-            throw new ApiProblem('VALIDATION_ERROR', 'Data yang dikirim belum valid.', 422, [$key => ["Panjang $key harus $min–$max karakter."]]);
+            throw new ApiProblem('VALIDATION_ERROR', 'Data yang dikirim belum valid.', 422, [$key => ["Panjang {$key} harus {$min}–{$max} karakter."]]);
         }
         return trim($value);
     }
