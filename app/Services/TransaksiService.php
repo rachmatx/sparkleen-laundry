@@ -144,6 +144,39 @@ class TransaksiService
      */
     public function prosesUbahStatus(int $id_transaksi, array $postData, string $sessionLevel): array
     {
+        $db = db_connect();
+        if (!$db->transBegin()) return ['success'=>false,'message'=>'Status belum dapat diubah.'];
+        try {
+            $before = $db->query('SELECT * FROM tb_transaksi WHERE id_transaksi=? AND deleted_at IS NULL FOR UPDATE', [$id_transaksi])->getRowArray();
+            if (!$before) throw new \RuntimeException('Order not found.');
+            // External WhatsApp delivery runs only after the state/inbox commit.
+            $result = $this->prosesUbahStatusTerkunci($id_transaksi, array_replace($postData, ['kirim_wa'=>'0']), $sessionLevel);
+            if (!$result['success'] || !$db->transStatus()) {
+                $db->transRollback(); $db->resetTransStatus();
+                return ['success'=>false,'message'=>$result['message']];
+            }
+            $committed = $this->transaksiModel->find($id_transaksi);
+            if (!$db->transCommit()) throw new \RuntimeException('Unable to commit order status.');
+        } catch (\Throwable $error) {
+            $db->transRollback(); $db->resetTransStatus();
+            return ['success'=>false,'message'=>'Status belum dapat diubah. Periksa pesanan dan coba lagi.'];
+        }
+        if (($postData['kirim_wa']??'')==='1' && (int)$before['id_status_transaksi']!==(int)$postData['id_status_transaksi']) {
+            try {
+                $fresh=$committed;
+                $person=$this->pelangganModel->find($before['id_pelanggan']);
+                if ($person && (int)$fresh['id_status_transaksi']===StatusTransaksi::SELESAI) $result['wa_result']=service('whatsapp')->notifyOrderSelesai($fresh,$person);
+                elseif ($person && (int)$fresh['id_status_transaksi']===StatusTransaksi::DIAMBIL) $result['wa_result']=service('whatsapp')->notifyOrderDiambil($fresh,$person);
+            } catch (\Throwable $error) {
+                log_message('error', 'Order status WhatsApp failure: {type}', ['type'=>get_class($error)]);
+                $result['wa_result']=['success'=>false,'message'=>'Status tersimpan; pengiriman WhatsApp belum berhasil.'];
+            }
+        }
+        return $result;
+    }
+
+    private function prosesUbahStatusTerkunci(int $id_transaksi, array $postData, string $sessionLevel): array
+    {
         $id_status_baru    = $postData['id_status_transaksi'];
         $catatan           = $postData['catatan'] ?? '';
         $kirim_wa          = ($postData['kirim_wa'] ?? '') === '1';
@@ -155,7 +188,9 @@ class TransaksiService
 
         $statusModel      = new MasterStatusTransaksiModel();
         $status_baru_row  = $statusModel->find($id_status_baru);
+        if (!$status_baru_row) return ['success'=>false,'message'=>'Status tidak valid.'];
         $status_baru      = $status_baru_row['nama_status'];
+        if ($status_lama === $status_baru) return ['success'=>true,'message'=>'Status sudah sesuai.','wa_result'=>null];
 
         // Validasi PIN jika status baru adalah 'diambil'
         if ($status_baru === 'diambil') {
@@ -186,6 +221,10 @@ class TransaksiService
             'catatan'      => $catatan,
         ]);
 
+        $logId = (int) $this->statusLogModel->getInsertID();
+        $label = \App\Libraries\Mobile\CustomerOrders::LABELS[$status_baru] ?? ucfirst($status_baru);
+        (new CustomerNotificationService())->publish((int)$transaksi['id_pelanggan'], 'status:'.$logId, 'order',
+            'Cucian: '.$label, 'Nota '.$transaksi['no_nota'].' kini berstatus '.$label.'.', 'order', $id_transaksi);
         $wa_result = null;
 
         if ($status_baru === 'selesai') {
@@ -222,14 +261,59 @@ class TransaksiService
      */
     public function prosesPembayaran(int $id_transaksi, array $postData): array
     {
+        $db = db_connect();
+        if (!$db->transBegin()) {
+            return ['success' => false, 'message' => 'Pembayaran belum dapat diproses.'];
+        }
+        try {
+            // Cash and webhook use the same order lock before reading the balance.
+            $order = $db->query('SELECT * FROM tb_transaksi WHERE id_transaksi = ? AND deleted_at IS NULL FOR UPDATE', [$id_transaksi])->getRowArray();
+            $result = $order
+                ? $this->prosesPembayaranTerkunci($id_transaksi, $postData, $order)
+                : ['success' => false, 'message' => 'Transaksi tidak ditemukan.'];
+            if (!$result['success'] || !$db->transStatus()) {
+                $db->transRollback();
+                $db->resetTransStatus();
+                return ['success' => false, 'message' => $result['success'] ? 'Gagal menyimpan pembayaran.' : $result['message']];
+            }
+            if (!$db->transCommit()) {
+                throw new \RuntimeException('Payment commit failed.');
+            }
+            return $result;
+        } catch (\Throwable $error) {
+            $db->transRollback();
+            $db->resetTransStatus();
+            log_message('error', 'Cashier payment failure: {type}', ['type' => get_class($error)]);
+            return ['success' => false, 'message' => 'Pembayaran belum dapat diproses. Periksa konfigurasi dan tagihan.'];
+        }
+    }
+
+    private function prosesPembayaranTerkunci(int $id_transaksi, array $postData, array $transaksi): array
+    {
         $nominal_bayar        = (float) ($postData['nominal_bayar'] ?? 0);
         $id_metode_pembayaran = (int) ($postData['id_metode_pembayaran'] ?? 0);
 
-        if ($nominal_bayar <= 0) {
+        if (!is_finite($nominal_bayar) || $nominal_bayar <= 0 || !in_array($id_metode_pembayaran, [1, 2, 3], true)) {
             return ['success' => false, 'message' => 'Input tidak valid. Pastikan nominal lebih dari 0 dan metode bayar valid.'];
         }
 
-        $transaksi    = $this->transaksiModel->find($id_transaksi);
+        $active = db_connect()->query("SELECT * FROM tb_payment_intent WHERE id_transaksi = ? AND status IN ('CREATING','PENDING')
+            AND (active_order_id = ? OR gateway_ref = ?) ORDER BY id_intent DESC LIMIT 1", [$id_transaksi, $id_transaksi, $transaksi['payment_ref']])->getRowArray();
+        if ($active) {
+            if ($id_metode_pembayaran !== 1 && $active['status'] === 'PENDING'
+                && \App\Libraries\Payments\PaymentContract::METHODS[$active['method']] === $id_metode_pembayaran) {
+                return ['success' => true, 'message' => 'Tagihan online yang sama masih aktif.'];
+            }
+            return ['success' => false, 'message' => 'Masih ada tagihan online aktif. Batalkan dan pastikan status gateway sebelum pembayaran lain.'];
+        }
+
+        if ($transaksi['payment_ref']) {
+            $previous = db_connect()->table('tb_payment_intent')->where('gateway_ref', $transaksi['payment_ref'])->get()->getRowArray();
+            if (!$previous || $previous['status'] !== 'APPLIED') {
+                return ['success' => false, 'message' => 'Referensi pembayaran lama perlu diperiksa sebelum menerima pembayaran lain.'];
+            }
+        }
+
         $totalDibayar = $this->pembayaranModel
             ->selectSum('nominal_bayar', 'total')
             ->where('id_transaksi', $id_transaksi)
@@ -252,6 +336,9 @@ class TransaksiService
         // 1 = Cash, 2 = QRIS, 3 = Transfer
         if ($id_metode_pembayaran === 2 || $id_metode_pembayaran === 3) {
             $methodName = $id_metode_pembayaran === 2 ? 'QRIS' : 'BANK_TRANSFER';
+            if (floor($nominal_bayar) !== $nominal_bayar || $nominal_bayar > \App\Libraries\Payments\PaymentContract::MAX_RUPIAH) {
+                return ['success' => false, 'message' => 'Pembayaran online harus berupa integer rupiah yang didukung.'];
+            }
             
             $apiUrl = env('PAYMENT_API_URL') ?: getenv('PAYMENT_API_URL');
             $apiKey = env('PAYMENT_API_KEY') ?: getenv('PAYMENT_API_KEY');
@@ -275,7 +362,8 @@ class TransaksiService
 
                     $resData = json_decode($response->getBody(), true);
                     if (isset($resData['success']) && $resData['success'] === true) {
-                        // Update tb_transaksi dgn payment_ref dari API
+                        (new PaymentSettlementService())->recordIntent($transaksi, $resData['data'], (int) $nominal_bayar, $methodName);
+                        // The intent and displayed gateway reference commit together.
                         $this->transaksiModel->update($id_transaksi, [
                             'payment_ref'    => $resData['data']['transaction_id'],
                             'payment_detail' => json_encode($resData['data']['payment_detail']),
@@ -288,17 +376,16 @@ class TransaksiService
                         ];
                     }
                 } catch (\Exception $e) {
-                    log_message('error', 'API Payment Gagal: ' . $e->getMessage());
-                    // Fallback to normal behavior if API fails or unreachable
+                    log_message('error', 'Payment gateway failure: {type}', ['type' => get_class($e)]);
+                    // Return an explicit failure below; never record a local online payment.
                 }
             }
+            // An unavailable/rejected gateway is not proof that money was received.
+            return ['success' => false, 'message' => 'Pembayaran online belum terkonfirmasi. Layanan pembayaran tidak tersedia; coba lagi nanti.'];
         }
 
-        // Lanjut ke alur CASH atau Fallback jika API gagal
+        // Pembayaran tunai hanya melalui pilihan kasir yang eksplisit.
         $sisaSetelah = $sisa - $nominal_bayar;
-
-        $db = db_connect();
-        $db->transStart();
 
         $this->pembayaranModel->insert([
             'id_transaksi'         => $id_transaksi,
@@ -308,19 +395,16 @@ class TransaksiService
             'id_metode_pembayaran' => $id_metode_pembayaran,
         ]);
 
+        $paymentId = (int) $this->pembayaranModel->getInsertID();
+        (new CustomerNotificationService())->publish((int)$transaksi['id_pelanggan'], 'payment:'.$paymentId, 'payment',
+            $sisaSetelah <= 0 ? 'Pembayaran lunas' : 'Pembayaran diterima', 'Pembayaran kasir tercatat pada nota '.$transaksi['no_nota'].'.', 'order', $id_transaksi);
+
         $statusPembayaran = ($sisaSetelah <= 0) ? StatusPembayaran::LUNAS : StatusPembayaran::CICIL;
 
         $this->transaksiModel->update($id_transaksi, [
             'id_status_pembayaran' => $statusPembayaran,
             'id_metode_pembayaran' => $id_metode_pembayaran,
         ]);
-
-        $db->transComplete();
-
-        if (!$db->transStatus()) {
-            log_message('error', 'prosesPembayaran: DB transaction gagal untuk id_transaksi=' . $id_transaksi);
-            return ['success' => false, 'message' => 'Gagal menyimpan pembayaran ke database. Silakan coba lagi.'];
-        }
 
         $message = $kembalian > 0
             ? 'Pembayaran berhasil. Uang Kembalian: Rp ' . number_format($kembalian, 0, ',', '.')
@@ -390,6 +474,8 @@ class TransaksiService
         $db->transBegin();
 
         try {
+            $pelanggan = $db->query('SELECT * FROM tb_pelanggan WHERE id_pelanggan=? FOR UPDATE', [(int)$pelanggan['id_pelanggan']])->getRowArray();
+            if (!$pelanggan || !(int)$pelanggan['is_aktif']) throw new \RuntimeException('Pelanggan tidak aktif.');
             // Batch fetch all layanan in one query
             $layananIds = array_unique(array_column($itemsTemp, 'id_layanan'));
             $layananRows = $this->layananModel->whereIn('id_layanan', $layananIds)->findAll();
@@ -469,6 +555,14 @@ class TransaksiService
                     'total_transaksi' => $total_transaksi_baru
                 ]);
             }
+
+            $loyalty = new CustomerLoyaltyService();
+            $loyalty->movement((int)$pelanggan['id_pelanggan'], (int)$id_transaksi, 'cashier-redeem:'.$id_transaksi,
+                -$poin_ditebus, $poin_tersedia-$poin_ditebus, 'Penukaran poin oleh kasir');
+            $loyalty->movement((int)$pelanggan['id_pelanggan'], (int)$id_transaksi, 'earn:'.$id_transaksi,
+                $poin_diperoleh, $poin_baru, 'Poin pesanan baru');
+            (new CustomerNotificationService())->publish((int)$pelanggan['id_pelanggan'], 'order:'.$id_transaksi, 'order',
+                'Pesanan diterima', 'Nota '.$no_nota.' sudah dibuat. Lihat rincian dan perkembangan cucian Anda.', 'order', (int)$id_transaksi);
 
             // Simpan detail layanan (reuse layananMap - no extra queries)
             foreach ($itemsTemp as $item) {

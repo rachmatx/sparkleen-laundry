@@ -27,11 +27,6 @@ final class AuthFeatureTest extends CIUnitTestCase
     {
         parent::setUp();
 
-        // Disable CSRF for feature tests
-        $filterConfig = config('Filters');
-        $filterConfig->methods = [];
-        \CodeIgniter\Config\Factories::injectMock('config', 'Filters', $filterConfig);
-
         // Clear any throttle cache
         $throttle = service('loginThrottle');
         $throttle->clear('127.0.0.1', 'kasir_test');
@@ -47,59 +42,86 @@ final class AuthFeatureTest extends CIUnitTestCase
 
     public function testSuccessfulLoginRedirectsToDashboard(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        // Submit the same CSRF-protected form as the browser.
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('dashboard'));
         $result->assertSessionHas('isLoggedIn', true);
         $result->assertSessionHas('level', 'kasir');
+        $result->assertSessionHas('username', 'kasir_test');
+        $this->assertSame(1, (int) session()->get('id_karyawan'));
+        $this->seeInDatabase('tb_log_aktivitas', [
+            'aksi' => 'Login',
+            'id_karyawan' => 1,
+            'nama_referensi' => 'kasir_test',
+        ]);
     }
 
     public function testFailedLoginShowsError(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'wrong_password',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('error');
+        $this->assertStringContainsString('Username/email atau password salah.', session()->getFlashdata('error'));
+        $result->assertSessionMissing('isLoggedIn');
+        $result->assertSessionMissing('id_karyawan');
     }
 
     public function testEmptyCredentialsShowsError(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => '',
             'password' => '',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('error', 'Username/email dan password wajib diisi.');
+        $result->assertSessionMissing('isLoggedIn');
+        $result->assertSessionMissing('id_karyawan');
     }
 
     public function testDeactivatedAccountCannotLogin(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        // Exercise the controller through the real CSRF-protected login route.
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'nonaktif_test',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
         $result->assertSessionHas('error', 'Akun Anda telah dinonaktifkan. Silakan hubungi Admin.');
+        $this->assertFalse((bool) session()->get('isLoggedIn'));
+        $this->assertNull(session()->get('id_karyawan'));
+        $this->seeInDatabase('tb_log_aktivitas', [
+            'aksi' => 'Login Akun Nonaktif',
+            'nama_referensi' => 'nonaktif_test',
+        ]);
     }
 
     public function testLoginWithEmailWorks(): void
     {
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'admin@test.com',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('dashboard'));
         $result->assertSessionHas('isLoggedIn', true);
         $result->assertSessionHas('level', 'admin');
+        $result->assertSessionHas('username', 'admin_test');
+        $this->assertSame(2, (int) session()->get('id_karyawan'));
     }
 
     public function testLogoutDestroysSession(): void

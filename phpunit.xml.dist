@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/phpunit_bootstrap.php" colors="true" cacheDirectory=".phpunit.cache">
+  <php>
+    <server name="CI_ENVIRONMENT" value="testing" force="true"/>
+    <server name="app.baseURL" value="http://localhost:8080/"/>
+  </php>
+  <testsuites>
+    <testsuite name="Unit"><directory>tests/unit</directory></testsuite>
+    <testsuite name="Feature"><directory>tests/Feature</directory></testsuite>
+    <testsuite name="Database"><directory>tests/database</directory></testsuite>
+  </testsuites>
+</phpunit>

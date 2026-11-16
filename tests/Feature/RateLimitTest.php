@@ -27,11 +27,6 @@ final class RateLimitTest extends CIUnitTestCase
     {
         parent::setUp();
 
-        // Disable CSRF for login POST tests
-        $filterConfig = config('Filters');
-        $filterConfig->methods = [];
-        \CodeIgniter\Config\Factories::injectMock('config', 'Filters', $filterConfig);
-
         // Clear throttle state
         $throttle = service('loginThrottle');
         $throttle->clear('127.0.0.1', 'kasir_test');
@@ -51,17 +46,19 @@ final class RateLimitTest extends CIUnitTestCase
 
         // Record max failures
         for ($i = 0; $i < $maxAttempts; $i++) {
-            $result = $this->call('post', 'doLogin', [
+            $result = $this->call('POST', 'doLogin', [
                 'username' => 'kasir_test',
                 'password' => 'wrong_password_' . $i,
+                csrf_token() => csrf_hash(),
             ]);
             $result->assertRedirectTo(site_url('login'));
         }
 
         // Next attempt should show blocked message
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
-            'password' => 'wrong_password_again',
+            'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('login'));
@@ -70,22 +67,27 @@ final class RateLimitTest extends CIUnitTestCase
         // Verify the error message contains blocking text
         $error = session()->getFlashdata('error');
         $this->assertStringContainsString('Terlalu banyak percobaan login gagal', $error);
+        $result->assertSessionMissing('isLoggedIn');
     }
 
     public function testSuccessfulLoginClearsThrottle(): void
     {
         // Record a few failures first
         for ($i = 0; $i < 3; $i++) {
-            $this->call('post', 'doLogin', [
+            $this->call('POST', 'doLogin', [
                 'username' => 'kasir_test',
                 'password' => 'wrong_pass',
+                csrf_token() => csrf_hash(),
             ]);
         }
 
+        $this->assertStringContainsString('Sisa percobaan: 2', service('loginThrottle')->getFailureMessage('127.0.0.1', 'kasir_test'));
+
         // Now login successfully
-        $result = $this->call('post', 'doLogin', [
+        $result = $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'password123',
+            csrf_token() => csrf_hash(),
         ]);
 
         $result->assertRedirectTo(site_url('dashboard'));
@@ -93,13 +95,16 @@ final class RateLimitTest extends CIUnitTestCase
         // Throttle should be cleared — user should not be blocked
         $throttle = service('loginThrottle', false);
         $this->assertFalse($throttle->isBlocked('127.0.0.1', 'kasir_test'));
+        $this->assertStringContainsString('Sisa percobaan: 5', $throttle->getFailureMessage('127.0.0.1', 'kasir_test'));
+        $result->assertSessionHas('isLoggedIn', true);
     }
 
     public function testFailedLoginRecordsActivityLog(): void
     {
-        $this->call('post', 'doLogin', [
+        $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'wrong_password',
+            csrf_token() => csrf_hash(),
         ]);
 
         // Verify activity log entry
@@ -118,6 +123,7 @@ final class RateLimitTest extends CIUnitTestCase
             $this->call('POST', 'doLogin', [
                 'username' => 'kasir_test',
                 'password' => 'wrong_pass_' . $i,
+                csrf_token() => csrf_hash(),
             ]);
         }
 
@@ -125,6 +131,7 @@ final class RateLimitTest extends CIUnitTestCase
         $this->call('POST', 'doLogin', [
             'username' => 'kasir_test',
             'password' => 'still_wrong',
+            csrf_token() => csrf_hash(),
         ]);
 
         // Verify security log

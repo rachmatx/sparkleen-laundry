@@ -48,6 +48,12 @@
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a href="<?= base_url('/penjemputan') ?>" class="nav-link <?= ($activeMenu ?? '') == 'penjemputan' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-truck"></i><p>Antrean Jemput</p>
+                    </a>
+                </li>
+
                 <!-- ===================================================== -->
                 <!-- MASTER DATA                                           -->
                 <!-- ===================================================== -->

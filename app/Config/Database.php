@@ -164,7 +164,7 @@ class Database extends Config
      */
     public array $tests = [
         'DSN'          => '',
-        'hostname'     => 'localhost',
+        'hostname'     => '127.0.0.1',
         'username'     => 'root',
         'password'     => '',
         'database'     => 'laundry_db_test',

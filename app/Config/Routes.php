@@ -34,26 +34,29 @@ $routes->group('pelanggan', ['filter' => 'role:admin,pemilik'], static function 
     $routes->post('toggle/(:num)', 'Pelanggan::toggleStatus/$1');
 });
 
-$routes->get('/debug-db', function() {
-    $db = \Config\Database::connect();
-    $karyawan = $db->table('tb_karyawan')->get()->getResultArray();
-    return "<pre>" . print_r($karyawan, true) . "</pre>";
-});
+// Diagnostic and bootstrap routes are available only for local development.
+if (ENVIRONMENT === 'development') {
+    $routes->get('/debug-db', function() {
+        $db = \Config\Database::connect();
+        $karyawan = $db->table('tb_karyawan')->get()->getResultArray();
+        return "<pre>" . print_r($karyawan, true) . "</pre>";
+    });
 
-$routes->get('/seed', function() {
-    $seeder = \Config\Database::seeder();
-    try {
-        $seeder->call('MasterSeeder');
-        $seeder->call('AdminSeeder');
-        return "Database berhasil di-seed! Silakan coba login.";
-    } catch (\Exception $e) {
-        return "Gagal seed database: " . $e->getMessage();
-    }
-});
+    $routes->get('/seed', function() {
+        $seeder = \Config\Database::seeder();
+        try {
+            $seeder->call('MasterSeeder');
+            $seeder->call('AdminSeeder');
+            return "Database berhasil di-seed! Silakan coba login.";
+        } catch (\Exception $e) {
+            return "Gagal seed database: " . $e->getMessage();
+        }
+    });
 
-$routes->get('/debug', function() {
-    return "Base URL is: " . base_url() . "<br>HTTP_HOST is: " . ($_SERVER['HTTP_HOST'] ?? 'null') . "<br>X-Forwarded-Host is: " . ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? 'null');
-});
+    $routes->get('/debug', function() {
+        return "Base URL is: " . base_url() . "<br>HTTP_HOST is: " . ($_SERVER['HTTP_HOST'] ?? 'null') . "<br>X-Forwarded-Host is: " . ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? 'null');
+    });
+}
 
 // Profil / Ganti Password
 $routes->get('/profile', 'Profile::index');
@@ -176,3 +179,47 @@ $routes->group('laporan', ['filter' => 'role:admin,pemilik'], static function ($
 
 // Webhook Payment
 $routes->post('webhook/payment', 'Webhook::payment');
+
+// Customer API: independent of cashier sessions; all private routes require Bearer auth.
+$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'cors'], static function ($routes) {
+    $routes->post('auth/register', 'AuthController::register');
+    $routes->post('auth/activate', 'AuthController::activate');
+    $routes->post('auth/login', 'AuthController::login');
+    $routes->options('(:any)', static fn () => service('response')->setStatusCode(204));
+    $routes->group('', ['filter' => 'apiauth'], static function ($routes) {
+        $routes->post('auth/logout', 'AuthController::logout');
+        $routes->get('me', 'CustomerController::me');
+        $routes->patch('me', 'CustomerController::update');
+        $routes->get('alamat', 'AddressController::index');
+        $routes->get('alamat/(:num)', 'AddressController::show/$1');
+        $routes->post('alamat', 'AddressController::create');
+        $routes->patch('alamat/(:num)', 'AddressController::update/$1');
+        $routes->post('alamat/(:num)/utama', 'AddressController::primary/$1');
+        $routes->delete('alamat/(:num)', 'AddressController::delete/$1');
+        $routes->get('layanan', 'CustomerController::layanan');
+        $routes->get('outlet', 'CustomerController::outlet');
+        $routes->post('permintaan', 'PermintaanController::create');
+        $routes->get('permintaan', 'PermintaanController::index');
+        $routes->get('permintaan/(:num)', 'PermintaanController::show/$1');
+        $routes->post('permintaan/(:num)/batal', 'PermintaanController::cancel/$1');
+        $routes->get('notifikasi', 'EngagementController::notifications');
+        $routes->get('notifikasi/ringkasan', 'EngagementController::unread');
+        $routes->post('notifikasi/baca-semua', 'EngagementController::readAll');
+        $routes->post('notifikasi/(:num)/baca', 'EngagementController::read/$1');
+        $routes->get('loyalitas', 'EngagementController::loyalty');
+        $routes->get('transaksi/(:num)/poin', 'EngagementController::quote/$1');
+        $routes->post('transaksi/(:num)/poin', 'EngagementController::redeem/$1');
+        $routes->get('transaksi', 'TransaksiController::index');
+        $routes->get('transaksi/(:num)', 'TransaksiController::show/$1');
+        $routes->get('transaksi/(:num)/nota', 'TransaksiController::nota/$1');
+        $routes->get('transaksi/(:num)/pembayaran', 'PembayaranController::show/$1');
+        $routes->post('transaksi/(:num)/pembayaran', 'PembayaranController::create/$1');
+        $routes->post('transaksi/(:num)/pembayaran/sinkronisasi', 'PembayaranController::sync/$1');
+        $routes->post('transaksi/(:num)/pembayaran/batal', 'PembayaranController::cancel/$1');
+    });
+    $routes->match(['GET', 'POST', 'PATCH', 'PUT', 'DELETE'], '(:any)', static fn () => \App\Libraries\Mobile\ApiJson::error(new \App\Libraries\Mobile\ApiProblem('NOT_FOUND', 'Endpoint tidak ditemukan.', 404)));
+});
+
+// Pickup queue uses cashier sessions/roles and the existing web CSRF filter.
+$routes->get('penjemputan', 'Penjemputan::index', ['filter' => 'role:admin,kasir,pemilik']);
+$routes->post('penjemputan/(:num)/(:segment)', 'Penjemputan::update/$1/$2', ['filter' => 'role:admin,kasir']);

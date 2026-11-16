@@ -584,14 +584,15 @@ class Transaksi extends BaseController
             return redirect()->to('/transaksi/pembayaran/' . $id)->with('error', 'Transaksi tidak ditemukan.');
         }
 
-        // Hapus payment_ref dan payment_detail
-        $this->transaksiModel->update($id, [
-            'payment_ref' => null,
-            'payment_detail' => null,
-            // Jika mau kembalikan id_metode_pembayaran ke default (misal 1/Cash), buka komentar di bawah:
-            // 'id_metode_pembayaran' => 1
-        ]);
-
-        return redirect()->to('/transaksi/pembayaran/' . $id)->with('success', 'Permintaan pembayaran API dibatalkan. Silakan pilih metode pembayaran lain.');
+        try {
+            $state = (new \App\Services\CustomerPaymentService())->sync((int) $id, null, true);
+            if (!in_array($state['status'], ['NONE', 'SUCCESS'], true)) {
+                return redirect()->to('/transaksi/pembayaran/' . $id)->with('error', 'Gateway belum mengonfirmasi pembatalan. Tagihan tetap aktif.');
+            }
+            $message = $state['status'] === 'SUCCESS' ? 'Pembayaran sudah terkonfirmasi; tagihan tidak dibatalkan.' : 'Pembatalan telah dikonfirmasi gateway.';
+            return redirect()->to('/transaksi/pembayaran/' . $id)->with('success', $message);
+        } catch (\Throwable $error) {
+            return redirect()->to('/transaksi/pembayaran/' . $id)->with('error', 'Pembatalan belum terkonfirmasi. Tagihan tetap dipertahankan; periksa lagi.');
+        }
     }
 }
